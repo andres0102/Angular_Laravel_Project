@@ -1,0 +1,29 @@
+/**
+ * @license
+ * Copyright TWISS.IO
+ * All Rights Reserved.
+ * Licensed under the MIT License.
+ */
+
+@import '~src/assets/styles/variables';
+
+mat-card-content {
+  background: white;
+}
+
+.mat-form-field {
+  vertical-align: middle;
+  &.multiple { width: calc(100% - 130px); }
+  &:not(.multiple) { width: 100%; }
+}
+
+.profile-thumbnail-wrapper {
+  width: 40px;
+  height: 40px;
+}
+
+ngx-datatable { min-height: 170px !important; }
+
+ngx-datatable.ngx-datatable.material.scroll-vertical {
+  &.mobile { max-height: calc(100vh - 325px); }
+}

@@ -1,0 +1,113 @@
+<h2 mat-dialog-title>Create a new Client Record</h2>
+
+<mat-dialog-content>
+  <form [formGroup]="authForm" (ngSubmit)="authForm.valid && submitForm()">
+    <div class="row">
+      <!-- Mat-Select -- Type of User Account -->
+      <mat-form-field class="w-100 mb-3 col-sm-6">
+        <mat-label>Type of Client</mat-label>
+        <mat-select panelClass="mat-selection-panel mat-light-blue" formControlName="client_type_slug" tabindex="1" required>
+          <mat-option [value]="'individual'">Individual</mat-option>
+          <mat-option [value]="'business'">Business</mat-option>
+        </mat-select>
+        <button type="button" mat-button *ngIf="client_type_slug.value" matSuffix mat-icon-button aria-label="Clear" (click)="$event.stopPropagation(); resetForm('client_type_slug');" class="d-inline-block" style="transform: translateY(2px)">
+          <mat-icon class="mat-light-blue">close</mat-icon>
+        </button>
+        <mat-error *ngIf="(client_type_slug.touched || client_type_slug.dirty) && client_type_slug.invalid">Client type is required.</mat-error>
+      </mat-form-field>
+
+      <!-- Mat-Select -- Client Source -->
+      <mat-form-field class="w-100 mb-3 col-sm-6">
+        <mat-label>Client Source</mat-label>
+        <mat-select panelClass="mat-selection-panel mat-light-blue" formControlName="source_slug" tabindex="2" required>
+          <mat-option *ngFor="let source of client_sources" [value]="source.slug">{{source.title}}</mat-option>
+        </mat-select>
+        <mat-spinner matSuffix [diameter]="20" [strokeWidth]="3" style="top: 7px;" *ngIf="!client_sources"></mat-spinner>
+        <button type="button" mat-button *ngIf="source_slug.value" matSuffix mat-icon-button aria-label="Clear" (click)="$event.stopPropagation(); resetForm('source_slug');" class="d-inline-block" style="transform: translateY(2px)">
+          <mat-icon class="mat-light-blue">close</mat-icon>
+        </button>
+        <mat-error *ngIf="(source_slug.touched || source_slug.dirty) && source_slug.invalid">Client Source is required.</mat-error>
+      </mat-form-field>
+    </div>
+
+    <!-- Mat-Input -- Display Name -->
+    <mat-form-field class="w-100 mb-3" *ngIf="client_type_slug.value">
+      <mat-label>{{(client_type_slug.value == 'individual') ? 'Full' : 'Business'}} Name</mat-label>
+      <input matInput type="text" placeholder="Type display name here..." formControlName="display_name" maxlength="128" tabindex="3" autocomplete="display_name" required>
+      <button type="button" mat-button *ngIf="display_name.value && !display_name.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm('display_name')">
+        <mat-icon class="mat-light-blue">close</mat-icon>
+      </button>
+      <mat-error *ngIf="(display_name.touched || display_name.dirty) && display_name.invalid">Display name is required.</mat-error>
+    </mat-form-field>
+
+    <!-- Mat-Input -- Individual NRIC No -->
+    <mat-form-field class="w-100 mb-3" *ngIf="client_type_slug.value == 'individual'">
+      <mat-label>NRIC Number</mat-label>
+      <input matInput type="text" placeholder="Type nric number here..." formControlName="nric_no" maxlength="128" tabindex="4" autocomplete="nric_no">
+      <button type="button" mat-button *ngIf="nric_no.value && !nric_no.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm('nric_no')">
+        <mat-icon class="mat-light-blue">close</mat-icon>
+      </button>
+    </mat-form-field>
+
+    <!-- Mat-Input -- Personal Gender -->
+    <mat-form-field class="w-100 mb-3" *ngIf="client_type_slug.value == 'individual'">
+      <mat-label>Gender</mat-label>
+      <mat-select class="mat-light-blue" formControlName="gender_slug" tabindex="5">
+        <mat-option [value]="'male'">Male</mat-option>
+        <mat-option [value]="'female'">Female</mat-option>
+      </mat-select>
+      <button type="button" mat-button *ngIf="gender_slug.value && !gender_slug.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm('gender_slug')" style="transform: translateY(2px);">
+        <mat-icon class="mat-light-blue">close</mat-icon>
+      </button>
+    </mat-form-field>
+
+    <!-- Mat-Input -- Date of Birth -->
+    <mat-form-field class="w-100 mb-3" *ngIf="client_type_slug.value == 'individual'">
+      <mat-label>Date of Birth</mat-label>
+      <input class="text-muted" matInput [matDatepicker]="datebirth" formControlName="date_birth" [readonly]="true" tabindex="6">
+      <mat-datepicker-toggle matSuffix [for]="datebirth"></mat-datepicker-toggle>
+      <mat-datepicker #datebirth disabled="false"></mat-datepicker>
+    </mat-form-field>
+
+    <!-- Mat-Input -- Individual Job Title -->
+    <mat-form-field class="w-100 mb-3" *ngIf="client_type_slug.value == 'individual'">
+      <mat-label>Job Title</mat-label>
+      <input matInput type="text" placeholder="Type job title here..." formControlName="job_title" maxlength="128" tabindex="7" autocomplete="job_title">
+      <button type="button" mat-button *ngIf="job_title.value && !job_title.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm('job_title')">
+        <mat-icon class="mat-light-blue">close</mat-icon>
+      </button>
+    </mat-form-field>
+
+    <!-- Mat-Input -- Individual Company Name -->
+    <mat-form-field class="w-100 mb-3" *ngIf="client_type_slug.value == 'individual'">
+      <mat-label>Company Name</mat-label>
+      <input matInput type="text" placeholder="Type company name here..." formControlName="company_name" maxlength="128" tabindex="8" autocomplete="company_name">
+      <button type="button" mat-button *ngIf="company_name.value && !company_name.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm('company_name')">
+        <mat-icon class="mat-light-blue">close</mat-icon>
+      </button>
+    </mat-form-field>
+
+    <!-- Mat-Input -- Business UEN -->
+    <mat-form-field class="w-100 mb-3" *ngIf="client_type_slug.value == 'business'">
+      <mat-label>Business UEN</mat-label>
+      <input matInput type="text" placeholder="Type business unique entity number here..." formControlName="business_uen" maxlength="128" tabindex="9" autocomplete="business_uen">
+      <button type="button" mat-button *ngIf="business_uen.value && !business_uen.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm('business_uen')">
+        <mat-icon class="mat-light-blue">close</mat-icon>
+      </button>
+    </mat-form-field>
+
+  </form>
+
+  <alert type="danger" [dismissible]="false" *ngIf="exists && !new.value">
+    <div class="d-flex justify-content-between" style="margin: -5px -10px;">
+      <p class="mr-auto my-auto pl-2 overflow-ellipsis col-6 p-0 m-0">Client exists, create new record?</p>
+      <p class="bold m-0"><button class="fw-600 fs-12 text-danger" mat-button (click)="new.setValue(true)">CONTINUE</button></p>
+    </div>
+  </alert>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button [mat-dialog-close]="authForm.value" class="fs-12 fw-600 text-master-lt mr-auto" *ngIf="!processing">Cancel</button>
+  <button mat-stroked-button class="fs-12 fw-600 text-master-lt" type="reset" *ngIf="!processing" (click)="resetForm()">Reset Fields</button>
+  <button mat-flat-button color="primary" class="ml-2 fs-12 fw-600 btn-submit" tabindex="10" [disabled]="processing || authForm.invalid || (!new.value && exists)" type="submit" (click)="submitForm()">{{(processing) ? 'Processing' : 'Add Client'}}</button>
+</mat-dialog-actions>

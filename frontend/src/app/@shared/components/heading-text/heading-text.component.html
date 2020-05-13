@@ -1,0 +1,19 @@
+<!--
+ * @license
+ * Copyright TWISS.IO
+ * All Rights Reserved.
+ * Licensed under the MIT License.
+ -->
+
+<!-- Start Heading Text Component :: Paragraph -->
+<p [ngClass]="{'mb-0': !margin}" class="font-proxima">
+  <!-- Title -->
+  <span class="d-block fs-18 ls-18 fw-600 text-master mb-2">{{title}}</span>
+
+  <!-- Subtitle -->
+  <span class="d-block fs-14 ls-13 text-master-lt">{{subtitle}}</span>
+</p>
+<!-- End Heading Text Component :: Paragraph -->
+
+<!-- Horizontal Rule Break -->
+<hr class="my-2 w-75" *ngIf="divider">

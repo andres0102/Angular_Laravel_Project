@@ -1,0 +1,106 @@
+<!--
+ * @license
+ * Copyright TWISS.IO
+ * All Rights Reserved.
+ * Licensed under the MIT License.
+ -->
+
+<!-- Start Main Blue Gradient Area -->
+<div id="main" class="position-sticky" [ngClass]="{'notices-loaded' : notices_loaded}">
+  <div class="summary-type d-flex flex-column flex-lg-row justify-content-center btn-group pb-2">
+    <div class="d-flex mx-auto ml-lg-0 mb-2 text-left text-lg-center flex-column">
+      <span class="d-flex mx-auto mx-lg-0 font-proxima fs-24 ls-13 text-white text-center">Notice Board</span>
+      <span class="d-flex mx-auto mx-lg-0 fs-11 ls-15 font-montserrat text-muted text-center fw-500">Important Announcements you should know</span>
+    </div>
+  </div>
+
+  <div class="text-center fs-30 text-white justify-content-center align-self-center" [ngClass]="{'d-flex' : !notices_loaded, 'd-none': notices_loaded}">
+    <div class="align-self-center"><i class="fas fa-spinner-third faa-spin animated"></i></div>
+  </div>
+</div>
+
+<form [formGroup]="commentsForm" class="h-100 row">
+
+<div class="container-fluid animated bounceInUp" *ngIf="notices_loaded">
+  <div class="row hover-top align-items-start">
+    <div class="col-xl-8">
+      <!-- Start Nested Row -->
+      <div formArrayName="notice_list">
+          <!-- Start Main Component Area -->
+          <mat-card class="mat-elevation-z mb-5" *ngFor="let notice_control of notice_list.controls; let i = index;" [formGroupName]="i">
+
+            <!-- Start Material Card Content -->
+            <mat-card-header *ngIf="notice_uuid" class="no-inner-padding py-3 px-4 border-0">
+
+              <div class="profile-thumbnail-wrapper overflow-hidden stretched-link {{(!notice_control.value.notice.author.display_photo.original && !notice_control.value.notice.author.display_photo.thumbnail) ? 'rounded ' + (notice_control.value.notice.author.gender_slug || 'camera') : 'rounded-circle faa-tada animated-hover'}}">
+                <img src="{{ notice_control.value.notice.author.display_photo.original || '/assets/images/spacer.png' }}" width="35" height="35" alt="">
+              </div>
+              <div class="d-flex flex-column my-auto ml-3 pt-1">
+                <div class="text-truncate ls-15 fs-15 lh-15">{{notice_control.value.notice.author.name}}</div>
+                <div class="fs-10 lh-12 text-master-lt desc text-truncate">
+                  <span class="ls-18 lh-12 text-lowercase">posted {{notice_control.value.notice.created}}</span>
+                </div>
+              </div>
+            </mat-card-header>
+
+            <!-- Start Material Card Content -->
+            <mat-card-content class="no-inner-padding d-flex flex-column" [ngClass]="{'single': notice_uuid == notice_control.value.notice.uuid}">
+
+              <div *ngIf="notice_uuid != notice_control.value.notice.uuid" class="notice-title d-flex flex-row">
+                <i class="my-auto icon text-master-light fs-30 fas fa-envelope" *ngIf="!notice_control.value.notice.read"></i>
+                <i class="my-auto icon text-master-light fs-30 fas fa-envelope-open-text" *ngIf="notice_control.value.notice.read"></i>
+                <div class="ml-3 my-auto d-flex flex-column">
+                  <span class="fs-30 ls-13 fw-600 text-master">{{notice_control.value.notice.title}}</span>
+                  <span class="desc d-block fs-10 ls-13 lh-20 text-master-lt text-italic">posted {{ notice_control.value.notice.created }} by {{ notice_control.value.notice.author.name }}</span>
+                </div>
+              </div>
+
+              <ckeditor *ngIf="notice_uuid == notice_control.value.notice.uuid" class="notice-title" [editor]="Editor" [data]="notice_control.value.notice.title" (change)="onChange($event)" [disabled]="true"></ckeditor>
+              <ckeditor *ngIf="notice_uuid == notice_control.value.notice.uuid" [editor]="Editor" [data]="notice_control.value.notice.details" (change)="onChange($event)" [disabled]="true"></ckeditor>
+
+            </mat-card-content>
+            <!-- End Material Card Content -->
+
+            <mat-card-footer class="py-4">
+              <span class="d-flex my-auto profile-thumbnail-wrapper overflow-hidden {{ authService.user?.display_photo.original || authService.user?.display_photo.thumbnail
+                    ? 'rounded-circle faa-tada animated-hover' : 'rounded ' + authService.user?.personal.gender_slug }}">
+                <!-- Profile Photo of (User/Rep) if exist -->
+                <img *ngIf="authService.user?.display_photo.original || authService.user?.display_photo.thumbnail" retina
+                      src1x="{{ authService.user?.display_photo.thumbnail }}"
+                      src2x="{{ authService.user?.display_photo.original }}"
+                      width="35" height="35" alt="" />
+                <!-- Profile Photo of (User/Rep) does not exist -->
+                <img *ngIf="!(authService.user?.display_photo.original || authService.user?.display_photo.thumbnail)"
+                      src="/assets/images/spacer.png"
+                      width="35" height="35" alt="" />
+              </span>
+
+              <mat-form-field class="ml-3 mr-2 w-100">
+                <input matInput placeholder="Write a comment ..." name="comments" formControlName="comment" [readonly]="commentsProcessing[i] === true" (keydown.enter)="notice_list.controls[i].get('comment').value && submitComment(i)" maxlength="2000">
+                <mat-hint align="end">{{notice_list.controls[i].get('comment').value?.length || 0}} / 2000</mat-hint>
+                <button type="button" mat-button *ngIf="notice_list.controls[i].get('comment').value && commentsProcessing[i] !== true" matSuffix mat-icon-button aria-label="Clear" (click)="resetComment(i)" style="transform: translateY(2px);">
+                  <mat-icon class="mat-light-blue">close</mat-icon>
+                </button>
+              </mat-form-field>
+
+              <button [disabled]="!notice_list.controls[i].get('comment').value || commentsProcessing[i] === true" class="my-auto" type="button" mat-button mat-icon-button aria-label="Add Comment" (click)="submitComment(i)" [ngClass]="{'animated faa-float': notice_list.controls[i].get('comment').value && commentsProcessing[i] !== true}">
+                <i class="mx-auto fad fa-paper-plane text-primary fs-20" *ngIf="commentsProcessing[i] !== true"></i>
+                <!-- <i class="fad fa-paper-plane text-master-lt fs-20 animated faa-spin" *ngIf="commentsProcessing[i] === true"></i> -->
+                <mat-spinner class="mx-auto" *ngIf="commentsProcessing[i] === true" [strokeWidth]="3" [diameter]="20"></mat-spinner>
+              </button>
+
+            </mat-card-footer>
+
+          </mat-card>
+          <!-- End Main Database Area -->
+
+
+          <button mat-raised-button *ngIf="notices_current_page < notices_total_pages" (click)="getNotices()">Show More</button>
+
+      </div>
+      <!-- End Nested Row -->
+    </div>
+  </div>
+</div>
+
+</form>

@@ -1,0 +1,13 @@
+/**
+ * @license
+ * Copyright TWISS.IO
+ * All Rights Reserved.
+ * Licensed under the MIT License.
+ */
+@import '~src/assets/styles/variables';
+
+.pointer { cursor: pointer !important; }
+.link{
+  opacity: .7;
+  &:hover{ opacity: 1; }
+}

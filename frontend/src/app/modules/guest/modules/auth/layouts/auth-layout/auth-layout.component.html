@@ -1,0 +1,16 @@
+<!--
+ * @license
+ * Copyright TWISS.IO
+ * All Rights Reserved.
+ * Licensed under the MIT License.
+ -->
+
+<!-- Start Videogular/Background -->
+<vg-player class="position-fixed">
+  <video [vgMedia]="media" #media id="singleVideo" preload="auto" autoplay="true" playsinline [muted]="true" loop="true">
+    <source src="/assets/videos/video-bg.mp4" type="video/mp4">
+  </video>
+</vg-player>
+<!-- End Videogular/Background -->
+
+<router-outlet></router-outlet>

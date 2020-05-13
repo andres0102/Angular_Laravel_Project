@@ -1,0 +1,49 @@
+<mat-card class="mb-3 mat-elevation-z">
+  <mat-progress-bar mode="indeterminate" *ngIf="!notices_loaded"></mat-progress-bar>
+  <mat-card-header>
+    <mat-card-title>What's New</mat-card-title>
+    <mat-card-subtitle>Important Announcements you should know</mat-card-subtitle>
+    <div class="actions">
+      <!-- External Link :: Notices Page -->
+      <button class="btn shadow-none mr-2" [routerLink]="['/authenticated/general/notices']">
+        <i class="fas fa-external-link-alt"></i>
+      </button>
+      <!-- Refresh Data :: Notices -->
+      <button (click)="notices_loaded && getNotices()" class="btn shadow-none faa-parent animated-hover">
+        <i class="fas fa-sync-alt faa-spin" *ngIf="notices_loaded"></i>
+        <mat-spinner [diameter]="20" [strokeWidth]="3" *ngIf="!notices_loaded"></mat-spinner>
+      </button>
+    </div>
+  </mat-card-header>
+  <mat-card-content class="no-inner-padding" [ngClass]="{'bg-light': !notices_loaded}">
+    <div class="text-center fs-30 text-master-lt p-4 w-100" [ngClass]="{'d-flex' : !notices_loaded, 'd-none': notices_loaded}">
+      <i class="fas fa-spinner-third faa-spin animated m-auto"></i>
+    </div>
+    <table class="w-100 table table-sm table-borderless" *ngIf="notices_loaded">
+      <tbody>
+        <!--[ngClass]="{'highlight-blue': !notice.read, 'read': notice.read}"-->
+        <tr *ngFor="let notice of notices; let i = index" [attr.data-index]="i" class="animated lightSpeedIn pointer"
+           [routerLink]="['/authenticated/general/notices', notice.uuid]">
+          <td width="60" class="text-center">
+            <i class="icon text-master-light fs-25 fas fa-envelope" *ngIf="!notice.read"></i>
+            <i class="icon text-master-light fs-25 fas fa-envelope-open-text" *ngIf="notice.read"></i>
+          </td>
+          <td class="pl-3 pr-4 py-3" style="max-width: 0" [ngClass]="{'has-date': notice.start_date}">
+            <div class="title fs-16 ls-10 text-truncate">{{ notice.title }}</div>
+            <!-- <div class="desc d-block fs-12 ls-12 text-muted text-truncate" [innerHtml]="notice.details | safe: 'html'"></div> -->
+            <div class="desc d-block fs-10 ls-13 lh-20 text-master-lt text-italic">posted {{ notice.created }} by {{ notice.author.name }}</div>
+
+            <div class="floating-date text-right" *ngIf="notice.start_date">
+              <span class="day font-source-code">{{ notice.start_date | date:'dd' }}</span>
+              <span class="month text-uppercase pr-2">{{ notice.start_date | date:'MMMM' }}</span>
+            </div>
+            <!-- <div class="desc d-flex mt-2 text-muted">
+              <i class="fas fa-map-marker-alt fs-7 mr-2 lh-15"></i>
+              <span class="text-uppercase fs-10 ls-13">{{ notice.location }}</span>
+            </div> -->
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </mat-card-content>
+</mat-card>

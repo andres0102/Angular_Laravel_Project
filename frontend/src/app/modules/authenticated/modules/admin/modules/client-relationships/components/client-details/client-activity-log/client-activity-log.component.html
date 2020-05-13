@@ -1,0 +1,84 @@
+<!--
+ * @license
+ * Copyright TWISS.IO
+ * All Rights Reserved.
+ * Licensed under the MIT License.
+ -->
+
+<!-- Start Padded Container -->
+<div class="container-fluid animated bounceInUp">
+
+  <!-- Client does not have any Policies  -->
+  <access-denied class="mt-4" [title]="'This Client does not have any Logs yet.'" [link]="'../profile'" [linkText]="'Back to Client Particulars'" *ngIf="!logs"></access-denied>
+
+  <!-- Client has Policies :: Start Material Card -->
+  <!-- <mat-card class="mat-elevation-z" *ngIf="client.activities_count > 0"> -->
+
+    <!-- Start Material Card Content -->
+    <!-- <mat-card-content class="no-inner-padding flex-column"> -->
+
+
+  <div class="timeline-container top-circle" *ngIf="logs">
+    <section class="timeline" ngsRevealSet [ngsSelector]="'.timeline-block'">
+      <!-- Start Timeline Block -->
+      <div class="timeline-block" *ngIf="!dataLoaded">
+        <div class="timeline-point bg-white icon d-flex color-mat-blue">
+          <!-- <i class="fas fa-spinner-third faa-spin animated m-auto"></i> -->
+          <mat-progress-spinner class="m-auto" [color]="primary" [diameter]="25" [strokeWidth]="3" [mode]="'indeterminate'"></mat-progress-spinner>
+        </div>
+        <!-- timeline-point -->
+      </div>
+      <!-- End Timeline Block -->
+      <!-- Start Timeline Block -->
+      <div class="timeline-block" *ngFor="let log of logs">
+        <div class="timeline-point" [ngClass]="getStyle(log.event)">
+          <i [ngClass]="getIcon(log.event)"></i>
+        </div>
+        <!-- timeline-point -->
+        <div class="timeline-content">
+          <mat-card class="mat-elevation-z border border-white" [routerLink]="getLink(log.event)">
+            <mat-card-content class="no-inner-padding py-5 flex-column">
+              <div class="text-left fs-20 text-{{getStyle(log.event)}} fw-500 font-montserrat">{{log.title}}</div>
+              <div class="text-left font-proxima fs-12 text-uppercase text-master-lt desc" *ngIf="log.target_uuid"># {{log.target_uuid}}</div>
+            </mat-card-content>
+            <mat-card-footer class="px-3 py-2 mat-card-footer">
+              <div class="mat-card-footer-text text-left d-flex flex-row">
+                <div class="profile-thumbnail-wrapper overflow-hidden mr-3 {{(!log.user['dp_1x'] && !log.user['dp_2x']) ? 'rounded ' + log.user['gender'] : 'rounded-circle'}}" *ngIf="log.user else profile">
+                  <img src="{{ log.user['dp_2x'] || '/assets/images/spacer.png' }}" width="30" height="30" alt="">
+                </div>
+                <div>
+                  <mat-card-title class="text-master fs-12">{{(log.user) ? log.user.name : 'System Administrator'}}</mat-card-title>
+                  <mat-card-subtitle class="fs-8">{{log.created_at | amTimeAgo}}<span class="d-inline d-lg-none fs-8 mat-card-subtitle">, on {{log.created_at | amDateFormat:'MMMM Do, YYYY'}}</span></mat-card-subtitle>
+                </div>
+              </div>
+            </mat-card-footer>
+          </mat-card>
+          <div class="event-date flex-column d-none d-lg-flex">
+            <small class="fs-14 text-master fw-600" *ngIf="(log.created_at | amDateFormat:'HH:mm:ss') !== '00:00:00'">{{log.created_at | amDateFormat:'h:mm:ss a'}}</small>
+            <small class="{{((log.created_at | amDateFormat:'HH:mm:ss') === '00:00:00') ? 'fs-14 text-master fw-600' : 'fs-12 text-master-lt lh-10'}}">{{log.created_at | amDateFormat:'MMMM Do, YYYY'}}</small>
+          </div>
+        </div>
+        <!-- timeline-content -->
+      </div>
+      <!-- End Timeline Block -->
+    </section>
+    <!-- timeline -->
+  </div>
+
+
+
+
+    <!-- </mat-card-content> -->
+    <!-- End Material Card Content -->
+
+  <!-- </mat-card> -->
+  <!-- Client has Policies :: End Material Card -->
+
+
+</div>
+<!-- End Padded Container -->
+
+
+<ng-template #profile>
+  <img class="mr-3" retina src1x="/assets/logo/symbol.png" src2x="/assets/logo/symbol@2x.png" height="35" alt="LFA Symbol">
+</ng-template>

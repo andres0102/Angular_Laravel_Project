@@ -1,0 +1,238 @@
+<!--
+ * @license
+ * Copyright TWISS.IO
+ * All Rights Reserved.
+ * Licensed under the MIT License.
+ -->
+
+<!-- Start Padded Container -->
+<div class="main-container container-fluid animated bounceInUp">
+
+  <!-- Start Hover-Top Containers -->
+  <div class="align-items-start" [ngClass]="{'hover-top':!authService.user?.permissions?.includes(page_permission),'hover-top-high':authService.user?.permissions?.includes(page_permission)}">
+
+    <!-- Start Bootstrap Flex -->
+    <div class="d-flex flex-column flex-xl-row">
+
+      <!-- Start Main Database Area -->
+      <mat-card class="mat-elevation-z bg-transparent d-flex flex-column flex-grow-1">
+
+          <!-- Start Navigation Tabs -->
+          <nav mat-tab-nav-bar class="full-database">
+
+            <!-- Start Mat Tab :: Product Series -->
+            <a mat-tab-link [routerLink]="['/authenticated/associates/business/products-catalog']" [queryParams]="{series: null, f: null}" queryParamsHandling="merge" routerLinkActive #rla1="routerLinkActive" [active]="rla1.isActive" style="width: 305px; transition: .5s ease" [routerLinkActiveOptions]="{exact:true}" (click)="clearFilters()">
+              <div class="mat-tab-label-content">
+                <div class="d-inline-flex flex-row">
+                  <span class="mat-tab-icon"><i class="fad fa-list"></i></span>
+                  <div class="d-inline-flex flex-column ml-3 mat-titles">
+                    <span class="mat-tab-title align-self-start">All Product Series</span>
+                    <span class="mat-tab-subtitle align-self-start">{{(dataLoaded && products) ? products.length + ' Records' : 'Loading...'}}</span>
+                  </div>
+                </div>
+              </div>
+            </a>
+            <!-- End Mat Tab :: Product Series -->
+
+            <!-- Start Mat Tab :: Product Options -->
+            <a class="sub-category align-self-end px-3 mat-tab-link mat-tab-label-active" *ngIf="series && seriesSelected">
+              <div class="mat-tab-label-content h-100">
+                <div class="d-inline-flex flex-row">
+                  <!-- <span class="mat-tab-icon fs-20 lh-36"><i class="fad fa-edit"></i></span> -->
+                  <div class="profile-thumbnail-wrapper mr-2" style="width: 40px;">
+                    <img src="{{ series?.provider?.thumbnail_2x }}" width="40" height="40" alt="">
+                  </div>
+                  <div class="d-inline-flex flex-column ml-2 mat-titles">
+                    <span class="mat-tab-title align-self-start">{{series?.name}}</span>
+                    <span class="mat-tab-subtitle align-self-start">{{(dataLoaded && options) ? series?.provider?.name : 'Loading...'}}</span>
+                  </div>
+                  <span class="mat-tab-icon fs-18 lh-36 text-master-lt ml-4" (click)="clearSeries()"><i class="fal fa-times faa-tada"></i></span>
+                </div>
+              </div>
+            </a>
+            <!-- End Mat Tab :: Product Options -->
+
+          </nav>
+          <!-- End Navigation Tabs -->
+
+          <!-- Start Material Card Content -->
+          <mat-card-content class="no-inner-padding flex-column">
+
+              <!-- Start Series :: Table Filters -->
+              <div class="d-flex py-2 px-4 row datatable-form-fields" *ngIf="!series">
+                <div class="col-lg-6">
+                  <mat-form-field appearance="outline" class="mat-light-blue" [ngClass]="{'d-none': !dataLoaded}">
+                    <mat-icon matPrefix>filter_list</mat-icon>
+                    <mat-label>Filter by Provider Names</mat-label>
+                    <mat-select [(ngModel)]="providerSelected" panelClass="mat-selection-panel mat-light-blue" (selectionChange)="filterChange()">
+                      <mat-option [value]="''" class="show-all" *ngIf="dataLoaded && products">Show All Providers <span class="filter_count">({{providersFilterCount['all'] || 0}})</span></mat-option>
+                      <ng-container *ngFor="let provider of providers">
+                        <mat-option *ngIf="dataLoaded && products && providersFilterCount[provider.slug] > 0" [value]="provider.alias">{{provider.full_name}} <span class="filter_count">({{providersFilterCount[provider.slug] || 0}})</span></mat-option>
+                      </ng-container>
+                    </mat-select>
+                    <button type="button" mat-button *ngIf="providerSelected" matSuffix mat-icon-button aria-label="Clear" (click)="$event.stopPropagation(); providerSelected = ''; filterChange();" class="d-inline-block" style="transform: translateY(9px);">
+                      <mat-icon class="mat-light-blue">close</mat-icon>
+                    </button>
+                  </mat-form-field>
+                </div>
+                <div class="col-lg-6 text-right">
+                  <mat-form-field appearance="outline" [ngClass]="{'d-none': !dataLoaded, 'activated': searchActive || pageService.isMobile || pageService.isDesktopSmall}" class="mat-light-blue multiple auto-hide pointer" (click)="searchActive = true;">
+                    <mat-icon matPrefix>search</mat-icon>
+                    <mat-label>Search Product Series</mat-label>
+                    <input matInput #searchInput type="text" placeholder="Type anything here..." tabindex="1" [(ngModel)]="searchTerm" (input)="searchChange()" (blur)="searchChange(true)" (keyup.esc)="searchChange(true);$event.target.blur();" spellcheck="false" autocomplete="off">
+                    <button type="button" mat-button *ngIf="searchTerm" matSuffix mat-icon-button aria-label="Clear" (click)="searchTerm = null; searchChange();" class="d-inline-block">
+                      <mat-icon>close</mat-icon>
+                    </button>
+                  </mat-form-field>
+
+                  <button mat-stroked-button class="btn" (click)="getProducts(true)" tooltip="Refresh Database" container="body">
+                    <i class="far fa-sync-alt" *ngIf="dataLoaded"></i>
+                    <mat-spinner [diameter]="20" [strokeWidth]="3" *ngIf="!dataLoaded"></mat-spinner>
+                  </button>
+                </div>
+              </div>
+              <!-- End Series :: Table Filters -->
+
+
+              <!-- Progress Loader -->
+              <card-loader *ngIf="!dataLoaded"></card-loader>
+
+
+
+              <!-- Series :: Datatable Start -->
+              <ngx-datatable
+                #seriesDatatable
+                [rows]="products"
+                class="material w-100"
+                [ngStyle]="{'height': (getDatatableHeight(products, 60) + 105) + 'px'}"
+                [ngClass]="{'mobile': pageService.isMobile || pageService.isDesktopSmall}"
+                [columnMode]="'force'"
+                [headerHeight]="50"
+                [footerHeight]="50"
+                [scrollbarV]="true"
+                [scrollbarH]="true"
+                [reorderable]="false"
+                [rowHeight]="60"
+                [messages]="messages"
+                [rowClass]="seriesRowClass"
+                *ngIf="dataLoaded && products && !series"
+                [sorts]="[{ prop: 'name', dir: 'asc'}]"
+                >
+
+                <ngx-datatable-column name="Product Series Information" prop="name" [minWidth]="300" [draggable]="false" cellClass="position-relative">
+                  <ng-template ngx-datatable-cell-template let-row="row" let-value="value" let-rowIndex="rowIndex">
+                    <div class="d-flex">
+                      <div class="profile-thumbnail-wrapper mr-3" style="width: 40px;">
+                        <img src="{{ row.provider?.thumbnail_2x }}" width="40" height="40" alt="">
+                      </div>
+                      <div class="d-flex flex-column stretched-link pointer" (click)="seriesChange(row.slug, value, row.provider?.name, row.provider?.thumbnail_2x);">
+                        <div class="hover-padding text-truncate lh-18 mt-auto">{{value}}</div>
+                        <div class="hover-padding fs-9 ls-13 text-uppercase text-master-lt desc text-truncate lh-18 mb-auto">{{row.provider?.name}}</div>
+                      </div>
+                    </div>
+                  </ng-template>
+                </ngx-datatable-column>
+                <ngx-datatable-column name="Options" prop="options_count" headerClass="text-center" [width]="100" [resizeable]="false" [draggable]="false" [canAutoResize]="false">
+                  <ng-template ngx-datatable-cell-template let-row="row" let-value="value">
+                    <div class="text-center">{{value}}</div>
+                  </ng-template>
+                </ngx-datatable-column>
+                <ngx-datatable-column name="Riders" prop="riders_count" headerClass="text-center" [width]="100" [resizeable]="false" [draggable]="false" [canAutoResize]="false">
+                  <ng-template ngx-datatable-cell-template let-row="row" let-value="value">
+                    <div class="text-center">{{value}}</div>
+                  </ng-template>
+                </ngx-datatable-column>
+                <ngx-datatable-column [width]="75" [resizeable]="false" [draggable]="false" [canAutoResize]="false">
+                  <ng-template ngx-datatable-cell-template let-row="row" let-value="value">
+                    <div class="text-center">
+                      <a mat-button color="primary" class="action-buttons" matTooltip="External Reference" [disabled]="!row.reference_url" href="{{row.reference_url}}" target="_blank"><i class="far fa-external-link"></i></a>
+                    </div>
+                  </ng-template>
+                </ngx-datatable-column>
+                <ngx-datatable-column [width]="100" [resizeable]="false" [draggable]="false" [canAutoResize]="false">
+                  <ng-template ngx-datatable-cell-template let-row="row" let-value="value">
+                    <div class="text-center">
+                      <a mat-button color="primary" class="action-buttons" matTooltip="Download Brochure" [disabled]="!row.brochure" href="{{row.brochure}}" download target="_blank"><i class="far fa-cloud-download"></i></a>
+                    </div>
+                  </ng-template>
+                </ngx-datatable-column>
+              </ngx-datatable>
+              <!-- Series :: Datatable End -->
+
+
+
+              <!-- Options :: Datatable Start -->
+              <ngx-datatable
+                [rows]="options"
+                class="material w-100 product-options"
+                [ngStyle]="{'height': (getDatatableHeight(options, 60) + 105) + 'px'}"
+                [ngClass]="{'mobile': pageService.isMobile || pageService.isDesktopSmall}"
+                [columnMode]="'force'"
+                [headerHeight]="50"
+                [footerHeight]="50"
+                [scrollbarV]="true"
+                [scrollbarH]="true"
+                [reorderable]="false"
+                [rowHeight]="60"
+                [messages]="messages"
+                [rowClass]="optionsRowClass"
+                *ngIf="dataLoaded && series"
+                [sorts]="[{ prop: 'date_end', dir: 'desc'},{ prop: 'name', dir: 'asc'}]"
+                >
+
+                <ngx-datatable-column name="Product Option Information" prop="name" [minWidth]="300" [draggable]="false" cellClass="position-relative">
+                  <ng-template ngx-datatable-cell-template let-row="row" let-value="value">
+                    <div class="d-flex">
+                      <div class="profile-thumbnail-wrapper mr-3" style="width: 40px;">
+                        <img src="{{ series.provider?.thumbnail_2x }}" width="40" height="40" alt="">
+                      </div>
+                      <div class="d-flex flex-column">
+                        <div class="hover-padding text-truncate lh-18 mt-auto">{{value}}</div>
+                        <div class="hover-padding fs-9 ls-13 text-uppercase text-muted desc text-truncate lh-18 mb-auto">{{series.provider?.name}}</div>
+                      </div>
+                    </div>
+                  </ng-template>
+                </ngx-datatable-column>
+                <ngx-datatable-column name="Premium Type" prop="premium_type" headerClass="text-center" [width]="150" [resizeable]="false" [draggable]="false" [canAutoResize]="false">
+                  <ng-template ngx-datatable-cell-template let-row="row" let-value="value">
+                    <div class="text-center">{{(value | uppercase) || "-"}}</div>
+                    <div class="text-center hover-padding fs-9 ls-13 text-uppercase text-master-lt desc lh-18 mb-auto" *ngIf="value">PREMIUMS</div>
+                  </ng-template>
+                </ngx-datatable-column>
+                <ngx-datatable-column name="Participating" prop="participating" headerClass="text-center" [width]="150" [resizeable]="false" [draggable]="false" [canAutoResize]="false">
+                  <ng-template ngx-datatable-cell-template let-row="row" let-value="value">
+                    <div class="text-center">{{(value) ? 'PAR' : 'NON-PAR'}}</div>
+                  </ng-template>
+                </ngx-datatable-column>
+                <ngx-datatable-column name="Riders" prop="riders_count" headerClass="text-center" [width]="150" [resizeable]="false" [draggable]="false" [canAutoResize]="false">
+                  <ng-template ngx-datatable-cell-template let-row="row" let-value="value">
+                    <div class="text-center">{{value || "-"}}</div>
+                  </ng-template>
+                </ngx-datatable-column>
+                <ngx-datatable-column name="Date Start" prop="date_start" headerClass="text-center" [width]="150" [resizeable]="false" [draggable]="false" [canAutoResize]="false">
+                  <ng-template ngx-datatable-cell-template let-row="row" let-value="value">
+                    <div class="text-center">{{value}}</div>
+                  </ng-template>
+                </ngx-datatable-column>
+                <ngx-datatable-column name="Date End" prop="date_end" headerClass="text-center" [width]="150" [resizeable]="false" [draggable]="false" [canAutoResize]="false">
+                  <ng-template ngx-datatable-cell-template let-row="row" let-value="value">
+                    <div class="text-center">{{(value == '2100-12-31') ? '-' : value}}</div>
+                  </ng-template>
+                </ngx-datatable-column>
+              </ngx-datatable>
+              <!-- Series :: Datatable End -->
+
+          </mat-card-content>
+          <!-- End Material Card Content -->
+
+      </mat-card>
+      <!-- End Main Database Area -->
+
+    </div>
+    <!-- End Bootstrap Flex -->
+
+  </div>
+  <!-- End Hover-Top Containers -->
+
+</div>
+<!-- End Padded Container -->

@@ -1,0 +1,44 @@
+/**
+ * @license
+ * Copyright TWISS.IO
+ * All Rights Reserved.
+ * Licensed under the MIT License.
+ */
+
+@import '~src/assets/styles/variables';
+
+:host { width: 100%; }
+
+table thead {
+  background: #E7E7FF;
+}
+
+@media (min-width: 992px) {
+  .res-width { width: 100px; }
+  .provider-info {
+    width: 400px;
+    border-right: 1px solid;
+  }
+}
+
+@media (max-width: 991px) {
+  .res-width { width: 150px; }
+  .provider-info {
+    border-bottom: 1px solid;
+  }
+}
+
+.id-image {
+  border: 4px dashed #E0E0FF;
+  border-radius: 10px;
+}
+
+.loading {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 100;
+  background: rgba(255,255,255,0.75);
+}

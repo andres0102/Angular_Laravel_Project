@@ -1,0 +1,465 @@
+<!--
+ * @license
+ * Copyright TWISS.IO
+ * All Rights Reserved.
+ * Licensed under the MIT License.
+ -->
+
+<!-- Main Blue Gradient Area -->
+<div
+  id="main"
+  [ngClass]="{
+    'summary-chart-loaded': summary_chart_loaded,
+    'summary-chart-hidden': summary_chart_hidden
+  }"
+>
+  <div
+    class="summary-type d-flex flex-column flex-lg-row justify-content-center btn-group pb-2"
+  >
+    <div
+      class="d-flex mx-auto ml-lg-0 mb-2 text-left text-lg-center flex-column"
+    >
+      <span
+        class="d-flex mx-auto mx-lg-0 font-proxima fs-24 ls-13 text-white text-center"
+        >FA Representatives Overview</span
+      >
+      <span
+        class="d-flex mx-auto mx-lg-0 fs-11 ls-15 font-montserrat text-muted text-center fw-500"
+        [ngClass]="{ 'text-danger': summary_chart_hidden }"
+      >
+        {{
+          summary_chart_hidden
+            ? "Interactive Chart Unavailable"
+            : summary_chart_title
+        }}
+      </span>
+    </div>
+
+    <mat-button-toggle-group
+      class="ml-auto mr-auto mr-lg-0 align-self-center mb-2 my-lg-auto"
+      [(ngModel)]="selected_range"
+      (change)="changeRange($event.value)"
+    >
+      <mat-button-toggle value="month" aria-label="Month-to-Date">{{
+        summary_chart_latest_month_title || "Latest Month"
+      }}</mat-button-toggle>
+      <mat-button-toggle value="year" aria-label="Year-to-Date"
+        >{{
+          selected_range == "year" ? summary_data["year"] : ""
+        }}
+        Year-to-Date</mat-button-toggle
+      >
+      <!-- <mat-button-toggle value="all-time" aria-label="All">All</mat-button-toggle> -->
+    </mat-button-toggle-group>
+  </div>
+
+  <div
+    class="chart-container"
+    *ngIf="summary_chart_initialized && !summary_chart_hidden"
+    (mousemove)="moveTooltip($event)"
+  >
+    <button
+      mat-flat-button
+      class="chart-arrow left d-flex"
+      [disabled]="!summary_chart_loaded || summary_data['earliest']"
+      (click)="summary_chart_loaded && getSummary('previous')"
+    >
+      <i class="fal fa-chevron-left my-auto"></i>
+    </button>
+    <ngx-chartjs
+      #chart
+      type="bar"
+      [data]="summary_chart_data"
+      [options]="summary_chart_options"
+    ></ngx-chartjs>
+    <button
+      mat-flat-button
+      class="chart-arrow right d-flex"
+      [disabled]="!summary_chart_loaded || summary_data['latest']"
+      (click)="summary_chart_loaded && getSummary('next')"
+    >
+      <i class="fal fa-chevron-right my-auto"></i>
+    </button>
+  </div>
+
+  <div
+    class="text-center fs-30 text-white justify-content-center align-self-center"
+    [ngClass]="{
+      'd-flex': !summary_chart_loaded || !summary_chart_initialized,
+      'd-none': summary_chart_loaded && summary_chart_initialized
+    }"
+    style="height: calc(100% - 70px);"
+  >
+    <div class="align-self-center">
+      <i class="fas fa-spinner-third faa-spin animated"></i>
+    </div>
+  </div>
+</div>
+
+<div class="container-fluid animated bounceInUp">
+  <div class="row hover-top align-items-start">
+    <div class="col-xl-6">
+      <!-- Start Nested Row -->
+      <div class="row">
+        <!--
+          * Whats New Widget Section *
+        -->
+        <div class="col-12">
+          <app-whats-new></app-whats-new>
+        </div>
+
+        <div class="col-12 col-md-4">
+          <mat-card
+            class="hover-expand mb-3 border border-white"
+            [routerLink]="['/authenticated/associates/relationships/clients']"
+            style="
+              background: linear-gradient(
+                -30deg,
+                rgba(255, 193, 6, 0.25) -40%,
+                white 100%
+              );
+            "
+          >
+            <mat-card-content class="no-inner-padding mt-3 mb-0">
+              <div class="text-center fs-50 text-warning px-4">
+                <!-- <i class="fas fa-spinner-third faa-spin animated"></i> -->
+                {{ summary_data["clients_count"] || 0 }}
+              </div>
+            </mat-card-content>
+            <mat-card-footer class="pt-0">
+              <div class="mat-card-footer-text">
+                <mat-card-title class="text-master">Clients</mat-card-title>
+                <mat-card-subtitle
+                  >View Clients <i class="far fa-long-arrow-right"></i
+                ></mat-card-subtitle>
+              </div>
+            </mat-card-footer>
+          </mat-card>
+        </div>
+
+        <div class="col-12 col-md-4">
+          <mat-card
+            class="hover-expand mb-3 border border-white"
+            [routerLink]="[
+              '/authenticated/associates/business/case-submissions'
+            ]"
+            style="
+              background: linear-gradient(
+                -30deg,
+                rgba(39, 167, 69, 0.25) -40%,
+                white 100%
+              );
+            "
+          >
+            <mat-card-content class="no-inner-padding mt-3 mb-0">
+              <div class="text-center fs-50 text-success px-4">
+                <!-- <i class="fas fa-spinner-third faa-spin animated"></i> -->
+                {{ summary_data["submissions_count"] || 0 }}
+              </div>
+            </mat-card-content>
+            <mat-card-footer class="pt-0">
+              <div class="mat-card-footer-text">
+                <mat-card-title class="text-master">Submissions</mat-card-title>
+                <mat-card-subtitle
+                  >View Case Submissions <i class="far fa-long-arrow-right"></i
+                ></mat-card-subtitle>
+              </div>
+            </mat-card-footer>
+          </mat-card>
+        </div>
+
+        <div class="col-12 col-md-4">
+          <mat-card
+            class="hover-expand mb-3 border border-white"
+            [routerLink]="[
+              '/authenticated/associates/business/client-policies'
+            ]"
+            style="
+              background: linear-gradient(
+                -30deg,
+                rgba(23, 162, 184, 0.25) -40%,
+                white 100%
+              );
+            "
+          >
+            <mat-card-content class="no-inner-padding mt-3 mb-0">
+              <div class="text-center fs-50 text-info px-4">
+                <!-- <i class="fas fa-spinner-third faa-spin animated"></i> -->
+                {{ summary_data["policies_count"] || 0 }}
+              </div>
+            </mat-card-content>
+            <mat-card-footer class="pt-0">
+              <div class="mat-card-footer-text">
+                <mat-card-title class="text-master">Policies</mat-card-title>
+                <mat-card-subtitle
+                  >View Client Policies <i class="far fa-long-arrow-right"></i
+                ></mat-card-subtitle>
+              </div>
+            </mat-card-footer>
+          </mat-card>
+        </div>
+
+        <!-- <div class="col-12 col-sm-6" *ngIf="selected_role && (haveAccess('fa-representative') || haveAccess('team') || haveAccess('organisation'))">
+          <mat-card class="mb-3 mat-elevation-z">
+            <mat-card-header>
+              <mat-card-title>Case Submissions</mat-card-title>
+              <mat-card-subtitle>Breakdown by Month</mat-card-subtitle>
+            </mat-card-header>
+            <mat-card-content class="no-inner-padding">
+              <div class="text-center fs-30 text-master-lt p-4">
+                <i class="fas fa-spinner-third faa-spin animated"></i>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div> -->
+
+        <!-- <div class="col-12">
+          <mat-card class="mb-3 provider_chart mat-elevation-z">
+            <mat-progress-bar mode="indeterminate" *ngIf="!provider_chart_loaded"></mat-progress-bar>
+            <mat-card-header>
+              <mat-card-title>What's New</mat-card-title>
+              <mat-card-subtitle>Important Announcements you should know</mat-card-subtitle>
+              <div class="actions">
+                <button (click)="provider_chart_loaded && getProviderBreakdown(selected_role)" class="btn shadow-none faa-parent animated-hover">
+                  <i class="fas fa-sync-alt faa-spin" *ngIf="provider_chart_loaded"></i>
+                  <mat-spinner [diameter]="20" [strokeWidth]="3" *ngIf="!provider_chart_loaded"></mat-spinner>
+                </button>
+              </div>
+            </mat-card-header>
+            <mat-card-content [ngClass]="{'bg-light': !provider_chart_loaded}">
+              <div class="text-center fs-30 text-master-lt p-4 w-100" [ngClass]="{'d-flex' : !provider_chart_loaded, 'd-none': provider_chart_loaded}">
+                <i class="fas fa-spinner-third faa-spin animated m-auto"></i>
+              </div>
+              <div class="chart-container w-100" *ngIf="provider_chart_loaded && provider_chart_visible">
+                <ngx-chartjs #chartProvider type="doughnut" [data]="provider_chart_data" [options]="provider_chart_options" [legend]="provider_chart_legend" [redraw]="true"></ngx-chartjs>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div> -->
+        <!-- <div class="col-12 col-md-6">
+          <mat-card class="mb-3 mat-elevation-z">
+            <mat-card-header>
+              <mat-card-title>Important Dates</mat-card-title>
+              <mat-card-subtitle>For Upcoming Week</mat-card-subtitle>
+            </mat-card-header>
+            <mat-card-content class="no-inner-padding">
+              <mat-calendar #calendar></mat-calendar>
+            </mat-card-content>
+          </mat-card>
+        </div> -->
+        <!-- <div class="col-12 col-md-6">
+          <mat-card class="mb-3 mat-elevation-z">
+            <mat-card-header>
+              <mat-card-title>Pending Tasks</mat-card-title>
+              <mat-card-subtitle>For Upcoming Week</mat-card-subtitle>
+            </mat-card-header>
+            <mat-card-content class="no-inner-padding">
+              <div class="text-center fs-30 text-master-lt p-4">
+                <i class="fas fa-spinner-third faa-spin animated"></i>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div> -->
+      </div>
+      <!-- End Nested Row -->
+    </div>
+    <div class="col-12 col-xl-6">
+      <mat-card class="mb-3 leaderboard mat-elevation-z">
+        <mat-progress-bar
+          mode="indeterminate"
+          *ngIf="!leaderboard_loaded"
+        ></mat-progress-bar>
+        <mat-card-header>
+          <mat-card-title>{{ leaderboard_title }}</mat-card-title>
+          <mat-card-subtitle
+            >By First Year Commissions
+            <!-- {{ leaderboard_desc }} --></mat-card-subtitle
+          >
+          <div class="actions dropdown" dropdown>
+            <!-- <button dropdownToggle *ngIf="leaderboard_loaded" class="btn shadow-none">
+              <i class="far fa-ellipsis-h"></i>
+            </button> -->
+            <button
+              (click)="leaderboard_loaded && getSummary('previous')"
+              class="btn shadow-none mr-2"
+              *ngIf="leaderboard_loaded"
+              [disabled]="!leaderboard_loaded || summary_data['earliest']"
+            >
+              <i class="fas fa-chevron-left"></i>
+            </button>
+            <button
+              (click)="leaderboard_loaded && getSummary('next')"
+              class="btn shadow-none mr-2"
+              *ngIf="leaderboard_loaded"
+              [disabled]="!leaderboard_loaded || summary_data['latest']"
+            >
+              <i class="fas fa-chevron-right"></i>
+            </button>
+            <button
+              (click)="leaderboard_loaded && getLeaderboard()"
+              class="btn shadow-none faa-parent animated-hover"
+            >
+              <i
+                class="fas fa-sync-alt faa-spin"
+                *ngIf="leaderboard_loaded"
+              ></i>
+              <mat-spinner
+                [diameter]="20"
+                [strokeWidth]="3"
+                *ngIf="!leaderboard_loaded"
+              ></mat-spinner>
+            </button>
+            <div
+              class="dropdown-menu dropdown-menu-right profile-dropdown font-proxima"
+              *dropdownMenu
+              role="menu"
+            >
+              <a
+                href="javascript:void(0)"
+                class="d-flex dropdown-item ls-10 fs-14 lh-20"
+              >
+                <i class="fs-18 lh-20 fal fa-funnel-dollar"></i>By First Year
+                Commissions
+              </a>
+              <a
+                href="javascript:void(0)"
+                class="d-flex dropdown-item ls-10 fs-14 lh-20"
+              >
+                <i class="fs-18 lh-20 fal fa-filter"></i>By Case Count
+              </a>
+            </div>
+          </div>
+        </mat-card-header>
+        <mat-card-content
+          class="no-inner-padding"
+          [ngClass]="{ 'bg-light': !leaderboard_loaded }"
+        >
+          <div
+            class="text-center fs-30 text-master-lt p-4 w-100"
+            [ngClass]="{
+              'd-block': !leaderboard_loaded,
+              'd-none': leaderboard_loaded
+            }"
+          >
+            <i class="fas fa-spinner-third faa-spin animated"></i>
+          </div>
+          <table
+            class="w-100 table table-sm table-borderless leaderboard"
+            *ngIf="leaderboard_loaded"
+          >
+            <tbody>
+              <tr
+                *ngFor="let rep of leaderboard; let i = index"
+                [attr.data-index]="i"
+                class="animated lightSpeedIn position-relative"
+              >
+                <td width="70">
+                  <div class="flip animated">
+                    <div class="front">
+                      <div
+                        class="profile-thumbnail-wrapper overflow-hidden {{
+                          !rep['associate']['display_photo']['original'] &&
+                          !rep['associate']['display_photo']['thumbnail']
+                            ? 'rounded ' + rep['associate']['gender_slug']
+                            : 'rounded-circle faa-tada animated-hover'
+                        }}"
+                      >
+                        <img
+                          retina
+                          src1x="{{
+                            rep['associate']['display_photo']['thumbnail'] ||
+                              '/assets/images/spacer.png'
+                          }}"
+                          src2x="{{
+                            rep['associate']['display_photo']['original'] ||
+                              '/assets/images/spacer.png'
+                          }}"
+                          width="40"
+                          height="40"
+                          alt=""
+                        />
+                      </div>
+                    </div>
+                    <div class="back">
+                      <span class="rank" *ngIf="i > 2"
+                        ><i class="fab fa-slack-hash"></i> {{ i + 1 }}</span
+                      >
+                      <div class="medal" *ngIf="i <= 2">
+                        <div
+                          class="hexagon hexagon-with-border"
+                          [ngClass]="{
+                            gold: i == 0,
+                            silver: i == 1,
+                            bronze: i == 2
+                          }"
+                        >
+                          <div class="hexagon-shape">
+                            <div class="hexagon-shape-inner">
+                              <div class="hexagon-shape-inner-2"></div>
+                            </div>
+                          </div>
+                          <div class="hexagon-shape content-panel">
+                            <div class="hexagon-shape-inner">
+                              <div class="hexagon-shape-inner-2"></div>
+                            </div>
+                          </div>
+                          <div class="hexagon-content">
+                            <div class="content-title">
+                              <i class="fas fa-trophy"></i>
+                            </div>
+                            <div class="content-sub">{{ i + 1 }}</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+                <td style="max-width: 0;">
+                  <div class="title ls-10 text-truncate">
+                    {{ rep["associate"]["name"] }}
+                  </div>
+                  <div
+                    class="d-block fs-9 ls-13 text-uppercase text-muted desc text-truncate"
+                  >
+                    {{ rep["associate"]["designation"] }}
+                  </div>
+                  <!-- <button mat-mini-fab color="primary" class="add-friend"><i class="fas fa-plus"></i> <span>Add Friend</span></button> -->
+                </td>
+                <td width="75" class="text-center">
+                  <div class="title ls-10 text-truncate">
+                    {{ rep["count"] || 0 }}
+                  </div>
+                  <div
+                    class="d-block fs-9 ls-13 text-uppercase text-muted desc text-truncate"
+                  >
+                    Cases
+                  </div>
+                </td>
+                <td width="150" class="text-center">
+                  <div class="title ls-10 text-truncate">
+                    {{ rep["ape"] || 0 | currency }}
+                  </div>
+                  <div
+                    class="d-block fs-9 ls-13 text-uppercase text-muted desc text-truncate"
+                  >
+                    Submission APE
+                  </div>
+                </td>
+                <td width="150" class="text-center">
+                  <div class="title ls-10 text-truncate">
+                    {{ rep["fyc"] || 0 | currency }}
+                  </div>
+                  <div
+                    class="d-block fs-9 ls-13 text-uppercase text-muted desc text-truncate"
+                  >
+                    Total FYC
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+</div>

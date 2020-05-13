@@ -1,0 +1,47 @@
+.auth-box {
+  position: relative;
+  background: linear-gradient(-30deg, rgba(132, 138, 183, 0.9) -40%, white 100%);
+  box-shadow: 5px 10px 25px rgba(0,0,0,.5);
+  overflow: hidden;
+  margin: 0;
+  border-radius: 8px;
+
+  h1 { margin-left: -5px; font-size: 3rem !important;}
+
+  svg {
+    position: absolute;
+    top: 20%;
+    left: 0;
+    height: 91%;
+    width: 100%;
+    z-index: -1;
+    opacity: .1;
+    fill: rgb(132, 138, 183);
+  }
+
+  form {
+    margin-top: 30px;
+    mat-form-field { margin-bottom: 25px; }
+  }
+
+  a.login-button {
+    font-size: 13px;
+    letter-spacing: 0.15em;
+    padding: .3em 1.5em;
+    color: #888888;
+    &:hover { color: #444444; }
+  }
+}
+
+p, p * {
+  color: rgba(0, 0, 0, 0.6);
+  line-height: 15px !important;
+  font-size: 10px !important;
+  letter-spacing: 0.15em !important;
+  a { line-height: 20px !important; }
+  a:hover {
+    color: rgba(0, 0, 0, 0.8);
+    text-decoration: underline;
+    cursor: pointer;
+  }
+}

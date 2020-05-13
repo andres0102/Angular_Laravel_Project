@@ -1,0 +1,1409 @@
+<!--
+ * @license
+ * Copyright TWISS.IO
+ * All Rights Reserved.
+ * Licensed under the MIT License.
+ -->
+
+<!-- Progress Loader -->
+
+<div class="mbs-header px-4">
+
+  <div class="d-flex flex-column">
+    <h4 class="my-auto mb-0 fw-500 ls-13 color-mat-blue">{{(is_update) ? 'Update' : 'New'}} Submission Case</h4>
+    <!-- <span class="text-uppercase fw-600 fs-10 ls-15 text-master-lt mb-auto">#{{submission_data.uuid}}</span> -->
+  </div>
+
+  <!-- Start Close Button -->
+  <a class="d-flex back-button ml-auto my-auto text-master-lt position-relative" (click)="mbsRef.dismiss()">
+    <span class="faa-parent animated-hover stretched-link">
+      <i class="fal fa-times faa-tada fs-30"></i>
+    </span>
+  </a>
+  <!-- End Close Button -->
+
+</div>
+
+<div class="mbs-content px-4" *ngIf="selectionsLoaded | async as loaded; else loading">
+
+  <mat-horizontal-stepper [linear]="true" #stepper class="font-proxima d-flex flex-column">
+
+    <mat-step label="Case Summary" state="business" [stepControl]="caseDetails_form">
+      <form [formGroup]="caseDetails_form" class="h-100 row">
+        <div class="d-flex h-100 flex-column mx-auto col-lg-6">
+
+          <mat-form-field class="w-100 mb-3">
+            <mat-label>Date of Submission</mat-label>
+            <input class="text-muted" matInput [matDatepicker]="datesubmission" tabindex="1" formControlName="date_submission" [readonly]="true" required>
+            <mat-datepicker-toggle matSuffix [for]="datesubmission"></mat-datepicker-toggle>
+            <mat-datepicker #datesubmission disabled="false"></mat-datepicker>
+          </mat-form-field>
+
+          <!-- Mat-Input -- Submission Category -->
+          <mat-form-field class="w-100 mb-3">
+            <mat-label>Select Submission Category</mat-label>
+            <mat-select class="mat-light-blue" formControlName="submission_cat_slug" tabindex="2" (selectionChange)="submissionCatChanged($event)" [required]="true">
+              <mat-option *ngFor="let obj of select_submission_category" [value]="obj.slug">{{obj.title}}</mat-option>
+            </mat-select>
+            <mat-hint align="start" *ngIf="!submission_cat_slug">Click to select a Submission Category...</mat-hint>
+            <mat-error *ngIf="submission_cat_slug.invalid">Submission Category is required.</mat-error>
+          </mat-form-field>
+
+        </div>
+      </form>
+    </mat-step>
+
+    <mat-step label="Define Policy Details" state="folder" [stepControl]="policy_insurance_form" *ngIf="submission_cat_slug.value == 'insurance'">
+      <form [formGroup]="policy_insurance_form" class="h-100 row">
+        <div class="d-flex h-100 flex-column mx-auto col-lg-6 mb-5">
+
+              <!-- Heading Text Component -->
+              <heading-text [title]="'Policy Details'"></heading-text>
+
+              <!-- Mat-Input -- Providers -->
+              <mat-form-field class="w-100 mb-3">
+                <mat-label>Select Provider</mat-label>
+                <mat-select class="mat-light-blue" formControlName="provider_slug" tabindex="3" (selectionChange)="insurance_providerChanged($event)" [required]="true">
+                  <mat-option *ngFor="let obj of select_providers[submission_cat_slug.value] | sortBy:'asc':'full_name'" [value]="obj.slug">{{obj.full_name}}</mat-option>
+                </mat-select>
+                <mat-hint align="start" *ngIf="!insurance_provider_slug.value">Click to select a Provider Name...</mat-hint>
+                <mat-error *ngIf="insurance_provider_slug.invalid">Provider is required.</mat-error>
+              </mat-form-field>
+
+              <!-- Mat-Autocomplete -- Select Product -->
+              <mat-form-field class="w-100 mb-3" *ngIf="insurance_provider_slug.value">
+                <input #insuranceOptionInput matInput class="text-master" placeholder="Select a Product Option" aria-label="Select a Product Option" [matAutocomplete]="optionlist" formControlName="product_option" (input)="fuseResults()" (blur)="blurOption()" [readonly]="insurance_optionSelected" required tabindex="4">
+                <mat-hint align="start" *ngIf="!insurance_optionSelected">Start typing to search for Products...</mat-hint>
+                <mat-hint align="start" *ngIf="insurance_optionSelected && !insurance_optionSelected_old">{{select_riders_all[insurance_product_option_uuid.value].length}} different riders available.</mat-hint>
+                <mat-hint align="start" *ngIf="insurance_optionSelected_old" class="text-danger">Selected product is unavailable now.</mat-hint>
+                <button type="button" mat-button *ngIf="insurance_optionSelected && insurance_product_option.value && !insurance_product_option.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_policy_insurance_form('product_option');">
+                  <mat-icon>close</mat-icon>
+                </button>
+                <mat-error *ngIf="(insurance_product_option.touched || insurance_product_option.dirty) && insurance_product_option.invalid">Please select a valid Product Option.</mat-error>
+                <mat-autocomplete #optionlist="matAutocomplete" [displayWith]="displayFn" (optionSelected)="insurance_processOption();">
+                  <mat-option *ngFor="let select_option of insurance_options" [value]="select_option">
+                    <div class="d-flex flex-column my-auto">
+                      <div class="fs-14 lh-21">{{select_option.name}}</div>
+                    </div>
+                  </mat-option>
+                </mat-autocomplete>
+              </mat-form-field>
+
+            <div class="w-100" *ngIf="insurance_optionSelected">
+              <!-- Mat-Input -- Submission Mode -->
+              <mat-form-field class="w-100 mb-3">
+                <mat-label>Select Life Assured Type</mat-label>
+                <mat-select class="mat-light-blue" formControlName="life_assured_type" tabindex="5" [required]="true" (selectionChange)="insurance_lifeAssuredTypeChanged($event)">
+                  <mat-option [value]="'client'">Life Assured is Policy Holder.</mat-option>
+                  <mat-option [value]="'individual'">Life Assured is a separate individual.</mat-option>
+                  <mat-option [value]="'na'">There is no Life Assured for this policy.</mat-option>
+                </mat-select>
+                <mat-hint align="start" *ngIf="!insurance_life_assured_type.value">Click to select life assured type...</mat-hint>
+                <mat-error *ngIf="insurance_life_assured_type.invalid">Life Assured Type is required.</mat-error>
+              </mat-form-field>
+
+              <div class="row">
+                <div class="col-6">
+                  <!-- Mat-Input -- Submission Mode -->
+                  <mat-form-field class="w-100 mb-3">
+                    <mat-label>Select Submission Mode</mat-label>
+                    <mat-select class="mat-light-blue" formControlName="submission_mode" tabindex="6" [required]="true">
+                      <mat-option [value]="'online'">Online</mat-option>
+                      <mat-option [value]="'hard-copy'">Hard-Copy</mat-option>
+                    </mat-select>
+                <mat-hint align="start" *ngIf="!insurance_submission_mode.value">Click to select Submission Mode...</mat-hint>
+                    <mat-error *ngIf="insurance_submission_mode.invalid">Submission Mode is required.</mat-error>
+                  </mat-form-field>
+                </div>
+                <div class="col-6">
+                  <!-- Mat-Input -- Payment Mode -->
+                  <mat-form-field class="w-100 mb-3">
+                    <mat-label>Select Payment Mode</mat-label>
+                    <mat-select class="mat-light-blue" formControlName="payment_mode_slug" tabindex="7" [required]="true">
+                      <mat-option *ngFor="let obj of select_payment_mode" [value]="obj.slug">{{obj.title}}</mat-option>
+                    </mat-select>
+                <mat-hint align="start" *ngIf="!insurance_payment_mode_slug.value">Click to select Payment Mode...</mat-hint>
+                    <mat-error *ngIf="insurance_payment_mode_slug.invalid">Payment Mode is required.</mat-error>
+                  </mat-form-field>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-6">
+                  <!-- Mat-Input -- Submission Mode -->
+                  <mat-form-field class="w-100 mb-3">
+                    <mat-label>Select Premium Type</mat-label>
+                    <mat-select class="mat-light-blue" formControlName="payment_type" tabindex="8" [required]="true" (selectionChange)="insurance_premiumTypeChanged($event)">
+                      <mat-option [value]="'regular'">Regular Premiums</mat-option>
+                      <mat-option [value]="'single'">Single Premium</mat-option>
+                    </mat-select>
+                    <mat-hint align="start" *ngIf="!insurance_payment_type.value">Click to select Premium Type...</mat-hint>
+                    <mat-error *ngIf="insurance_payment_type.invalid">Premium Type is required.</mat-error>
+                  </mat-form-field>
+                </div>
+                <div class="col-6">
+                  <!-- Mat-Input -- Payment Mode -->
+                  <mat-form-field class="w-100 mb-3">
+                    <mat-label>Select Payment Frequency</mat-label>
+                    <mat-select class="mat-light-blue" formControlName="payment_frequency" tabindex="9" [required]="true">
+                      <mat-option [value]="'single'" *ngIf="!insurance_payment_type.value || insurance_payment_type.value =='single'">Single Premium</mat-option>
+                      <mat-option [value]="'monthly'" *ngIf="!insurance_payment_type.value || insurance_payment_type.value =='regular'">Monthly Premiums</mat-option>
+                      <mat-option [value]="'quarterly'" *ngIf="!insurance_payment_type.value || insurance_payment_type.value =='regular'">Quarterly Premiums</mat-option>
+                      <mat-option [value]="'semi-annually'" *ngIf="!insurance_payment_type.value || insurance_payment_type.value =='regular'">Semi-Annual Premiums</mat-option>
+                      <mat-option [value]="'annually'" *ngIf="!insurance_payment_type.value || insurance_payment_type.value =='regular'">Annual Premiums</mat-option>
+                    </mat-select>
+                    <mat-hint align="start" *ngIf="!insurance_payment_frequency.value">Click to select Payment Frequency...</mat-hint>
+                    <mat-error *ngIf="insurance_payment_frequency.invalid">Payment Frequency is required.</mat-error>
+                  </mat-form-field>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-6">
+                  <!-- Mat-Input -- Policy Term -->
+                  <mat-form-field class="w-100 mb-3">
+                    <mat-label>Policy Term (Years)</mat-label>
+                    <input matInput type="number" placeholder="Type Policy Term here..." formControlName="policy_term" tabindex="10" min="1" max="99" step="1" required>
+                    <button type="button" mat-button *ngIf="insurance_policy_term.value && !insurance_policy_term.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_policy_insurance_form('policy_term')">
+                      <mat-icon class="mat-light-blue">close</mat-icon>
+                    </button>
+                    <mat-hint align="start" *ngIf="!insurance_policy_term.value">Enter a valid number from 1-99...</mat-hint>
+                    <mat-error *ngIf="insurance_policy_term.invalid">Please enter a valid number from 1-99.</mat-error>
+                  </mat-form-field>
+                </div>
+                <div class="col-6">
+                  <!-- Mat-Input -- Premium Term -->
+                  <mat-form-field class="w-100 mb-3">
+                    <mat-label>Premium Term (Years)</mat-label>
+                    <input matInput type="number" placeholder="Type Premium Term here..." formControlName="payment_term" tabindex="11" min="1" max="99" step="1" required>
+                    <button type="button" mat-button *ngIf="insurance_payment_term.value && !insurance_payment_term.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_policy_insurance_form('payment_term')">
+                      <mat-icon class="mat-light-blue">close</mat-icon>
+                    </button>
+                    <mat-hint align="start" *ngIf="!insurance_payment_term.value">Enter a valid number from 1-99...</mat-hint>
+                    <mat-error *ngIf="insurance_payment_term.invalid">Please enter a valid number from 1-99.</mat-error>
+                  </mat-form-field>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-6">
+                  <!-- Mat-Input -- Payment Mode -->
+                  <mat-form-field class="w-100 mb-3">
+                    <mat-label>Select Currency</mat-label>
+                    <mat-select class="mat-light-blue" formControlName="currency" tabindex="12" [required]="true">
+                      <mat-option *ngFor="let obj of select_currency" [value]="obj.code">{{obj.title}}</mat-option>
+                    </mat-select>
+                    <mat-hint align="start" *ngIf="!insurance_currency.value">Click to select Payment Frequency...</mat-hint>
+                    <mat-error *ngIf="insurance_currency.invalid">Currency is required.</mat-error>
+                  </mat-form-field>
+                </div>
+                <div class="col-6">
+                  <!-- Mat-Input -- Premium -->
+                  <mat-form-field class="w-100 mb-3">
+                    <mat-label>Sum Assured</mat-label>
+                    <input matInput type="number" placeholder="Type Sum Assured here..." formControlName="sum_assured" tabindex="13" step="0.01" min="0" max="999999999">
+                    <button type="button" mat-button *ngIf="insurance_sum_assured.value && !insurance_sum_assured.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_policy_insurance_form('sum_assured')">
+                      <mat-icon class="mat-light-blue">close</mat-icon>
+                    </button>
+                    <mat-hint align="start" *ngIf="!insurance_sum_assured.value">(Optional) Enter Sum Assured here...</mat-hint>
+                    <mat-error *ngIf="insurance_sum_assured.invalid">Please enter a valid amount.</mat-error>
+                  </mat-form-field>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-6">
+                  <!-- Mat-Input -- Premium -->
+                  <mat-form-field class="w-100 mb-3">
+                    <mat-label>Premium Amount {{(insurance_gst_compute.value) ? '(after GST)':''}}</mat-label>
+                    <input matInput type="number" placeholder="Type Premium Amount here..." formControlName="gross_payment_after_gst" tabindex="14" step="0.01" step="0.01" min="0" max="999999999">
+                    <button type="button" mat-button *ngIf="insurance_gross_payment_after_gst.value && !insurance_gross_payment_after_gst.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_policy_insurance_form('gross_payment_after_gst')">
+                      <mat-icon class="mat-light-blue">close</mat-icon>
+                    </button>
+                    <mat-hint align="start" *ngIf="!insurance_gross_payment_after_gst.value">Enter Premium Amount here...</mat-hint>
+                    <mat-error *ngIf="insurance_gross_payment_after_gst.invalid">Please enter a valid amount.</mat-error>
+                  </mat-form-field>
+                </div>
+
+                <div class="col-6">
+                  <!-- Mat-Input -- Premium Discount -->
+                  <mat-form-field class="w-100 mb-3">
+                    <mat-label>Premium Discount</mat-label>
+                    <mat-select class="mat-light-blue" formControlName="payment_discount" tabindex="15" [required]="true">
+                      <mat-option [value]="0">0%</mat-option>
+                      <mat-option [value]="0.05">5%</mat-option>
+                      <mat-option [value]="0.10">10%</mat-option>
+                      <mat-option [value]="0.15">15%</mat-option>
+                      <mat-option [value]="0.20">20%</mat-option>
+                      <mat-option [value]="0.25">25%</mat-option>
+                      <mat-option [value]="0.30">30%</mat-option>
+                      <mat-option [value]="0.35">35%</mat-option>
+                      <mat-option [value]="0.40">40%</mat-option>
+                      <mat-option [value]="0.45">45%</mat-option>
+                      <mat-option [value]="0.50">50%</mat-option>
+                      <mat-option [value]="0.55">55%</mat-option>
+                      <mat-option [value]="0.60">60%</mat-option>
+                      <mat-option [value]="0.65">65%</mat-option>
+                      <mat-option [value]="0.70">70%</mat-option>
+                      <mat-option [value]="0.75">75%</mat-option>
+                      <mat-option [value]="0.80">80%</mat-option>
+                      <mat-option [value]="0.85">85%</mat-option>
+                      <mat-option [value]="0.90">90%</mat-option>
+                      <mat-option [value]="0.95">95%</mat-option>
+                      <mat-option [value]="1">100%</mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                </div>
+              </div>
+
+              <mat-form-field floatLabel="always" appearance="none" class="w-100 mb-3 ml-4">
+                <mat-slide-toggle formControlName="gst_compute" [color]="'primary'" tabindex="16">GST will {{(insurance_gst_compute.value)?'':'not'}} be computed on premiums.</mat-slide-toggle>
+                <textarea matInput hidden></textarea>
+              </mat-form-field>
+
+            </div>
+        </div>
+
+
+
+        <div class="d-flex h-100 flex-column mx-auto col-lg-6 mb-5 border-left-lg" *ngIf="insurance_lifeAssured_active">
+
+          <!-- Heading Text Component -->
+          <heading-text [title]="'Life Assured Details'"></heading-text>
+
+          <!-- Mat-Autocomplete -- Select Life Assured -->
+          <mat-form-field class="w-100 mb-3">
+            <input #insuranceLifeAssuredInput matInput class="text-master text-uppercase" placeholder="Select existing Life Assured" aria-label="Select existing Life Assured" [matAutocomplete]="clientlist" formControlName="life_assured" (input)="fuseResults_lifeAssured()" [readonly]="insurance_lifeAssured_selected" tabindex="17">
+            <button type="button" mat-button *ngIf="insurance_lifeAssured_selected && insurance_life_assured.value && !insurance_life_assured.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_policy_insurance_form('life_assured');">
+              <mat-icon>close</mat-icon>
+            </button>
+            <mat-hint *ngIf="(insurance_life_assured.value && !insurance_lifeAssured_selected) || insurance_lifeAssured_list.length == 0" align="start">Life Assured does not exists, you may <a class="link dark" (click)="insurance_lifeAssured_new = true; insurance_processLifeAssured(false);">create a new Individual Record</a>.</mat-hint>
+            <mat-autocomplete #clientlist="matAutocomplete" [displayWith]="displayFn_lifeAssured" (optionSelected)="insurance_processLifeAssured();">
+              <mat-option *ngFor="let select_la of insurance_lifeAssured_list" [value]="select_la">
+                <div class="d-flex flex-row">
+                  <div class="d-flex my-auto mr-2 profile-thumbnail-wrapper overflow-hidden rounded {{select_la.personal?.gender_slug || 'male'}}">
+                    <img src="{{ '/assets/images/spacer.png' }}" width="40" height="40" alt="">
+                  </div>
+                  <div class="d-flex flex-column my-auto">
+                    <div class="fs-14 lh-21">{{select_la.personal?.full_name}}</div>
+                    <div class="fs-10 text-uppercase text-master-lt desc text-truncate info-container">
+                      <span class="ls-13" *ngIf="select_la.personal?.job_title || select_la.personal?.company_name">{{(select_la.personal.job_title && select_la.personal.company_name) ? select_la.personal.job_title + ' @ ' + select_la.personal.company_name : select_la.personal.job_title || select_la.personal.company_name}}</span>
+                      <span class="ls-13" *ngIf="select_la.personal?.gender_slug">{{select_la.personal?.gender_slug | uppercase}}</span>
+                      <span class="ls-13" *ngIf="select_la.personal?.date_birth">{{-(select_la.personal?.date_birth | amDifference:today:'years') + ' year old' | uppercase}}</span>
+                    </div>
+                  </div>
+                </div>
+              </mat-option>
+            </mat-autocomplete>
+          </mat-form-field>
+
+          <div *ngIf="insurance_life_assured.value && (insurance_lifeAssured_selected || insurance_lifeAssured_new)">
+
+            <!-- Mat-Input -- Payment Mode -->
+            <mat-form-field class="w-100 mb-3">
+              <mat-label>Relationship to Policy Holder</mat-label>
+              <mat-select class="mat-light-blue" formControlName="relationship_type_slug" tabindex="18">
+                <mat-option *ngFor="let obj of select_relationship" [value]="obj.slug">{{obj.title}}</mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <!-- Heading Text Component -->
+            <heading-text [title]="'Personal Information'" class="mt-5"></heading-text>
+
+            <div class="row">
+              <div class="col-xl-4">
+                <!-- Mat-Input -- Personal Salutation -->
+                <mat-form-field class="w-100 mb-3">
+                  <mat-label>Salutation</mat-label>
+                  <mat-select class="mat-light-blue" formControlName="salutation_slug" tabindex="19">
+                    <mat-option *ngFor="let obj of salutations" [value]="obj.slug">{{obj.title}}</mat-option>
+                  </mat-select>
+                  <button type="button" mat-button *ngIf="salutation_slug.value && !salutation_slug.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_policy_insurance_form('salutation_slug')" style="transform: translateY(2px);">
+                    <mat-icon class="mat-light-blue">close</mat-icon>
+                  </button>
+                </mat-form-field>
+              </div>
+              <div class="col-xl-8">
+                <!-- Mat-Input -- Personal Full Name -->
+                <mat-form-field class="w-100 mb-3">
+                  <mat-label>Full Name (NRIC)</mat-label>
+                  <input matInput type="text" placeholder="Type Full Name here..." formControlName="full_name" maxlength="128" tabindex="20" class="text-uppercase">
+                  <button type="button" mat-button *ngIf="full_name.value && !full_name.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_policy_insurance_form('full_name')">
+                    <mat-icon class="mat-light-blue">close</mat-icon>
+                  </button>
+                  <mat-hint align="end" class="d-none d-sm-inline-block">{{full_name.value?.length || 0}} / 128</mat-hint>
+                  <mat-error *ngIf="full_name.invalid">Full Name is required.</mat-error>
+                </mat-form-field>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-xl-6">
+                <!-- Mat-Input -- Personal Alias -->
+                <mat-form-field class="w-100 mb-3">
+                  <mat-label>Alias</mat-label>
+                  <input matInput type="text" placeholder="Type Alias here..." formControlName="alias" maxlength="64" tabindex="21">
+                  <button type="button" mat-button *ngIf="alias.value && !alias.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_policy_insurance_form('alias')">
+                    <mat-icon class="mat-light-blue">close</mat-icon>
+                  </button>
+                  <mat-hint align="end" class="d-none d-sm-inline-block">{{alias.value?.length || 0}} / 64</mat-hint>
+                </mat-form-field>
+              </div>
+              <div class="col-xl-6">
+                <!-- Mat-Input -- Personal Chinese Name -->
+                <mat-form-field class="w-100 mb-3">
+                  <mat-label>Chinese Name</mat-label>
+                  <input matInput type="text" placeholder="Type Chinese Name here..." formControlName="chinese_name" maxlength="64" tabindex="22">
+                  <button type="button" mat-button *ngIf="chinese_name.value && !chinese_name.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_policy_insurance_form('chinese_name')">
+                    <mat-icon class="mat-light-blue">close</mat-icon>
+                  </button>
+                  <mat-hint align="end" class="d-none d-sm-inline-block">{{chinese_name.value?.length || 0}} / 64</mat-hint>
+                </mat-form-field>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-xl-4">
+                <!-- Mat-Input -- Personal NRIC No -->
+                <mat-form-field class="w-100 mb-3">
+                  <mat-label>NRIC No</mat-label>
+                  <input matInput type="text" placeholder="Type NRIC Number here..." formControlName="nric_no" maxlength="32" tabindex="23">
+                  <button type="button" mat-button *ngIf="nric_no.value && !nric_no.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_policy_insurance_form('nric_no')">
+                    <mat-icon class="mat-light-blue">close</mat-icon>
+                  </button>
+                  <mat-hint align="end" class="d-none d-sm-inline-block">{{nric_no.value?.length || 0}} / 32</mat-hint>
+                </mat-form-field>
+              </div>
+              <div class="col-xl-4">
+                <!-- Mat-Input -- Personal FIN No -->
+                <mat-form-field class="w-100 mb-3">
+                  <mat-label>FIN No</mat-label>
+                  <input matInput type="text" placeholder="Type FIN Number here..." formControlName="fin_no" maxlength="32" tabindex="24">
+                  <button type="button" mat-button *ngIf="fin_no.value && !fin_no.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_policy_insurance_form('fin_no')">
+                    <mat-icon class="mat-light-blue">close</mat-icon>
+                  </button>
+                  <mat-hint align="end" class="d-none d-sm-inline-block">{{fin_no.value?.length || 0}} / 32</mat-hint>
+                </mat-form-field>
+              </div>
+              <div class="col-xl-4">
+                <!-- Mat-Input -- Personal Passport No -->
+                <mat-form-field class="w-100 mb-3">
+                  <mat-label>Passport No</mat-label>
+                  <input matInput type="text" placeholder="Type Passport Number here..." formControlName="passport_no" maxlength="32" tabindex="25">
+                  <button type="button" mat-button *ngIf="passport_no.value && !passport_no.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_policy_insurance_form('passport_no')">
+                    <mat-icon class="mat-light-blue">close</mat-icon>
+                  </button>
+                  <mat-hint align="end" class="d-none d-sm-inline-block">{{passport_no.value?.length || 0}} / 32</mat-hint>
+                </mat-form-field>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-xl-4">
+                <!-- Mat-Input -- Personal Gender -->
+                <mat-form-field class="w-100 mb-3">
+                  <mat-label>Gender</mat-label>
+                  <mat-select class="mat-light-blue" formControlName="gender_slug" tabindex="26">
+                    <mat-option *ngFor="let obj of genders" [value]="obj.slug">{{obj.title}}</mat-option>
+                  </mat-select>
+                  <button type="button" mat-button *ngIf="gender_slug.value && !gender_slug.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_policy_insurance_form('gender_slug')" style="transform: translateY(2px);">
+                    <mat-icon class="mat-light-blue">close</mat-icon>
+                  </button>
+                </mat-form-field>
+              </div>
+              <div class="col-xl-4">
+                <!-- Mat-Input -- Date of Birth -->
+                <mat-form-field class="w-100 mb-3">
+                  <mat-label>Date of Birth</mat-label>
+                  <input class="text-muted" matInput [matDatepicker]="datebirth" formControlName="date_birth" [readonly]="true" tabindex="27">
+                  <mat-datepicker-toggle matSuffix [for]="datebirth"></mat-datepicker-toggle>
+                  <mat-datepicker #datebirth disabled="false"></mat-datepicker>
+                </mat-form-field>
+              </div>
+              <div class="col-xl-4">
+                <!-- Mat-Input -- Personal Address Country -->
+                <mat-form-field class="w-100 mb-3">
+                  <mat-label>Country of Birth</mat-label>
+                  <mat-select class="mat-light-blue" formControlName="country_birth_slug" tabindex="28">
+                    <mat-option *ngFor="let obj of countries | sortBy:'asc':'title'" [value]="obj.slug">{{obj.title}}</mat-option>
+                  </mat-select>
+                  <button type="button" mat-button *ngIf="country_birth_slug.value && !country_birth_slug.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_policy_insurance_form('country_birth_slug')" style="transform: translateY(2px);">
+                    <mat-icon class="mat-light-blue">close</mat-icon>
+                  </button>
+                </mat-form-field>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-xl-6">
+                <!-- Mat-Input -- Personal Marital Status -->
+                <mat-form-field class="w-100 mb-3">
+                  <mat-label>Marital Status</mat-label>
+                  <mat-select class="mat-light-blue" formControlName="marital_status_slug" tabindex="29">
+                    <mat-option *ngFor="let obj of marital_status" [value]="obj.slug">{{obj.title}}</mat-option>
+                  </mat-select>
+                  <button type="button" mat-button *ngIf="marital_status_slug.value && !marital_status_slug.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_policy_insurance_form('marital_status_slug')" style="transform: translateY(2px);">
+                    <mat-icon class="mat-light-blue">close</mat-icon>
+                  </button>
+                </mat-form-field>
+              </div>
+              <div class="col-xl-6">
+                <!-- Mat-Input -- Personal Race -->
+                <mat-form-field class="w-100 mb-3">
+                  <mat-label>Race</mat-label>
+                  <input type="text" matInput formControlName="race_slug" [matAutocomplete]="race_select" tabindex="30" class="text-uppercase">
+                  <mat-autocomplete #race_select="matAutocomplete">
+                    <mat-option *ngFor="let obj of filteredRaces | async | sortBy:'asc':'title'" [value]="obj.slug">{{obj.title | uppercase}}</mat-option>
+                  </mat-autocomplete>
+                </mat-form-field>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-xl-6">
+                <!-- Mat-Input -- Personal Nationality -->
+                <mat-form-field class="w-100 mb-3">
+                  <mat-label>Nationality</mat-label>
+                  <mat-select class="mat-light-blue" formControlName="nationality_slug" tabindex="31">
+                    <mat-option *ngFor="let obj of countries | sortBy:'asc':'title'" [value]="obj.slug">{{obj.nationality || obj.title}}</mat-option>
+                  </mat-select>
+                  <button type="button" mat-button *ngIf="nationality_slug.value && !nationality_slug.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_policy_insurance_form('nationality_slug')" style="transform: translateY(2px);">
+                    <mat-icon class="mat-light-blue">close</mat-icon>
+                  </button>
+                </mat-form-field>
+              </div>
+              <div class="col-xl-6">
+                <!-- Mat-Input -- Personal Residency Status -->
+                <mat-form-field class="w-100 mb-3">
+                  <mat-label>Residency Status</mat-label>
+                  <mat-select class="mat-light-blue" formControlName="residency_status_slug" tabindex="32">
+                    <mat-option *ngFor="let obj of residency_status" [value]="obj.slug">{{obj.title}}</mat-option>
+                  </mat-select>
+                  <button type="button" mat-button *ngIf="residency_status_slug.value && !residency_status_slug.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_policy_insurance_form('residency_status_slug')" style="transform: translateY(2px);">
+                    <mat-icon class="mat-light-blue">close</mat-icon>
+                  </button>
+                </mat-form-field>
+              </div>
+            </div>
+
+            <mat-form-field floatLabel="always" appearance="none" class="w-100 mb-3 ml-4">
+              <mat-slide-toggle formControlName="smoker" [color]="'primary'" tabindex="33">Life Assured is {{(smoker.value == true) ? '' : 'not'}}  a smoker.</mat-slide-toggle>
+              <textarea matInput hidden></textarea>
+            </mat-form-field>
+
+            <mat-form-field floatLabel="always" appearance="none" class="w-100 mb-3 ml-4">
+              <mat-slide-toggle formControlName="selected" [color]="'primary'" tabindex="34">Life Assured is {{(selected.value == true) ? '' : 'not'}} a selected Individual.</mat-slide-toggle>
+              <textarea matInput hidden></textarea>
+            </mat-form-field>
+
+            <mat-form-field floatLabel="always" appearance="none" class="w-100 mb-3 ml-4">
+              <mat-slide-toggle formControlName="pdpa" [color]="'primary'" tabindex="35">Life Assured has {{(pdpa.value == true) ? '' : 'not'}} given consent for PDPA.</mat-slide-toggle>
+              <textarea matInput hidden></textarea>
+            </mat-form-field>
+
+
+
+            <!-- Heading Text Component -->
+            <heading-text [title]="'Educational Information'" class="mt-5"></heading-text>
+
+            <!-- Mat-Input -- Personal Educational Level -->
+            <mat-form-field class="w-100 mb-3">
+              <mat-label>Educational Level</mat-label>
+              <mat-select class="mat-light-blue" formControlName="education_level_slug" tabindex="36">
+                <mat-option *ngFor="let obj of educational_levels" [value]="obj.slug">{{obj.title}}</mat-option>
+              </mat-select>
+              <button type="button" mat-button *ngIf="education_level_slug.value && !education_level_slug.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_policy_insurance_form('education_level_slug')" style="transform: translateY(2px);">
+                <mat-icon class="mat-light-blue">close</mat-icon>
+              </button>
+            </mat-form-field>
+
+            <!-- Mat-Input -- Personal Educational Institution -->
+            <mat-form-field class="w-100 mb-3">
+              <mat-label>Institution</mat-label>
+              <input matInput type="text" placeholder="Type Institution here..." formControlName="education_institution" maxlength="128" tabindex="37">
+              <button type="button" mat-button *ngIf="education_institution.value && !education_institution.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_policy_insurance_form('education_institution')">
+                <mat-icon class="mat-light-blue">close</mat-icon>
+              </button>
+              <mat-hint align="end" class="d-none d-sm-inline-block">{{education_institution.value?.length || 0}} / 128</mat-hint>
+            </mat-form-field>
+
+            <!-- Mat-Input -- Personal Field of Study -->
+            <mat-form-field class="w-100 mb-3">
+              <mat-label>Field of Study</mat-label>
+              <input matInput type="text" placeholder="Type Field of Study here..." formControlName="field_of_study" maxlength="128" tabindex="38">
+              <button type="button" mat-button *ngIf="field_of_study.value && !field_of_study.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_policy_insurance_form('field_of_study')">
+                <mat-icon class="mat-light-blue">close</mat-icon>
+              </button>
+              <mat-hint align="end" class="d-none d-sm-inline-block">{{field_of_study.value?.length || 0}} / 128</mat-hint>
+            </mat-form-field>
+
+
+
+            <!-- Heading Text Component -->
+            <heading-text [title]="'Employment Information'" class="mt-5"></heading-text>
+
+            <!-- Mat-Input -- Personal Employment Status -->
+            <mat-form-field class="w-100 mb-3">
+              <mat-label>Employment Status</mat-label>
+              <mat-select class="mat-light-blue" formControlName="employment_status_slug" tabindex="39">
+                <mat-option *ngFor="let obj of employment_status" [value]="obj.slug">{{obj.title}}</mat-option>
+              </mat-select>
+              <button type="button" mat-button *ngIf="employment_status_slug.value && !employment_status_slug.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_policy_insurance_form('employment_status_slug')" style="transform: translateY(2px);">
+                <mat-icon class="mat-light-blue">close</mat-icon>
+              </button>
+            </mat-form-field>
+
+            <div *ngIf="insurance_life_assured.personal?.employment_status_slug != 'unemployed'">
+              <!-- Mat-Input -- Personal Work Job Title-->
+              <mat-form-field class="w-100 mb-3">
+                <mat-label>Job Title</mat-label>
+                <input matInput type="text" placeholder="Type Job Title here..." formControlName="job_title" maxlength="128" tabindex="40">
+                <button type="button" mat-button *ngIf="job_title.value && !job_title.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_policy_insurance_form('job_title')">
+                  <mat-icon class="mat-light-blue">close</mat-icon>
+                </button>
+                <mat-hint align="end" class="d-none d-sm-inline-block">{{job_title.value?.length || 0}} / 128</mat-hint>
+              </mat-form-field>
+
+              <!-- Mat-Input -- Personal Work Company Name-->
+              <mat-form-field class="w-100 mb-3">
+                <mat-label>Company Name</mat-label>
+                <input matInput type="text" placeholder="Type Company Name here..." formControlName="company_name" maxlength="128" tabindex="41">
+                <button type="button" mat-button *ngIf="company_name.value && !company_name.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_policy_insurance_form('company_name')">
+                  <mat-icon class="mat-light-blue">close</mat-icon>
+                </button>
+                <mat-hint align="end" class="d-none d-sm-inline-block">{{company_name.value?.length || 0}} / 128</mat-hint>
+              </mat-form-field>
+
+              <!-- Mat-Input -- Personal Work Business Nature-->
+              <mat-form-field class="w-100 mb-3">
+                <mat-label>Business Nature</mat-label>
+                <input matInput type="text" placeholder="Type Business Nature here..." formControlName="business_nature" maxlength="128" tabindex="42">
+                <button type="button" mat-button *ngIf="business_nature.value && !business_nature.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_policy_insurance_form('business_nature')">
+                  <mat-icon class="mat-light-blue">close</mat-icon>
+                </button>
+                <mat-hint align="end" class="d-none d-sm-inline-block">{{business_nature.value?.length || 0}} / 128</mat-hint>
+              </mat-form-field>
+
+              <!-- Mat-Input -- Personal Income Range -->
+              <mat-form-field class="w-100 mb-3">
+                <mat-label>Income Range</mat-label>
+                <mat-select class="mat-light-blue" formControlName="income_range" tabindex="43">
+                  <mat-option [value]="0">$0 - $29,999</mat-option>
+                  <mat-option [value]="30000">$30,000 - $49,999</mat-option>
+                  <mat-option [value]="50000">$50,000 - $99,999</mat-option>
+                  <mat-option [value]="100000">$100,000 - $149,999</mat-option>
+                  <mat-option [value]="150000">$150,000 - $299,999</mat-option>
+                  <mat-option [value]="300000">$300,000 and above</mat-option>
+                </mat-select>
+                <button type="button" mat-button *ngIf="income_range.value && !income_range.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_policy_insurance_form('income_range')" style="transform: translateY(2px);">
+                  <mat-icon class="mat-light-blue">close</mat-icon>
+                </button>
+              </mat-form-field>
+            </div>
+
+
+              <!-- Heading Text Component -->
+              <heading-text [title]="'Contact Information'" class="mt-5"></heading-text>
+
+              <!-- Mat-Input -- Personal Contact Email -->
+              <mat-form-field class="w-100 mb-3">
+                <mat-icon matPrefix class="mr-2 text-center"><i class="fs-18 fad fa-at text-master-lt"></i></mat-icon>
+                <mat-label>Personal Email</mat-label>
+                <input matInput type="text" placeholder="Type Email here..." formControlName="email" maxlength="128" tabindex="44">
+                <button type="button" mat-button *ngIf="email.value && !email.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_policy_insurance_form('email')">
+                  <mat-icon class="mat-light-blue">close</mat-icon>
+                </button>
+                <mat-hint align="end" class="d-none d-sm-inline-block">{{email.value?.length || 0}} / 128</mat-hint>
+              </mat-form-field>
+
+              <div class="row">
+                <div class="col-xl-4">
+                  <!-- Mat-Input -- Personal Contact Home -->
+                  <mat-form-field class="w-100 mb-3">
+                    <mat-icon matPrefix class="mr-2 text-center"><i class="fs-18 fad fa-phone-rotary text-master-lt"></i></mat-icon>
+                    <mat-label>Home No</mat-label>
+                    <input matInput type="text" placeholder="Type Home Number here..." formControlName="home_no" maxlength="32" tabindex="45">
+                    <button type="button" mat-button *ngIf="home_no.value && !home_no.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_policy_insurance_form('home_no')">
+                      <mat-icon class="mat-light-blue">close</mat-icon>
+                    </button>
+                    <mat-hint align="end" class="d-none d-sm-inline-block">{{home_no.value?.length || 0}} / 32</mat-hint>
+                  </mat-form-field>
+                </div>
+                <div class="col-xl-4">
+                  <!-- Mat-Input -- Personal Contact Mobile -->
+                  <mat-form-field class="w-100 mb-3">
+                    <mat-icon matPrefix class="mr-2 text-center"><i class="fs-18 fad fa-mobile text-master-lt"></i></mat-icon>
+                    <mat-label>Mobile No</mat-label>
+                    <input matInput type="text" placeholder="Type Mobile Number here..." formControlName="mobile_no" maxlength="32" tabindex="46">
+                    <button type="button" mat-button *ngIf="mobile_no.value && !mobile_no.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_policy_insurance_form('mobile_no')">
+                      <mat-icon class="mat-light-blue">close</mat-icon>
+                    </button>
+                    <mat-hint align="end" class="d-none d-sm-inline-block">{{mobile_no.value?.length || 0}} / 32</mat-hint>
+                  </mat-form-field>
+                </div>
+                <div class="col-xl-4">
+                  <!-- Mat-Input -- Personal Contact Fax -->
+                  <mat-form-field class="w-100 mb-3">
+                    <mat-icon matPrefix class="mr-2 text-center"><i class="fs-18 fad fa-fax text-master-lt"></i></mat-icon>
+                    <mat-label>Fax No</mat-label>
+                    <input matInput type="text" placeholder="Type Fax Number here..." formControlName="fax_no" maxlength="32" tabindex="47">
+                    <button type="button" mat-button *ngIf="fax_no.value && !fax_no.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_policy_insurance_form('fax_no')">
+                      <mat-icon class="mat-light-blue">close</mat-icon>
+                    </button>
+                    <mat-hint align="end" class="d-none d-sm-inline-block">{{fax_no.value?.length || 0}} / 32</mat-hint>
+                  </mat-form-field>
+                </div>
+              </div>
+
+
+
+              <!-- Heading Text Component -->
+              <heading-text [title]="'Address Information'" class="mt-5"></heading-text>
+
+              <div class="row">
+                <div class="col-4">
+                  <!-- Mat-Input -- Personal Address Block -->
+                  <mat-form-field class="w-100 mb-3">
+                    <mat-icon matPrefix class="mr-2 text-center"><i class="fs-18 fad fa-home text-master-lt"></i></mat-icon>
+                    <mat-label>Block</mat-label>
+                    <input matInput type="text" placeholder="Block" formControlName="block" maxlength="32" tabindex="48">
+                    <button type="button" mat-button *ngIf="block.value && !block.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_policy_insurance_form('block')">
+                      <mat-icon class="mat-light-blue">close</mat-icon>
+                    </button>
+                    <mat-hint align="end" class="d-none d-sm-inline-block">{{block.value?.length || 0}} / 32</mat-hint>
+                  </mat-form-field>
+                </div>
+                <div class="col-8">
+                  <!-- Mat-Input -- Personal Address Street -->
+                  <mat-form-field class="w-100 mb-3">
+                    <mat-icon matPrefix class="mr-2 text-center"><i class="fs-18 fad fa-road text-master-lt"></i></mat-icon>
+                    <mat-label>Street</mat-label>
+                    <input matInput type="text" placeholder="Street" formControlName="street" maxlength="128" tabindex="49">
+                    <button type="button" mat-button *ngIf="street.value && !street.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_policy_insurance_form('street')">
+                      <mat-icon class="mat-light-blue">close</mat-icon>
+                    </button>
+                    <mat-hint align="end" class="d-none d-sm-inline-block">{{street.value?.length || 0}} / 128</mat-hint>
+                  </mat-form-field>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-4">
+                  <!-- Mat-Input -- Personal Address Unit -->
+                  <mat-form-field class="w-100 mb-3">
+                    <mat-icon matPrefix class="mr-2 text-center"><i class="fs-18 fab fa-slack-hash text-master-lt"></i></mat-icon>
+                    <mat-label>Unit</mat-label>
+                    <input matInput type="text" placeholder="Unit" formControlName="unit" maxlength="32" tabindex="50">
+                    <button type="button" mat-button *ngIf="unit.value && !unit.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_policy_insurance_form('unit')">
+                      <mat-icon class="mat-light-blue">close</mat-icon>
+                    </button>
+                    <mat-hint align="end" class="d-none d-sm-inline-block">{{unit.value?.length || 0}} / 32</mat-hint>
+                  </mat-form-field>
+                </div>
+                <div class="col-8">
+                  <!-- Mat-Input -- Personal Address Building -->
+                  <mat-form-field class="w-100 mb-3">
+                    <mat-icon matPrefix class="mr-2 text-center"><i class="fs-18 fad fa-building text-master-lt"></i></mat-icon>
+                    <mat-label>Building</mat-label>
+                    <input matInput type="text" placeholder="Building" formControlName="building" maxlength="128" tabindex="51">
+                    <button type="button" mat-button *ngIf="building.value && !building.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_policy_insurance_form('building')">
+                      <mat-icon class="mat-light-blue">close</mat-icon>
+                    </button>
+                    <mat-hint align="end" class="d-none d-sm-inline-block">{{building.value?.length || 0}} / 128</mat-hint>
+                  </mat-form-field>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-4">
+                  <!-- Mat-Input -- Personal Address City -->
+                  <mat-form-field class="w-100 mb-3">
+                    <mat-icon matPrefix class="mr-2 text-center"><i class="fs-18 fad fa-city text-master-lt"></i></mat-icon>
+                    <mat-label>City</mat-label>
+                    <input matInput type="text" placeholder="City" formControlName="city" maxlength="32" tabindex="52">
+                    <button type="button" mat-button *ngIf="city.value && !city.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_policy_insurance_form('city')">
+                      <mat-icon class="mat-light-blue">close</mat-icon>
+                    </button>
+                    <mat-hint align="end" class="d-none d-sm-inline-block">{{city.value?.length || 0}} / 32</mat-hint>
+                  </mat-form-field>
+                </div>
+                <div class="col-4">
+                  <!-- Mat-Input -- Personal Address Postal -->
+                  <mat-form-field class="w-100 mb-3">
+                    <mat-icon matPrefix class="mr-2 text-center"><i class="fs-18 fad fa-mailbox text-master-lt"></i></mat-icon>
+                    <mat-label>Postal</mat-label>
+                    <input matInput type="text" placeholder="Postal" formControlName="postal" maxlength="32" tabindex="53">
+                    <button type="button" mat-button *ngIf="postal.value && !postal.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_policy_insurance_form('postal')">
+                      <mat-icon class="mat-light-blue">close</mat-icon>
+                    </button>
+                    <mat-hint align="end" class="d-none d-sm-inline-block">{{postal.value?.length || 0}} / 32</mat-hint>
+                  </mat-form-field>
+                </div>
+                <div class="col-4">
+                  <!-- Mat-Input -- Personal Address Country -->
+                  <mat-form-field class="w-100 mb-3">
+                    <mat-icon matPrefix class="mr-2 text-center"><i class="fs-18 fad fa-globe-asia text-master-lt"></i></mat-icon>
+                    <mat-label>Country</mat-label>
+                    <mat-select class="mat-light-blue" formControlName="country_slug" tabindex="54">
+                      <mat-option *ngFor="let obj of countries | sortBy:'asc':'title'" [value]="obj.slug">{{obj.title}}</mat-option>
+                    </mat-select>
+                    <button type="button" mat-button *ngIf="country_slug.value && !country_slug.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_policy_insurance_form('country_slug')" style="transform: translateY(2px);">
+                      <mat-icon class="mat-light-blue">close</mat-icon>
+                    </button>
+                  </mat-form-field>
+                </div>
+              </div>
+
+          </div>
+          <!-- End Life Assured Details -->
+
+        </div>
+      </form>
+    </mat-step>
+
+
+
+
+
+    <mat-step label="Define Investment Details" state="folder" [stepControl]="policy_investment_form" *ngIf="submission_cat_slug.value == 'cis'">
+      <form [formGroup]="policy_investment_form" class="h-100 row">
+        <div class="d-flex h-100 flex-column mx-auto col-lg-6 mb-5">
+
+              <!-- Heading Text Component -->
+              <heading-text [title]="'Investment Details'"></heading-text>
+
+              <!-- Mat-Input -- Providers -->
+              <mat-form-field class="w-100 mb-3">
+                <mat-label>Select Provider</mat-label>
+                <mat-select class="mat-light-blue" formControlName="provider_slug" tabindex="55" (selectionChange)="investment_providerChanged($event)" [required]="true">
+                  <mat-option *ngFor="let obj of select_providers[submission_cat_slug.value] | sortBy:'asc':'full_name'" [value]="obj.slug">{{obj.full_name}}</mat-option>
+                </mat-select>
+                <mat-error *ngIf="investment_provider_slug.invalid">Provider is required.</mat-error>
+              </mat-form-field>
+
+              <!-- Mat-Autocomplete -- Select Product -->
+              <mat-form-field class="w-100 mb-3" *ngIf="investment_provider_slug.value">
+                <input #investmentOptionInput matInput class="text-master" placeholder="Select a Product Option" aria-label="Select a Product Option" [matAutocomplete]="optionlist_investment" formControlName="product_option" (input)="fuseResults_investment()" (blur)="blurOption_investment()" [readonly]="investment_optionSelected" required tabindex="56">
+                <button type="button" mat-button *ngIf="investment_optionSelected && investment_product_option.value && !investment_product_option.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_policy_investment_form('product_option');">
+                  <mat-icon>close</mat-icon>
+                </button>
+                <mat-error *ngIf="(investment_product_option.touched || investment_product_option.dirty) && investment_product_option.invalid">Please select a valid Product Option.</mat-error>
+                <mat-autocomplete #optionlist_investment="matAutocomplete" [displayWith]="displayFn" (optionSelected)="investment_processOption();">
+                  <mat-option *ngFor="let select_option of investment_options" [value]="select_option">
+                    <div class="d-flex flex-column my-auto">
+                      <div class="fs-14 lh-21">{{select_option.name}}</div>
+                    </div>
+                  </mat-option>
+                </mat-autocomplete>
+              </mat-form-field>
+
+            <div class="w-100" *ngIf="investment_optionSelected">
+
+              <div class="row">
+                <div class="col-6">
+                  <!-- Mat-Input -- Submission Mode -->
+                  <mat-form-field class="w-100 mb-3">
+                    <mat-label>Select Account Type</mat-label>
+                    <mat-select class="mat-light-blue" formControlName="investment_account_type" tabindex="57" [required]="true">
+                      <mat-option [value]="'managed-account'">Managed Account</mat-option>
+                      <mat-option [value]="'wrap'">Wrap Account</mat-option>
+                      <mat-option [value]="'non-wrap'">Non-Wrap Account</mat-option>
+                    </mat-select>
+                    <mat-error *ngIf="investment_account_type.invalid">Account Type is required.</mat-error>
+                  </mat-form-field>
+                </div>
+                <div class="col-6">
+                  <!-- Mat-Input -- Payment Mode -->
+                  <mat-form-field class="w-100 mb-3">
+                    <mat-label>Select Transaction Type</mat-label>
+                    <mat-select class="mat-light-blue" formControlName="investment_transaction_type" tabindex="58" [required]="true">
+                      <mat-option [value]="'buy'" *ngIf="!investment_payment_type.value || investment_payment_type.value =='single'">Buy</mat-option>
+                      <mat-option [value]="'top-up'" *ngIf="!investment_payment_type.value || investment_payment_type.value =='single'">Top Up</mat-option>
+                      <mat-option [value]="'switch-in'" *ngIf="!investment_payment_type.value || investment_payment_type.value =='single'">Switch In</mat-option>
+                    </mat-select>
+                    <mat-error *ngIf="investment_transaction_type.invalid">Transaction Type is required.</mat-error>
+                  </mat-form-field>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-6">
+                  <!-- Mat-Input -- Submission Mode -->
+                  <mat-form-field class="w-100 mb-3">
+                    <mat-label>Select Submission Mode</mat-label>
+                    <mat-select class="mat-light-blue" formControlName="submission_mode" tabindex="59" [required]="true">
+                      <mat-option [value]="'online'">Online</mat-option>
+                      <mat-option [value]="'hard-copy'">Hard-Copy</mat-option>
+                    </mat-select>
+                    <mat-error *ngIf="investment_submission_mode.invalid">Submission Mode is required.</mat-error>
+                  </mat-form-field>
+                </div>
+                <div class="col-6">
+                  <!-- Mat-Input -- Payment Mode -->
+                  <mat-form-field class="w-100 mb-3">
+                    <mat-label>Select Payment Mode</mat-label>
+                    <mat-select class="mat-light-blue" formControlName="payment_mode_slug" tabindex="60" [required]="true">
+                      <mat-option *ngFor="let obj of select_payment_mode" [value]="obj.slug">{{obj.title}}</mat-option>
+                    </mat-select>
+                    <mat-error *ngIf="investment_payment_mode_slug.invalid">Payment Mode is required.</mat-error>
+                  </mat-form-field>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-6">
+                  <!-- Mat-Input -- Submission Mode -->
+                  <mat-form-field class="w-100 mb-3">
+                    <mat-label>Select Premium Type</mat-label>
+                    <mat-select class="mat-light-blue" formControlName="payment_type" tabindex="61" [required]="true" (selectionChange)="investment_premiumTypeChanged($event)">
+                      <mat-option [value]="'regular'">Regular Premiums</mat-option>
+                      <mat-option [value]="'single'">Single Premium</mat-option>
+                    </mat-select>
+                    <mat-error *ngIf="investment_payment_type.invalid">Premium Type is required.</mat-error>
+                  </mat-form-field>
+                </div>
+                <div class="col-6">
+                  <!-- Mat-Input -- Payment Mode -->
+                  <mat-form-field class="w-100 mb-3">
+                    <mat-label>Select Payment Frequency</mat-label>
+                    <mat-select class="mat-light-blue" formControlName="payment_frequency" tabindex="62" [required]="true">
+                      <mat-option [value]="'single'" *ngIf="!investment_payment_type.value || investment_payment_type.value =='single'">Single Premium</mat-option>
+                      <mat-option [value]="'monthly'" *ngIf="!investment_payment_type.value || investment_payment_type.value =='regular'">Monthly Premiums</mat-option>
+                      <mat-option [value]="'quarterly'" *ngIf="!investment_payment_type.value || investment_payment_type.value =='regular'">Quarterly Premiums</mat-option>
+                      <mat-option [value]="'semi-annually'" *ngIf="!investment_payment_type.value || investment_payment_type.value =='regular'">Semi-Annual Premiums</mat-option>
+                      <mat-option [value]="'annually'" *ngIf="!investment_payment_type.value || investment_payment_type.value =='regular'">Annual Premiums</mat-option>
+                    </mat-select>
+                    <mat-error *ngIf="investment_payment_frequency.invalid">Payment Frequency is required.</mat-error>
+                  </mat-form-field>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-6">
+                  <!-- Mat-Input -- Payment Mode -->
+                  <mat-form-field class="w-100 mb-3">
+                    <mat-label>Select Currency</mat-label>
+                    <mat-select class="mat-light-blue" formControlName="currency" tabindex="63" [required]="true">
+                      <mat-option *ngFor="let obj of select_currency" [value]="obj.code">{{obj.title}}</mat-option>
+                    </mat-select>
+                    <mat-error *ngIf="investment_currency.invalid">Currency is required.</mat-error>
+                  </mat-form-field>
+                </div>
+                <div class="col-6">
+                  <!-- Mat-Input -- Premium Term -->
+                  <mat-form-field class="w-100 mb-3">
+                    <mat-label>Premium Term (Years)</mat-label>
+                    <input matInput type="number" placeholder="Type Premium Term here..." formControlName="payment_term" tabindex="64" min="1" max="99" step="1" required>
+                    <button type="button" mat-button *ngIf="investment_payment_term.value && !investment_payment_term.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_policy_investment_form('payment_term')">
+                      <mat-icon class="mat-light-blue">close</mat-icon>
+                    </button>
+                    <mat-error *ngIf="investment_payment_term.invalid">Please enter a valid number.</mat-error>
+                  </mat-form-field>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-6">
+                  <!-- Mat-Input -- Premium -->
+                  <mat-form-field class="w-100 mb-3">
+                    <mat-label>Premium Amount {{(investment_gst_compute.value) ? '(after GST)':''}}</mat-label>
+                    <input matInput type="number" placeholder="Type Premium Amount here..." formControlName="gross_payment_after_gst" tabindex="65" step="0.01" step="0.01" min="0" max="999999999">
+                    <button type="button" mat-button *ngIf="investment_gross_payment_after_gst.value && !investment_gross_payment_after_gst.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_policy_investment_form('gross_payment_after_gst')">
+                      <mat-icon class="mat-light-blue">close</mat-icon>
+                    </button>
+                    <mat-error *ngIf="investment_gross_payment_after_gst.invalid">Please enter a valid amount.</mat-error>
+                  </mat-form-field>
+                </div>
+
+                <div class="col-6">
+                  <!-- Mat-Input -- Premium Discount -->
+                  <mat-form-field class="w-100 mb-3">
+                    <mat-label>Premium Discount</mat-label>
+                    <input matInput type="number" placeholder="Type Premium Amount here..." formControlName="payment_discount" tabindex="66" step="0.01" step="0.01" min="0" max="999999999">
+                    <button type="button" mat-button *ngIf="investment_payment_discount.value && !investment_payment_discount.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_policy_investment_form('payment_discount')">
+                      <mat-icon class="mat-light-blue">close</mat-icon>
+                    </button>
+                    <mat-error *ngIf="investment_payment_discount.invalid">Please enter a valid amount.</mat-error>
+                  </mat-form-field>
+                </div>
+              </div>
+
+              <mat-form-field floatLabel="always" appearance="none" class="w-100 mb-3 ml-4">
+                <mat-slide-toggle formControlName="gst_compute" [color]="'primary'" tabindex="67">GST will {{(investment_gst_compute.value)?'':'not'}} be computed on premiums.</mat-slide-toggle>
+                <textarea matInput hidden></textarea>
+              </mat-form-field>
+
+            </div>
+        </div>
+      </form>
+    </mat-step>
+
+
+
+
+
+
+    <mat-step label="Define GI Details" state="folder" [stepControl]="policy_gi_form" *ngIf="submission_cat_slug.value == 'gi'">
+      <form [formGroup]="policy_gi_form" class="h-100 row">
+        <div class="d-flex h-100 flex-column mx-auto col-lg-6 mb-5">
+
+              <!-- Heading Text Component -->
+              <heading-text [title]="'General Insurance Details'"></heading-text>
+
+              <!-- Mat-Input -- Providers -->
+              <mat-form-field class="w-100 mb-3">
+                <mat-label>Select Provider</mat-label>
+                <mat-select class="mat-light-blue" formControlName="provider_slug" tabindex="68" [required]="true">
+                  <mat-option *ngFor="let obj of select_providers[submission_cat_slug.value] | sortBy:'asc':'full_name'" [value]="obj.slug">{{obj.full_name}}</mat-option>
+                </mat-select>
+                <mat-error *ngIf="gi_provider_slug.invalid">Provider is required.</mat-error>
+              </mat-form-field>
+
+              <!-- Mat-Input -- Providers -->
+              <mat-form-field class="w-100 mb-3" *ngIf="gi_provider_slug.value">
+                <mat-label>Select Product Category</mat-label>
+                <mat-select class="mat-light-blue" formControlName="product_cat" tabindex="69" [required]="true" (selectionChange)="gi_productCatChanged($event)">
+                  <mat-option *ngFor="let obj of select_product_category_gi | sortBy:'asc':'title'" [value]="obj">{{obj.title}}</mat-option>
+                </mat-select>
+                <mat-error *ngIf="gi_product_cat.invalid">Product Category is required.</mat-error>
+              </mat-form-field>
+
+            <div class="w-100" *ngIf="gi_product_cat_slug.value">
+
+              <div class="row">
+                <div class="col-6">
+                  <!-- Mat-Input -- Submission Mode -->
+                  <mat-form-field class="w-100 mb-3">
+                    <mat-label>Select Submission Mode</mat-label>
+                    <mat-select class="mat-light-blue" formControlName="submission_mode" tabindex="70" [required]="true">
+                      <mat-option [value]="'online'">Online</mat-option>
+                      <mat-option [value]="'hard-copy'">Hard-Copy</mat-option>
+                    </mat-select>
+                    <mat-error *ngIf="gi_submission_mode.invalid">Submission Mode is required.</mat-error>
+                  </mat-form-field>
+                </div>
+                <div class="col-6">
+                  <!-- Mat-Input -- Payment Mode -->
+                  <mat-form-field class="w-100 mb-3">
+                    <mat-label>Select Payment Mode</mat-label>
+                    <mat-select class="mat-light-blue" formControlName="payment_mode_slug" tabindex="71" [required]="true">
+                      <mat-option *ngFor="let obj of select_payment_mode" [value]="obj.slug">{{obj.title}}</mat-option>
+                    </mat-select>
+                    <mat-error *ngIf="gi_payment_mode_slug.invalid">Payment Mode is required.</mat-error>
+                  </mat-form-field>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-6">
+                  <!-- Mat-Input -- Submission Mode -->
+                  <mat-form-field class="w-100 mb-3">
+                    <mat-label>Select Premium Type</mat-label>
+                    <mat-select class="mat-light-blue" formControlName="payment_type" tabindex="72" [required]="true" (selectionChange)="gi_premiumTypeChanged($event)">
+                      <mat-option [value]="'regular'">Regular Premiums</mat-option>
+                      <mat-option [value]="'single'">Single Premium</mat-option>
+                    </mat-select>
+                    <mat-error *ngIf="gi_payment_type.invalid">Premium Type is required.</mat-error>
+                  </mat-form-field>
+                </div>
+                <div class="col-6">
+                  <!-- Mat-Input -- Payment Mode -->
+                  <mat-form-field class="w-100 mb-3">
+                    <mat-label>Select Payment Frequency</mat-label>
+                    <mat-select class="mat-light-blue" formControlName="payment_frequency" tabindex="73" [required]="true">
+                      <mat-option [value]="'single'" *ngIf="!gi_payment_type.value || gi_payment_type.value =='single'">Single Premium</mat-option>
+                      <mat-option [value]="'monthly'" *ngIf="!gi_payment_type.value || gi_payment_type.value =='regular'">Monthly Premiums</mat-option>
+                      <mat-option [value]="'quarterly'" *ngIf="!gi_payment_type.value || gi_payment_type.value =='regular'">Quarterly Premiums</mat-option>
+                      <mat-option [value]="'semi-annually'" *ngIf="!gi_payment_type.value || gi_payment_type.value =='regular'">Semi-Annual Premiums</mat-option>
+                      <mat-option [value]="'annually'" *ngIf="!gi_payment_type.value || gi_payment_type.value =='regular'">Annual Premiums</mat-option>
+                    </mat-select>
+                    <mat-error *ngIf="gi_payment_frequency.invalid">Payment Frequency is required.</mat-error>
+                  </mat-form-field>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-6">
+                  <!-- Mat-Input -- Payment Mode -->
+                  <mat-form-field class="w-100 mb-3">
+                    <mat-label>Select Currency</mat-label>
+                    <mat-select class="mat-light-blue" formControlName="currency" tabindex="74" [required]="true">
+                      <mat-option *ngFor="let obj of select_currency" [value]="obj.code">{{obj.title}}</mat-option>
+                    </mat-select>
+                    <mat-error *ngIf="gi_currency.invalid">Currency is required.</mat-error>
+                  </mat-form-field>
+                </div>
+                <div class="col-6">
+                  <!-- Mat-Input -- Premium Term -->
+                  <mat-form-field class="w-100 mb-3">
+                    <mat-label>Premium Term (Years)</mat-label>
+                    <input matInput type="number" placeholder="Type Premium Term here..." formControlName="payment_term" tabindex="75" min="1" max="99" step="1" required>
+                    <button type="button" mat-button *ngIf="gi_payment_term.value && !gi_payment_term.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_policy_gi_form('payment_term')">
+                      <mat-icon class="mat-light-blue">close</mat-icon>
+                    </button>
+                    <mat-error *ngIf="gi_payment_term.invalid">Please enter a valid number.</mat-error>
+                  </mat-form-field>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-6">
+                  <!-- Mat-Input -- Premium -->
+                  <mat-form-field class="w-100 mb-3">
+                    <mat-label>Premium Amount {{(gi_gst_compute.value) ? '(after GST)':''}}</mat-label>
+                    <input matInput type="number" placeholder="Type Premium Amount here..." formControlName="gross_payment_after_gst" tabindex="76" step="0.01" step="0.01" min="0" max="999999999">
+                    <button type="button" mat-button *ngIf="gi_gross_payment_after_gst.value && !gi_gross_payment_after_gst.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_policy_gi_form('gross_payment_after_gst')">
+                      <mat-icon class="mat-light-blue">close</mat-icon>
+                    </button>
+                    <mat-error *ngIf="gi_gross_payment_after_gst.invalid">Please enter a valid amount.</mat-error>
+                  </mat-form-field>
+                </div>
+
+                <div class="col-6">
+                  <!-- Mat-Input -- Premium Discount -->
+                  <mat-form-field class="w-100 mb-3">
+                    <mat-label>Premium Discount</mat-label>
+                    <input matInput type="number" placeholder="Type Premium Amount here..." formControlName="payment_discount" tabindex="77" step="0.01" step="0.01" min="0" max="999999999">
+                    <button type="button" mat-button *ngIf="gi_payment_discount.value && !gi_payment_discount.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_policy_gi_form('payment_discount')">
+                      <mat-icon class="mat-light-blue">close</mat-icon>
+                    </button>
+                    <mat-error *ngIf="gi_payment_discount.invalid">Please enter a valid amount.</mat-error>
+                  </mat-form-field>
+                </div>
+              </div>
+
+              <mat-form-field floatLabel="always" appearance="none" class="w-100 mb-3 ml-4">
+                <mat-slide-toggle formControlName="gst_compute" [color]="'primary'" tabindex="78">GST will {{(gi_gst_compute.value)?'':'not'}} be computed on premiums.</mat-slide-toggle>
+                <textarea matInput hidden></textarea>
+              </mat-form-field>
+
+            </div>
+        </div>
+      </form>
+    </mat-step>
+
+
+
+
+    <mat-step label="Define Wills Details" state="folder" [stepControl]="policy_wills_form" *ngIf="submission_cat_slug.value == 'wills'">
+      <form [formGroup]="policy_wills_form" class="h-100 row">
+        <div class="d-flex h-100 flex-column mx-auto col-lg-6 mb-5">
+
+              <!-- Heading Text Component -->
+              <heading-text [title]="'Wills Details'"></heading-text>
+
+              <!-- Mat-Input -- Providers -->
+              <mat-form-field class="w-100 mb-3">
+                <mat-label>Select Provider</mat-label>
+                <mat-select class="mat-light-blue" formControlName="provider_slug" tabindex="79" [required]="true">
+                  <mat-option *ngFor="let obj of select_providers[submission_cat_slug.value] | sortBy:'asc':'full_name'" [value]="obj.slug">{{obj.full_name}}</mat-option>
+                </mat-select>
+                <mat-error *ngIf="wills_provider_slug.invalid">Provider is required.</mat-error>
+              </mat-form-field>
+
+              <div class="row" *ngIf="wills_provider_slug.value">
+                <div class="col-6">
+                  <!-- Mat-Input -- Submission Mode -->
+                  <mat-form-field class="w-100 mb-3">
+                    <mat-label>Select Submission Mode</mat-label>
+                    <mat-select class="mat-light-blue" formControlName="submission_mode" tabindex="80" [required]="true">
+                      <mat-option [value]="'online'">Online</mat-option>
+                      <mat-option [value]="'hard-copy'">Hard-Copy</mat-option>
+                    </mat-select>
+                    <mat-error *ngIf="wills_submission_mode.invalid">Submission Mode is required.</mat-error>
+                  </mat-form-field>
+                </div>
+                <div class="col-6">
+                  <!-- Mat-Input -- Payment Mode -->
+                  <mat-form-field class="w-100 mb-3">
+                    <mat-label>Select Payment Mode</mat-label>
+                    <mat-select class="mat-light-blue" formControlName="payment_mode_slug" tabindex="81" [required]="true">
+                      <mat-option *ngFor="let obj of select_payment_mode" [value]="obj.slug">{{obj.title}}</mat-option>
+                    </mat-select>
+                    <mat-error *ngIf="wills_payment_mode_slug.invalid">Payment Mode is required.</mat-error>
+                  </mat-form-field>
+                </div>
+              </div>
+
+        </div>
+      </form>
+    </mat-step>
+
+
+
+
+
+
+    <mat-step label="Define Payment Details" state="money" [stepControl]="policy_insurance_payment_form"
+      *ngIf="(submission_cat_slug.value == 'insurance' && policy_insurance_form.valid) ||
+             (submission_cat_slug.value == 'cis' && policy_investment_form.valid) ||
+             (submission_cat_slug.value == 'gi' && policy_gi_form.valid)">
+      <form [formGroup]="policy_insurance_payment_form" class="h-100 row">
+
+        <div class="d-flex h-100 flex-column mx-auto col-lg-6 mb-4" *ngIf="insurance_product_option_uuid.value && select_riders_all[insurance_product_option_uuid.value].length > 0">
+
+          <!-- Mat-Autocomplete -- Select Rider -->
+          <mat-form-field class="w-100 mb-3">
+            <input matInput class="text-master" placeholder="Select a Rider" aria-label="Select a Rider" [matAutocomplete]="riderlist" formControlName="rider" (input)="fuseRiders()" (blur)="blurRider()" tabindex="82">
+            <mat-hint align="start" *ngIf="insurance_optionSelected">{{select_riders_all[insurance_product_option_uuid.value].length}} different riders available.</mat-hint>
+            <mat-autocomplete #riderlist="matAutocomplete" [displayWith]="displayFn" (optionSelected)="addRider($event)">
+              <mat-option *ngFor="let select_rider of insurance_riders_list" [value]="select_rider">
+                <div class="d-flex flex-column my-auto">
+                  <div class="fs-14 lh-21">{{select_rider.name}}</div>
+                </div>
+              </mat-option>
+            </mat-autocomplete>
+          </mat-form-field>
+
+        </div>
+
+        <div class="d-flex w-100 flex-column" formArrayName="payment_list">
+
+          <table class="table table-responsive">
+            <thead>
+              <td style="width: 100%; min-width: 200px;">Product Name</td>
+              <td *ngIf="((submission_cat_slug.value == 'insurance' && insurance_gst_compute.value) ||
+                   (submission_cat_slug.value == 'cis' && investment_gst_compute.value) ||
+                   (submission_cat_slug.value == 'gi' && gi_gst_compute.value))" class="text-center px-1 d-none d-xl-table-cell" style="width: 115px; min-width: 115px;">GST Rate</td>
+              <td *ngIf="((submission_cat_slug.value == 'insurance' && insurance_gst_compute.value) ||
+                   (submission_cat_slug.value == 'cis' && investment_gst_compute.value) ||
+                   (submission_cat_slug.value == 'gi' && gi_gst_compute.value))" class="text-center px-1 d-none d-xl-table-cell" style="width: 115px; min-width: 115px;">Gross Premium (bef GST)</td>
+              <td *ngIf="((submission_cat_slug.value == 'insurance' && insurance_gst_compute.value) ||
+                   (submission_cat_slug.value == 'cis' && investment_gst_compute.value) ||
+                   (submission_cat_slug.value == 'gi' && gi_gst_compute.value))" class="text-center px-1 d-none d-xl-table-cell" style="width: 115px; min-width: 115px;">Premium GST</td>
+              <td class="text-center px-1" style="width: 115px; min-width: 115px;">Gross Premium {{((submission_cat_slug.value == 'insurance' && insurance_gst_compute.value) ||
+                   (submission_cat_slug.value == 'cis' && investment_gst_compute.value) ||
+                   (submission_cat_slug.value == 'gi' && gi_gst_compute.value))?'(aft GST)':''}}</td>
+              <td class="text-center px-1" style="width: 115px; min-width: 115px;">Premium Discount</td>
+              <td *ngIf="((submission_cat_slug.value == 'insurance' && insurance_gst_compute.value) ||
+                   (submission_cat_slug.value == 'cis' && investment_gst_compute.value) ||
+                   (submission_cat_slug.value == 'gi' && gi_gst_compute.value))" class="text-center px-1 d-none d-xl-table-cell" style="width: 115px; min-width: 115px;">Nett Premium (bef GST)</td>
+              <td *ngIf="((submission_cat_slug.value == 'insurance' && insurance_gst_compute.value) ||
+                   (submission_cat_slug.value == 'cis' && investment_gst_compute.value) ||
+                   (submission_cat_slug.value == 'gi' && gi_gst_compute.value))" class="text-center px-1 d-none d-xl-table-cell" style="width: 115px; min-width: 115px;">Premium GST</td>
+              <td class="text-center px-1" style="width: 115px; min-width: 115px;">Nett Premium {{((submission_cat_slug.value == 'insurance' && insurance_gst_compute.value) ||
+                   (submission_cat_slug.value == 'cis' && investment_gst_compute.value) ||
+                   (submission_cat_slug.value == 'gi' && gi_gst_compute.value))?'(aft GST)':''}}</td>
+              <td class="text-center px-1" style="width: 115px; min-width: 115px;">Computed APE</td>
+              <td class="text-center px-1" style="width: 80px; min-width: 80px;"></td>
+            </thead>
+            <tbody>
+              <tr class="main fw-600" *ngIf="submission_cat_slug.value == 'insurance' && insurance_optionSelected && policy_insurance_form.valid">
+                <td>
+                  {{insurance_product_option.value?.name}}
+                  <span class="d-block fs-10 text-uppercase text-master-lt desc ls-15 fw-600 lh-13">Main Product</span>
+                </td>
+                <td *ngIf="insurance_gst_compute.value" class="text-center d-none d-xl-table-cell">{{(insurance_gst_rate.value || 0) | percent}}</td>
+                <td *ngIf="insurance_gst_compute.value" class="text-center d-none d-xl-table-cell">{{(insurance_gross_payment_before_gst.value || 0) | currency}}</td>
+                <td *ngIf="insurance_gst_compute.value" class="text-center d-none d-xl-table-cell">{{(insurance_gross_payment_gst.value || 0) | currency}}</td>
+                <td class="text-center">{{(insurance_gross_payment_after_gst.value || 0) | currency}}</td>
+                <td class="text-center">{{(insurance_payment_discount.value || 0) | percent}}</td>
+                <td *ngIf="insurance_gst_compute.value" class="text-center d-none d-xl-table-cell">{{(insurance_nett_payment_before_gst.value || 0) | currency}}</td>
+                <td *ngIf="insurance_gst_compute.value" class="text-center d-none d-xl-table-cell">{{(insurance_nett_payment_gst.value || 0) | currency}}</td>
+                <td class="text-center">{{(insurance_nett_payment_after_gst.value || 0) | currency}}</td>
+                <td class="text-center">{{(insurance_ape.value || 0) | currency}}</td>
+                <td class="text-center position-relative">
+                  <span class="my-auto pointer stretched-link" (click)="stepper.previous()"><i class="fad fa-edit fs-20 text-primary"></i></span>
+                </td>
+              </tr>
+              <tr class="main fw-600" *ngIf="submission_cat_slug.value == 'cis' && investment_optionSelected && policy_investment_form.valid">
+                <td>
+                  {{investment_product_option.value?.name}}
+                  <span class="d-block fs-10 text-uppercase text-master-lt desc ls-15 fw-600 lh-13">Main Product</span>
+                </td>
+                <td *ngIf="investment_gst_compute.value" class="text-center d-none d-xl-table-cell">{{(investment_gst_rate.value || 0) | percent}}</td>
+                <td *ngIf="investment_gst_compute.value" class="text-center d-none d-xl-table-cell">{{(investment_gross_payment_before_gst.value || 0) | currency}}</td>
+                <td *ngIf="investment_gst_compute.value" class="text-center d-none d-xl-table-cell">{{(investment_gross_payment_gst.value || 0) | currency}}</td>
+                <td class="text-center">{{(investment_gross_payment_after_gst.value || 0) | currency}}</td>
+                <td class="text-center">{{(investment_payment_discount.value || 0) | percent}}</td>
+                <td *ngIf="investment_gst_compute.value" class="text-center d-none d-xl-table-cell">{{(investment_nett_payment_before_gst.value || 0) | currency}}</td>
+                <td *ngIf="investment_gst_compute.value" class="text-center d-none d-xl-table-cell">{{(investment_nett_payment_gst.value || 0) | currency}}</td>
+                <td class="text-center">{{(investment_nett_payment_after_gst.value || 0) | currency}}</td>
+                <td class="text-center">{{(investment_ape.value || 0) | currency}}</td>
+                <td class="text-center position-relative">
+                  <span class="my-auto pointer stretched-link" (click)="stepper.previous()"><i class="fad fa-edit fs-20 text-primary"></i></span>
+                </td>
+              </tr>
+              <tr class="main fw-600" *ngIf="submission_cat_slug.value == 'gi' && policy_gi_form.valid">
+                <td>
+                  {{gi_product_cat.value?.title}}
+                  <span class="d-block fs-10 text-uppercase text-master-lt desc ls-15 fw-600 lh-13">Main Product</span>
+                </td>
+                <td *ngIf="gi_gst_compute.value" class="text-center d-none d-xl-table-cell">{{(gi_gst_rate.value || 0) | percent}}</td>
+                <td *ngIf="gi_gst_compute.value" class="text-center d-none d-xl-table-cell">{{(gi_gross_payment_before_gst.value || 0) | currency}}</td>
+                <td *ngIf="gi_gst_compute.value" class="text-center d-none d-xl-table-cell">{{(gi_gross_payment_gst.value || 0) | currency}}</td>
+                <td class="text-center">{{(gi_gross_payment_after_gst.value || 0) | currency}}</td>
+                <td class="text-center">{{(gi_payment_discount.value || 0) | percent}}</td>
+                <td *ngIf="gi_gst_compute.value" class="text-center d-none d-xl-table-cell">{{(gi_nett_payment_before_gst.value || 0) | currency}}</td>
+                <td *ngIf="gi_gst_compute.value" class="text-center d-none d-xl-table-cell">{{(gi_nett_payment_gst.value || 0) | currency}}</td>
+                <td class="text-center">{{(gi_nett_payment_after_gst.value || 0) | currency}}</td>
+                <td class="text-center">{{(gi_ape.value || 0) | currency}}</td>
+                <td class="text-center position-relative">
+                  <span class="my-auto pointer stretched-link" (click)="stepper.previous()"><i class="fad fa-edit fs-20 text-primary"></i></span>
+                </td>
+              </tr>
+              <tr [formGroupName]="i" *ngFor="let item of payment_list.controls; let i = index;">
+                <td>
+                  {{item.get('name').value}}
+                  <span class="d-block fs-10 text-uppercase text-master-lt desc ls-15 fw-600 lh-13">Rider</span>
+                </td>
+                <td *ngIf="((submission_cat_slug.value == 'insurance' && insurance_gst_compute.value) ||
+                   (submission_cat_slug.value == 'cis' && investment_gst_compute.value) ||
+                   (submission_cat_slug.value == 'gi' && gi_gst_compute.value))" class="text-center d-none d-xl-table-cell">{{(item.get('gst_rate').value || 0) | percent}}</td>
+                <td *ngIf="((submission_cat_slug.value == 'insurance' && insurance_gst_compute.value) ||
+                   (submission_cat_slug.value == 'cis' && investment_gst_compute.value) ||
+                   (submission_cat_slug.value == 'gi' && gi_gst_compute.value))" class="text-center d-none d-xl-table-cell">{{(item.get('gross_payment_before_gst').value || 0) | currency}}</td>
+                <td *ngIf="((submission_cat_slug.value == 'insurance' && insurance_gst_compute.value) ||
+                   (submission_cat_slug.value == 'cis' && investment_gst_compute.value) ||
+                   (submission_cat_slug.value == 'gi' && gi_gst_compute.value))" class="text-center d-none d-xl-table-cell">{{(item.get('gross_payment_gst').value || 0) | currency}}</td>
+                <td class="text-center">
+                  <mat-form-field appearance="outline" class="w-100 my-auto">
+                    <input class="text-center" matInput type="number" placeholder="0.00" step="0.01" min="0" max="999999999" formControlName="gross_payment_after_gst" (input)="processRiders(item)" style="margin-top: -15px;">
+                  </mat-form-field>
+                </td>
+                <td class="text-center">
+                  <!-- Mat-Input -- Premium Discount -->
+                  <mat-form-field appearance="outline" class="w-100 my-auto">
+                    <mat-select formControlName="payment_discount" [required]="true" (selectionChange)="processRiders(item)" style="margin-top: -15px;padding: 1px 0 !important;">
+                      <mat-option [value]="0">0%</mat-option>
+                      <mat-option [value]="0.05">5%</mat-option>
+                      <mat-option [value]="0.10">10%</mat-option>
+                      <mat-option [value]="0.15">15%</mat-option>
+                      <mat-option [value]="0.20">20%</mat-option>
+                      <mat-option [value]="0.25">25%</mat-option>
+                      <mat-option [value]="0.30">30%</mat-option>
+                      <mat-option [value]="0.35">35%</mat-option>
+                      <mat-option [value]="0.40">40%</mat-option>
+                      <mat-option [value]="0.45">45%</mat-option>
+                      <mat-option [value]="0.50">50%</mat-option>
+                      <mat-option [value]="0.55">55%</mat-option>
+                      <mat-option [value]="0.60">60%</mat-option>
+                      <mat-option [value]="0.65">65%</mat-option>
+                      <mat-option [value]="0.70">70%</mat-option>
+                      <mat-option [value]="0.75">75%</mat-option>
+                      <mat-option [value]="0.80">80%</mat-option>
+                      <mat-option [value]="0.85">85%</mat-option>
+                      <mat-option [value]="0.90">90%</mat-option>
+                      <mat-option [value]="0.95">95%</mat-option>
+                      <mat-option [value]="1">100%</mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                </td>
+                <td *ngIf="((submission_cat_slug.value == 'insurance' && insurance_gst_compute.value) ||
+                   (submission_cat_slug.value == 'cis' && investment_gst_compute.value) ||
+                   (submission_cat_slug.value == 'gi' && gi_gst_compute.value))" class="text-center d-none d-xl-table-cell">{{(item.get('nett_payment_before_gst').value || 0) | currency}}</td>
+                <td *ngIf="((submission_cat_slug.value == 'insurance' && insurance_gst_compute.value) ||
+                   (submission_cat_slug.value == 'cis' && investment_gst_compute.value) ||
+                   (submission_cat_slug.value == 'gi' && gi_gst_compute.value))" class="text-center d-none d-xl-table-cell">{{(item.get('nett_payment_gst').value || 0) | currency}}</td>
+                <td class="text-center">{{(item.get('nett_payment_after_gst').value || 0) | currency}}</td>
+                <td class="text-center">{{(item.get('ape').value || 0) | currency}}</td>
+                <td class="text-center position-relative">
+                  <span class="my-auto pointer stretched-link" (click)="paymentsRemove(i)"><i class="fad fa-trash fs-20 text-danger"></i></span>
+                </td>
+              </tr>
+            </tbody>
+            <tfoot *ngIf="submission_cat_slug.value == 'insurance' && insurance_optionSelected && policy_insurance_form.valid">
+              <tr>
+                <td>Total Riders: {{payment_list.value.length || 0}}</td>
+                <td *ngIf="insurance_gst_compute.value" class="text-center"></td>
+                <td *ngIf="insurance_gst_compute.value" class="text-center">{{paymentsSum('gross_payment_before_gst') | currency}}</td>
+                <td *ngIf="insurance_gst_compute.value" class="text-center">{{paymentsSum('gross_payment_gst') | currency}}</td>
+                <td class="text-center">{{paymentsSum('gross_payment_after_gst') | currency}}</td>
+                <td class="text-center"></td>
+                <td *ngIf="insurance_gst_compute.value" class="text-center">{{paymentsSum('nett_payment_before_gst') | currency}}</td>
+                <td *ngIf="insurance_gst_compute.value" class="text-center">{{paymentsSum('nett_payment_gst') | currency}}</td>
+                <td class="text-center">{{paymentsSum('nett_payment_after_gst') | currency}}</td>
+                <td class="text-center">{{paymentsSum('ape') | currency}}</td>
+                <td class="text-center"></td>
+              </tr>
+            </tfoot>
+          </table>
+
+        </div>
+
+      </form>
+    </mat-step>
+
+
+    <mat-step label="Upload Case Documents" state="face"
+      *ngIf="(submission_cat_slug.value == 'insurance' && policy_insurance_form.valid) ||
+               (submission_cat_slug.value == 'cis' && policy_investment_form.valid) ||
+               (submission_cat_slug.value == 'gi' && policy_gi_form.valid) ||
+               (submission_cat_slug.value == 'loans') ||
+               (submission_cat_slug.value == 'wills')">
+
+      <div ngx-dropzone (change)="onDropzoneSelectMultiple($event)" [accept]="'image/*,.pdf'" [id]="'dz_multiple'" [multiple]="true" class="id-image">
+        <ngx-dropzone-label>
+          <div class="d-flex flex-column text-truncate faa-parent animated-hover"><!-- dz-placeholder -->
+            <i class="mx-auto mb-3 faa-float fad fa-file-alt fs-60" style="color: #60b6b5;"></i>
+
+            <span class="fs-15 ls-18 lh-15 fw-600 text-master mb-1 text-truncate">Upload Case Files</span>
+            <span class="fs-12 ls-13 lh-15 text-master-lt text-wrap">Click here, or simply just drag & drop your file(s) here...</span>
+          </div>
+
+          <!-- <div class="dz-hover-placeholder animate zoomInUp flex-column">
+            <i class="fs-60 fad fa-paper-plane faa-float animated"></i>
+            <span class="fw-600 fs-18 mt-3 faa-tada animated">Drop your file(s) here!</span>
+          </div> -->
+        </ngx-dropzone-label>
+      </div>
+
+      <div *ngIf="idDropzone_files_uploaded" class="mt-3 row">
+        <div *ngFor="let file of idDropzone_files" class="col-md-4">
+          <div class="position-relative id-image d-flex flex-column" style="height: 180px">
+            <i class="fs-60 fad fa-file-check faa-float animated mx-auto mt-auto mb-3" style="color: #60b6b5;"></i>
+            <span class="fs-15 ls-18 lh-15 fw-600 text-master mb-1 mx-auto text-truncate">{{file.name}}</span>
+            <span class="fs-12 ls-13 lh-15 text-master-lt text-wrap mb-auto mx-auto">{{formatBytes(file.size)}}</span>
+            <!-- Button to remove file -->
+            <button class="mat-elevation-z btn_remove_file" mat-fab matTooltip="Remove File" [matTooltipPosition]="'above'" (click)="onDropzoneRemove(file)">
+              <i class="fal fa-times fs-20" style="transform: translate(1px,-13px);"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </mat-step>
+
+    <!-- Icon overrides. -->
+    <ng-template matStepperIcon="face">
+      <mat-icon>face</mat-icon>
+    </ng-template>
+    <ng-template matStepperIcon="date">
+      <mat-icon>date_range</mat-icon>
+    </ng-template>
+    <ng-template matStepperIcon="business">
+      <mat-icon>business_center</mat-icon>
+    </ng-template>
+    <ng-template matStepperIcon="folder">
+      <mat-icon>folder</mat-icon>
+    </ng-template>
+    <ng-template matStepperIcon="money">
+      <mat-icon>attach_money</mat-icon>
+    </ng-template>
+  </mat-horizontal-stepper>
+
+</div>
+
+
+
+
+
+<div class="mbs-footer px-4" *ngIf="selectionsLoaded">
+  <button mat-button class="fs-12 fw-600 text-master-lt" *ngIf="!(processing | async)" (click)="mbsRef.dismiss()">Cancel</button>
+  <button mat-flat-button class="ml-2 fs-12 fw-600" *ngIf="stepper && stepper.selectedIndex !== 0 && !(processing | async)" (click)="stepper.previous()">Back</button>
+  <button mat-flat-button class="ml-2 fs-12 fw-600" *ngIf="stepper && stepper.selectedIndex !== stepper.steps?.length-1 && !(processing | async)" (click)="stepper.next(); insurance_processAmounts();" [disabled]="!stepper.selected?.stepControl?.valid || false || (submission_cat_slug.value == 'insurance' && insurance_life_assured_type.value == 'individual' && !full_name.value)">Next</button>
+  <button mat-flat-button color="primary" class="ml-2 fs-12 fw-600 btn-submit" [disabled]="(processing | async)"
+      *ngIf="stepper && stepper.selectedIndex === stepper.steps?.length-1 &&
+          ((submission_cat_slug.value == 'insurance' && policy_insurance_form.valid) ||
+                   (submission_cat_slug.value == 'cis' && policy_investment_form.valid) ||
+                   (submission_cat_slug.value == 'gi' && policy_gi_form.valid) ||
+                   (submission_cat_slug.value == 'loans') ||
+                   (submission_cat_slug.value == 'wills'))" (click)="submitForm()">{{(is_update) ? 'Update' : 'Create New'}} Case</button>
+</div>
+
+
+
+
+<ng-template #loading>
+<card-loader></card-loader>
+</ng-template>

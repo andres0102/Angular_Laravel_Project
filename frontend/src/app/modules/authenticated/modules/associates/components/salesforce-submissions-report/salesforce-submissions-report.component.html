@@ -1,0 +1,99 @@
+<!--
+ * @license
+ * Copyright TWISS.IO
+ * All Rights Reserved.
+ * Licensed under the MIT License.
+ -->
+
+<!-- Start Main Blue Gradient Area -->
+<div id="main">
+  <div class="summary-type d-flex flex-column flex-lg-row justify-content-center btn-group pb-2">
+    <div class="d-flex mx-auto ml-lg-0 mb-2 text-left text-lg-center flex-column">
+      <span class="d-flex mx-auto mx-lg-0 font-proxima fs-24 ls-13 text-white text-center">{{ title }}</span>
+      <span class="d-flex mx-auto mx-lg-0 fs-11 ls-15 font-montserrat text-muted text-center fw-500">Month-to-Date Submission Reports...</span>
+    </div>
+  </div>
+</div>
+<!-- End Main Blue Gradient Area -->
+
+
+<!-- Start Padded Container -->
+<div class="main-container container-fluid animated bounceInUp">
+
+  <!-- Start Hover-Top Containers -->
+  <div class="row align-items-start hover-top">
+
+    <!-- Start Bootstrap Grid -->
+    <div class="col-12">
+
+      <!-- Start Main Component Area -->
+      <mat-card class="mat-elevation-z">
+
+        <!-- Start Material Card Content -->
+        <mat-card-header class="py-2 px-3">
+          <div class="d-flex datatable-form-fields w-100">
+            <button mat-stroked-button class="btn ml-0 mr-auto" (click)="prevMonth()" [disabled]="report?.earliest">
+              <i class="far fa-angle-left"></i>
+            </button>
+
+            <div class="my-auto text-center">
+              <span class="fs-20 ls-15 fw-600 text-master text-center text-wrap">{{report?.date}}</span>
+              <span class="d-block fs-10 ls-20 lh-12 text-center text-uppercase text-master-lt">Updated: {{now | amLocale:'en' | amDateFormat: 'MMMM Do YYYY, hh:mm:ss a'}}</span>
+            </div>
+
+            <button mat-stroked-button class="btn mr-0 ml-auto" (click)="nextMonth()" [disabled]="report?.latest">
+              <i class="far fa-angle-right"></i>
+            </button>
+          </div>
+        </mat-card-header>
+
+        <!-- Start Material Card Content -->
+        <mat-card-content class="no-inner-padding flex-column">
+
+          <table class="table table-responsive">
+            <thead>
+              <td class="text-center" style="min-width: 50px;">S/N</td>
+              <td class="text-center" style="min-width: 150px;">LFA Code</td>
+              <td style="width: 100%;">Associate Name</td>
+              <td class="text-center" style="min-width: 100px;">Case Count</td>
+              <td class="text-center" style="min-width: 200px;">Month-to-Date APE</td>
+              <td class="text-center" style="min-width: 100px;">Case Count</td>
+              <td class="text-center" style="min-width: 200px;">Year-to-Date APE</td>
+            </thead>
+            <tbody>
+              <tr *ngFor="let item of associates; let i = index">
+                <td class="text-center">{{i+1}}.</td>
+                <td class="text-center">{{item.lfa_code}}</td>
+                <td>{{item.name}}<span class="d-block fs-10 ls-20 lh-12 text-uppercase text-master-lt">{{item.designation}}</span></td>
+                <td class="text-center">{{item.cases_count}}</td>
+                <td class="text-center">{{item.ape | currency}}</td>
+                <td class="text-center">{{item.cases_count_ytd}}</td>
+                <td class="text-center">{{item.ape_ytd | currency}}</td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr>
+                <td colspan="3">{{report?.associates_count}} Associates</td>
+                <td class="text-center">{{report?.cases_count}} Cases</td>
+                <td class="text-center">{{report?.total_ape | currency}}</td>
+                <td class="text-center">{{report?.cases_count_ytd}} Cases</td>
+                <td class="text-center">{{report?.total_ape_ytd | currency}}</td>
+              </tr>
+            </tfoot>
+          </table>
+
+
+        </mat-card-content>
+        <!-- End Material Card Content -->
+
+      </mat-card>
+      <!-- End Main Database Area -->
+
+    </div>
+    <!-- End Bootstrap Grid -->
+
+  </div>
+  <!-- End Hover-Top Containers -->
+
+</div>
+<!-- End Padded Container-->

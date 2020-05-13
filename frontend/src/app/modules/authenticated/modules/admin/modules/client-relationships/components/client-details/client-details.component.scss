@@ -1,0 +1,40 @@
+/**
+ * @license
+ * Copyright TWISS.IO
+ * All Rights Reserved.
+ * Licensed under the MIT License.
+ */
+
+@import '~src/assets/styles/variables';
+
+.client-summary {
+  min-height: 170px;
+  z-index: 2;
+  box-shadow: $pg-shadow;
+
+  .back-button {
+    transition: $pg-transition;
+    font-weight: bold;
+    color: #888;
+
+    &:not(:hover) { opacity: 0.5; }
+    &:hover {
+      text-decoration: none;
+    }
+    * {
+      letter-spacing: .15em;
+    }
+  }
+  .info-container > span + span {
+    margin-left: 10px;
+    padding-left: 10px;
+  }
+}
+
+@media (max-width: 991px) {
+  .client-summary { top: -315px; }
+}
+
+@media (min-width: 992px) {
+  .client-summary { top: 0; }
+}

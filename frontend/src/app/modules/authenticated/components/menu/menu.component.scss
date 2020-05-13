@@ -1,0 +1,19 @@
+/**
+ * @license
+ * Copyright TWISS.IO
+ * All Rights Reserved.
+ * Licensed under the MIT License.
+ */
+
+.sidebar-menu .menu-items{
+  & > li ul.sub-menu{
+    margin: 0;
+    padding: 0;
+    & > :first-child{
+        margin-top: 19px;
+    }
+    & > :last-child{
+        margin-bottom: 10px;
+    }
+  }
+}

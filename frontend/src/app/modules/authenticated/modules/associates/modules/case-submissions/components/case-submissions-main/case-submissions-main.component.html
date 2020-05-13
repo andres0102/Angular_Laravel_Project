@@ -1,0 +1,571 @@
+<!--
+ * @license
+ * Copyright TWISS.IO
+ * All Rights Reserved.
+ * Licensed under the MIT License.
+ -->
+
+<!-- Start Padded Container -->
+<div class="main-container container-fluid animated bounceInUp">
+  <!-- Start Hover-Top Containers -->
+  <div
+    class="row align-items-start"
+    [ngClass]="{
+      'hover-top': !authService.user?.permissions?.includes(page_permission),
+      'hover-top-high': authService.user?.permissions?.includes(page_permission)
+    }"
+  >
+    <!-- Start Bootstrap Grid -->
+    <div class="col-12">
+      <!-- Restricted Area -->
+      <access-denied
+        *ngIf="!authService.user?.permissions?.includes(page_permission)"
+      ></access-denied>
+
+      <!-- Start Main Database Area -->
+      <mat-card
+        class="mat-elevation-z bg-transparent"
+        *ngIf="authService.user?.permissions?.includes(page_permission)"
+      >
+        <!-- Start Navigation Tabs -->
+        <nav mat-tab-nav-bar class="full-database">
+          <!-- Start Mat Tab :: All -->
+          <a
+            mat-tab-link
+            [routerLink]="[
+              '/authenticated/associates/business/case-submissions'
+            ]"
+            [queryParams]="{ status: null, f: null }"
+            queryParamsHandling="merge"
+            routerLinkActive
+            #rla1="routerLinkActive"
+            [active]="rla1.isActive"
+            style="width: 270px;"
+            [routerLinkActiveOptions]="{ exact: true }"
+            (click)="clearFilters()"
+          >
+            <div class="mat-tab-label-content">
+              <div class="d-inline-flex flex-row">
+                <span class="mat-tab-icon"><i class="fad fa-list"></i></span>
+                <div class="d-inline-flex flex-column ml-3 mat-titles">
+                  <span class="mat-tab-title align-self-start"
+                    >All Submissions</span
+                  >
+                  <span class="mat-tab-subtitle align-self-start">{{
+                    dataLoaded && submissions
+                      ? submissions.length + " Records"
+                      : "Loading..."
+                  }}</span>
+                </div>
+              </div>
+            </div>
+          </a>
+          <!-- End Mat Tab :: All -->
+
+          <!-- Start Mat Tab :: Drafts -->
+          <a
+            class="sub-category align-self-end"
+            mat-tab-link
+            [routerLink]="[
+              '/authenticated/associates/business/case-submissions'
+            ]"
+            [queryParams]="{ status: 'draft' }"
+            queryParamsHandling="merge"
+            routerLinkActive
+            #rla2="routerLinkActive"
+            [active]="rla2.isActive"
+            [routerLinkActiveOptions]="{ exact: true }"
+            (click)="statusChange('draft')"
+          >
+            <div class="mat-tab-label-content h-100">
+              <div class="d-inline-flex flex-row">
+                <span class="mat-tab-icon fs-20 lh-36"
+                  ><i class="fad fa-edit text-warning"></i
+                ></span>
+                <div class="d-inline-flex flex-column ml-2 mat-titles">
+                  <span class="mat-tab-title align-self-start text-warning-dark"
+                    >Drafts</span
+                  >
+                  <span
+                    class="mat-tab-subtitle align-self-start text-warning"
+                    >{{
+                      dataLoaded && submissions
+                        ? statusFilterCount["draft"] + " Records"
+                        : "Loading..."
+                    }}</span
+                  >
+                </div>
+              </div>
+            </div>
+          </a>
+          <!-- End Mat Tab :: Drafts -->
+
+          <!-- Start Mat Tab :: Pending -->
+          <a
+            class="sub-category align-self-end"
+            mat-tab-link
+            [routerLink]="[
+              '/authenticated/associates/business/case-submissions'
+            ]"
+            [queryParams]="{ status: 'pending' }"
+            queryParamsHandling="merge"
+            routerLinkActive
+            #rla3="routerLinkActive"
+            [active]="rla3.isActive"
+            [routerLinkActiveOptions]="{ exact: true }"
+            (click)="statusChange('pending')"
+          >
+            <div class="mat-tab-label-content h-100">
+              <div class="d-inline-flex flex-row">
+                <span class="mat-tab-icon fs-20 lh-36"
+                  ><i class="fad fa-user-clock text-muted"></i
+                ></span>
+                <div class="d-inline-flex flex-column ml-2 mat-titles">
+                  <span class="mat-tab-title align-self-start text-muted"
+                    >Pending</span
+                  >
+                  <span
+                    class="mat-tab-subtitle align-self-start text-master-lter"
+                    >{{
+                      dataLoaded && submissions
+                        ? statusFilterCount["pending"] + " Records"
+                        : "Loading..."
+                    }}</span
+                  >
+                </div>
+              </div>
+            </div>
+          </a>
+          <!-- End Mat Tab :: Pending -->
+
+          <!-- Start Mat Tab :: Rejected -->
+          <a
+            class="sub-category align-self-end"
+            mat-tab-link
+            [routerLink]="[
+              '/authenticated/associates/business/case-submissions'
+            ]"
+            [queryParams]="{ status: 'rejected' }"
+            queryParamsHandling="merge"
+            routerLinkActive
+            #rla4="routerLinkActive"
+            [active]="rla4.isActive"
+            [routerLinkActiveOptions]="{ exact: true }"
+            (click)="statusChange('rejected')"
+          >
+            <div class="mat-tab-label-content h-100">
+              <div class="d-inline-flex flex-row">
+                <span class="mat-tab-icon fs-20 lh-36"
+                  ><i class="fad fa-times-circle text-danger"></i
+                ></span>
+                <div class="d-inline-flex flex-column ml-2 mat-titles">
+                  <span class="mat-tab-title align-self-start text-danger"
+                    >Rejected</span
+                  >
+                  <span
+                    class="mat-tab-subtitle align-self-start text-danger-lter"
+                    >{{
+                      dataLoaded && submissions
+                        ? statusFilterCount["rejected"] + " Records"
+                        : "Loading..."
+                    }}</span
+                  >
+                </div>
+              </div>
+            </div>
+          </a>
+          <!-- End Mat Tab :: Rejected -->
+
+          <!-- Start Mat Tab :: (Manager) Pending Approval -->
+          <!-- <a class="sub-category align-self-end" mat-tab-link [routerLink]="['/authenticated/associates/business/case-submissions']" [queryParams]="{status: 'pending-approval'}" queryParamsHandling="merge" routerLinkActive #rla5="routerLinkActive" [active]="rla5.isActive" [routerLinkActiveOptions]="{exact:true}" (click)="statusChange('pending-approval')" *ngIf="authService.user?.roles?.is_manager">
+            <div class="mat-tab-label-content h-100">
+                <div class="d-inline-flex flex-column mat-titles h-100">
+                  <span class="mat-tab-title align-self-start">Pending Approvals</span>
+                  <span class="mat-tab-subtitle align-self-start">{{(dataLoaded && submissions) ? statusFilterCount['pending-approval'] + ' Team Records' : 'Loading...'}}</span>
+                </div>
+            </div>
+          </a> -->
+          <!-- End Mat Tab :: (Manager) Pending Approval -->
+        </nav>
+        <!-- End Navigation Tabs -->
+
+        <!-- Start Material Card Content -->
+        <mat-card-content class="no-inner-padding flex-column">
+          <!-- Start Table Filters -->
+          <div class="d-flex py-2 px-4 row datatable-form-fields">
+            <div class="col-lg-6">
+              <mat-form-field
+                appearance="outline"
+                class="mat-light-blue"
+                [ngClass]="{ 'd-none': !dataLoaded }"
+              >
+                <mat-icon matPrefix>filter_list</mat-icon>
+                <mat-label>Filter by Provider Names</mat-label>
+                <mat-select
+                  [(ngModel)]="providerSelected"
+                  panelClass="mat-selection-panel mat-light-blue"
+                  (selectionChange)="filterChange()"
+                >
+                  <mat-option
+                    [value]="''"
+                    class="show-all"
+                    *ngIf="dataLoaded && submissions"
+                    >Show All Providers
+                    <span class="filter_count"
+                      >({{ providersFilterCount["all"] || 0 }})</span
+                    ></mat-option
+                  >
+                  <ng-container *ngFor="let provider of providers">
+                    <mat-option
+                      *ngIf="
+                        dataLoaded &&
+                        submissions &&
+                        providersFilterCount[provider.slug] > 0
+                      "
+                      [value]="provider.alias"
+                      >{{ provider.full_name }}
+                      <span class="filter_count"
+                        >({{ providersFilterCount[provider.slug] || 0 }})</span
+                      ></mat-option
+                    >
+                  </ng-container>
+                </mat-select>
+                <button
+                  type="button"
+                  mat-button
+                  *ngIf="providerSelected"
+                  matSuffix
+                  mat-icon-button
+                  aria-label="Clear"
+                  (click)="
+                    $event.stopPropagation();
+                    providerSelected = '';
+                    filterChange()
+                  "
+                  class="d-inline-block"
+                  style="transform: translateY(9px);"
+                >
+                  <mat-icon class="mat-light-blue">close</mat-icon>
+                </button>
+              </mat-form-field>
+            </div>
+            <div class="col-lg-6 text-right">
+              <mat-form-field
+                appearance="outline"
+                [ngClass]="{
+                  'd-none': !dataLoaded,
+                  activated:
+                    searchActive ||
+                    pageService.isMobile ||
+                    pageService.isDesktopSmall
+                }"
+                class="mat-light-blue multiple auto-hide pointer"
+                (click)="searchActive = true"
+              >
+                <mat-icon matPrefix>search</mat-icon>
+                <mat-label>Search Submission Records</mat-label>
+                <input
+                  matInput
+                  #searchInput
+                  type="text"
+                  placeholder="Type anything here..."
+                  tabindex="1"
+                  [(ngModel)]="searchTerm"
+                  (input)="searchChange()"
+                  (blur)="searchChange(true)"
+                  (keyup.esc)="searchChange(true); $event.target.blur()"
+                  spellcheck="false"
+                  autocomplete="off"
+                />
+                <button
+                  type="button"
+                  mat-button
+                  *ngIf="searchTerm"
+                  matSuffix
+                  mat-icon-button
+                  aria-label="Clear"
+                  (click)="searchTerm = null; searchChange()"
+                  class="d-inline-block"
+                >
+                  <mat-icon>close</mat-icon>
+                </button>
+              </mat-form-field>
+
+              <button
+                mat-stroked-button
+                class="btn"
+                (click)="assSubmissionsService.addSubmissionDialog()"
+                *ngIf="dataLoaded && assSubmissionsService.clients"
+                tooltip="New Submission"
+                container="body"
+              >
+                <i class="far fa-plus"></i>
+              </button>
+
+              <button
+                mat-stroked-button
+                class="btn"
+                (click)="getSubmissions()"
+                tooltip="Refresh Database"
+                container="body"
+              >
+                <i class="far fa-sync-alt" *ngIf="dataLoaded"></i>
+                <mat-spinner
+                  [diameter]="20"
+                  [strokeWidth]="3"
+                  *ngIf="!dataLoaded"
+                ></mat-spinner>
+              </button>
+            </div>
+          </div>
+          <!-- End Table Filters -->
+
+          <!-- Progress Loader -->
+          <card-loader *ngIf="!dataLoaded"></card-loader>
+
+          <!-- Datatable Start -->
+          <ngx-datatable
+            [rows]="submissions"
+            class="material w-100"
+            [ngStyle]="{
+              height: getDatatableHeight(submissions, 60) + 105 + 'px'
+            }"
+            [ngClass]="{
+              mobile: pageService.isMobile || pageService.isDesktopSmall
+            }"
+            [columnMode]="'force'"
+            [headerHeight]="50"
+            [footerHeight]="50"
+            [scrollbarV]="true"
+            [scrollbarH]="true"
+            [reorderable]="false"
+            [rowHeight]="60"
+            [messages]="messages"
+            *ngIf="dataLoaded"
+            [sorts]="[{ prop: 'created_at', dir: 'desc' }]"
+          >
+            <!-- Submission Status -->
+            <ngx-datatable-column
+              [resizeable]="false"
+              name="Status"
+              prop="status"
+              headerClass="text-center"
+              cellClass="px-3"
+              [width]="155"
+              [canAutoResize]="false"
+              [draggable]="false"
+            >
+              <ng-template
+                ngx-datatable-cell-template
+                let-row="row"
+                let-value="value"
+              >
+                <span
+                  class="tw-chip w-100"
+                  [ngClass]="{
+                    green: row.status == 'Submitted',
+                    yellow: row.status == 'Draft',
+                    red: row.status == 'Rejected',
+                    grey: row.status == 'Pending'
+                  }"
+                  >{{ value | uppercase }}</span
+                >
+              </ng-template>
+            </ngx-datatable-column>
+
+            <!-- Client Display Photo -->
+            <ngx-datatable-column
+              [resizeable]="false"
+              [resizeable]="false"
+              name=""
+              [width]="70"
+              [minWidth]="70"
+              [draggable]="false"
+              [canAutoResize]="false"
+              cellClass="pr-0"
+            >
+              <ng-template ngx-datatable-cell-template let-row="row">
+                <div
+                  class="profile-thumbnail-wrapper overflow-hidden {{
+                    !row.client?.display_photo?.original &&
+                    !row.client?.display_photo?.thumbnail
+                      ? 'rounded ' +
+                        (row.client?.client_type == 'Individual'
+                          ? row.client?.personal?.gender_slug || 'camera'
+                          : 'business')
+                      : 'rounded-circle faa-tada animated-hover'
+                  }}"
+                >
+                  <img
+                    src="{{
+                      row.client?.display_photo?.original ||
+                        '/assets/images/spacer.png'
+                    }}"
+                    width="40"
+                    height="40"
+                    alt=""
+                  />
+                </div>
+              </ng-template>
+            </ngx-datatable-column>
+
+            <!-- Client Particulars -->
+            <ngx-datatable-column
+              [resizeable]="false"
+              name="Client Information"
+              prop="client.display_name"
+              [minWidth]="300"
+              [draggable]="false"
+              headerClass="pl-1"
+              cellClass="pl-1"
+            >
+              <ng-template
+                ngx-datatable-cell-template
+                let-row="row"
+                let-value="value"
+              >
+                <div
+                  [routerLink]="[row.uuid]"
+                  class="stretched-link hover-padding text-truncate"
+                >
+                  {{ value }}
+                </div>
+                <div
+                  class="hover-padding fs-10 text-uppercase text-master-lt desc text-truncate info-container"
+                  *ngIf="row.client?.client_type == 'Individual'"
+                >
+                  <span
+                    class="ls-13"
+                    *ngIf="
+                      row.client?.personal?.job_title ||
+                      row.client?.personal?.company_name
+                    "
+                    >{{
+                      row.client?.personal?.job_title &&
+                      row.client?.personal?.company_name
+                        ? row.client?.personal?.job_title +
+                          " @ " +
+                          row.client?.personal?.company_name
+                        : row.client?.personal?.job_title ||
+                          row.client?.personal?.company_name
+                    }}</span
+                  >
+                  <span
+                    class="ls-13"
+                    *ngIf="row.client?.personal?.gender_slug"
+                    >{{ row.client?.personal?.gender_slug | uppercase }}</span
+                  >
+                  <span
+                    class="ls-13"
+                    *ngIf="row.client?.personal?.date_birth"
+                    >{{
+                      -(
+                        row.client?.personal?.date_birth
+                        | amDifference: today:"years"
+                      ) + " year old" | uppercase
+                    }}</span
+                  >
+                </div>
+                <div
+                  class="hover-padding fs-10 ls-13 text-uppercase text-master-lt desc text-truncate"
+                  *ngIf="row.client_type == 'Business' && row.business?.uen"
+                >
+                  Business UEN: {{ row.business?.uen }}
+                </div>
+              </ng-template>
+            </ngx-datatable-column>
+
+            <!-- Case Providers -->
+            <ngx-datatable-column
+              [resizeable]="false"
+              name="Providers"
+              prop="providers"
+              headerClass="text-center"
+              [width]="200"
+              [canAutoResize]="false"
+              [draggable]="false"
+            >
+              <ng-template
+                ngx-datatable-cell-template
+                let-row="row"
+                let-value="value"
+              >
+                <div class="hover-padding text-center text-truncate">
+                  {{ (value | uppercase) || "-" }}
+                </div>
+              </ng-template>
+            </ngx-datatable-column>
+
+            <!-- Total Premiums -->
+            <ngx-datatable-column
+              [resizeable]="false"
+              name="Total Premiums"
+              prop="total_premiums"
+              headerClass="text-center"
+              [width]="150"
+              [canAutoResize]="false"
+              [draggable]="false"
+            >
+              <ng-template
+                ngx-datatable-cell-template
+                let-row="row"
+                let-value="value"
+              >
+                <div class="text-center">{{ value || 0 | currency }}</div>
+              </ng-template>
+            </ngx-datatable-column>
+
+            <!-- Total APE -->
+            <ngx-datatable-column
+              [resizeable]="false"
+              name="Total APE"
+              prop="total_ape"
+              headerClass="text-center"
+              [width]="150"
+              [canAutoResize]="false"
+              [draggable]="false"
+            >
+              <ng-template
+                ngx-datatable-cell-template
+                let-row="row"
+                let-value="value"
+              >
+                <div class="text-center">{{ value || 0 | currency }}</div>
+                <div
+                  class="hover-padding text-center fs-10 ls-13 text-uppercase text-master-lt desc text-truncate"
+                >
+                  TOTAL CASES: {{ row.case_count }}
+                </div>
+              </ng-template>
+            </ngx-datatable-column>
+
+            <!-- Date Submission -->
+            <ngx-datatable-column
+              [resizeable]="false"
+              name="Date Submission"
+              prop="date_submission"
+              headerClass="text-center"
+              [width]="150"
+              [canAutoResize]="false"
+              [draggable]="false"
+            >
+              <ng-template
+                ngx-datatable-cell-template
+                let-row="row"
+                let-value="value"
+              >
+                <div class="text-center">{{ value || "-" }}</div>
+              </ng-template>
+            </ngx-datatable-column>
+          </ngx-datatable>
+          <!-- Datatable End -->
+        </mat-card-content>
+        <!-- End Material Card Content -->
+      </mat-card>
+      <!-- End Main Database Area -->
+    </div>
+    <!-- End Bootstrap Grid -->
+  </div>
+  <!-- End Hover-Top Containers -->
+</div>
+<!-- End Padded Container -->

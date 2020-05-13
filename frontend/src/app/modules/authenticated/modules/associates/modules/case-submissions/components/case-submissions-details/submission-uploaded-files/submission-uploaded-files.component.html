@@ -1,0 +1,72 @@
+<!--
+ * @license
+ * Copyright TWISS.IO
+ * All Rights Reserved.
+ * Licensed under the MIT License.
+ -->
+
+<!-- Progress Loader -->
+<card-loader *ngIf="!dataLoaded"></card-loader>
+
+<div *ngIf="dataLoaded" class="p-4 position-relative">
+
+  <div class="loading d-flex" *ngIf="processing">
+    <mat-spinner class="m-auto"></mat-spinner>
+  </div>
+
+  <div *ngFor="let upload of upload_types" class="mb-5">
+
+    <p class="fw-700 mb-0 fs-20 ls-10 text-master">{{upload.title}}</p>
+
+    <hr class="mt-2">
+
+    <div class="list-group row flex-row">
+
+      <div class="col-12">
+        <div class="list-group-item d-flex" *ngIf="mediaByType(upload.slug).length == 0 && submission.status_slug != 'draft'">
+          <span class="fs-10 fw-600 ls-13 text-uppercase text-master my-4 mx-auto">No Data Found</span>
+        </div>
+      </div>
+
+      <div class="col-md-6 mb-4" *ngFor="let item of mediaByType(upload.slug) | keyvalue">
+        <div class="list-group-item list-group-item-action" (click)="downloadMedia(item.value.id, item.value.file_name)">
+          <div class="d-flex w-100">
+            <div class="d-flex my-auto">
+              <i class="fad fa-file-image fs-30 text-master-lt mr-3"></i>
+            </div>
+            <div class="d-flex flex-column my-auto text-truncate">
+              <span class="mt-0 fw-500 fs-15 lh-20 text-truncate">{{item.value.file_name}}</span>
+              <small class="fs-12 ls-8 lh-16 text-master-lt">{{item.value.size | filesize}} <span class="mx-1">|</span> {{item.value.mime_type}}</small>
+            </div>
+          </div>
+        </div>
+        <button mat-flat-button class="d-flex list-group-item list-group-item-action delete justify-content-center" type="button" *ngIf="submission.status_slug == 'draft'" [swal]="{
+                                                                    title: 'Delete File',
+                                                                    text: 'Please note that this action is irreversible.',
+                                                                    showCancelButton: true,
+                                                                    cancelButtonColor: '#ddd',
+                                                                    confirmButtonColor: '#ef4968',
+                                                                    confirmButtonText: 'Delete',
+                                                                    allowOutsideClick: false
+                                                                  }"
+                                                                  (confirm)="removeMedia(item.value.id)">
+          <span class="fs-10 fw-600 ls-13 text-uppercase text-master mx-auto py-2 d-block">Remove File</span>
+        </button>
+      </div>
+    </div>
+
+    <div ngx-dropzone (change)="onDropzoneUpload($event, upload.slug)" [accept]="'image/*,.pdf'" [id]="'dz_multiple'" [multiple]="true" class="id-image" *ngIf="submission.status_slug == 'draft'">
+      <ngx-dropzone-label>
+        <div class="d-flex flex-column text-truncate faa-parent animated-hover">
+          <i class="mx-auto mb-3 faa-float fad fa-file-alt fs-60" style="color: #60b6b5;"></i>
+
+          <span class="fs-15 ls-18 lh-15 fw-600 text-master mb-1 text-truncate">Upload files for {{upload.title}}</span>
+          <span class="fs-12 ls-13 lh-15 text-master-lt text-wrap">Click here, or simply just drag & drop your file(s) here...</span>
+        </div>
+      </ngx-dropzone-label>
+    </div>
+
+  </div>
+  <!-- End *ngFor -->
+
+</div>

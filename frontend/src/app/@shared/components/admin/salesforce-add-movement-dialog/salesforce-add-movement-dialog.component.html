@@ -1,0 +1,77 @@
+<!--
+ * @license
+ * Copyright TWISS.IO
+ * All Rights Reserved.
+ * Licensed under the MIT License.
+ -->
+
+<!-- Dialog Title -->
+<h2 mat-dialog-title>Add Movement Record</h2>
+
+<!-- Start Mat Dialog Content -->
+<mat-dialog-content>
+  <form [formGroup]="authForm" (ngSubmit)="authForm.valid && submitForm()">
+
+    <div class="row">
+      <!-- Mat-Select -- Salesforce Designation -->
+      <mat-form-field class="w-100 mb-3 col-sm-6">
+        <mat-label>Salesforce Designation</mat-label>
+        <mat-select panelClass="mat-selection-panel mat-light-blue" formControlName="designation_slug" tabindex="1" required>
+          <mat-option *ngFor="let designation of designations" [value]="designation.slug">{{designation.title}}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <!-- Date Start -->
+      <mat-form-field class="w-100 mb-3 col-sm-6">
+        <mat-label>Date Start</mat-label>
+        <input class="text-muted" matInput [matDatepicker]="date_start" formControlName="date_start" [readonly]="true" required tabindex="2">
+        <mat-datepicker-toggle matSuffix [for]="date_start"></mat-datepicker-toggle>
+        <mat-datepicker #date_start disabled="false"></mat-datepicker>
+        <mat-error *ngIf="(date_start.touched || date_start.dirty) && date_start.invalid">Date Start is required.</mat-error>
+      </mat-form-field>
+
+    </div>
+
+    <!-- LFA-Code -->
+    <div class="row">
+      <!-- Unit Code -->
+      <mat-form-field class="w-100 mb-3 col-6 col-md-3">
+        <mat-label>Unit</mat-label>
+        <mat-select panelClass="mat-selection-panel mat-light-blue" formControlName="unit" tabindex="3" required>
+          <mat-option *ngFor="let item of units" [value]="item">{{item.code}}</mat-option>
+        </mat-select>
+        <mat-error *ngIf="(unit.touched || unit.dirty) && unit.invalid">Required.</mat-error>
+        <mat-hint align="start" class="d-none d-sm-inline-block" *ngIf="unit.valid">{{unit.value.name}}</mat-hint>
+      </mat-form-field>
+
+      <!-- Group Code -->
+      <mat-form-field class="w-100 mb-3 col-6 col-md-3">
+        <mat-label>Group</mat-label>
+        <mat-select panelClass="mat-selection-panel mat-light-blue" formControlName="group" tabindex="4" required>
+          <mat-option *ngFor="let item of groups" [value]="item">{{item.code}}</mat-option>
+        </mat-select>
+        <mat-error *ngIf="(group.touched || group.dirty) && group.invalid">Required.</mat-error>
+        <mat-hint align="start" class="d-none d-sm-inline-block" *ngIf="group.valid">{{group.value.name}}</mat-hint>
+      </mat-form-field>
+
+      <!-- Mat-Input -- Client UUID -->
+      <mat-form-field class="w-100 mb-3 col-sm-6">
+        <mat-label>LFA S/N Code</mat-label>
+        <input matInput type="text" formControlName="lfa_sl_no" [readonly]="true">
+        <mat-hint align="end">{{lfa_sl_no.value?.length || 0}} / 4</mat-hint>
+      </mat-form-field>
+    </div>
+
+  </form>
+</mat-dialog-content>
+<!-- End Mat Dialog Content -->
+
+
+
+<!-- Start Mat Dialog Actions -->
+<mat-dialog-actions align="end">
+  <button mat-button [mat-dialog-close]="authForm.value" class="fs-12 fw-600 text-master-lt mr-auto" *ngIf="!processing">Cancel</button>
+  <button mat-stroked-button class="fs-12 fw-600 text-master-lt" type="reset" *ngIf="!processing" (click)="resetForm()">Reset Fields</button>
+  <button mat-flat-button color="primary" class="ml-2 fs-12 fw-600 btn-submit" [disabled]="processing || authForm.invalid" type="submit" (click)="submitForm()">{{(processing) ? 'Processing' : 'Add Record'}}</button>
+</mat-dialog-actions>
+<!-- End Mat Dialog Actions -->

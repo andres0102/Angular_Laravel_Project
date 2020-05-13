@@ -1,0 +1,22 @@
+/**
+ * @license
+ * Copyright TWISS.IO
+ * All Rights Reserved.
+ * Licensed under the MIT License.
+ */
+
+@import '~src/assets/styles/variables';
+
+.mat-card {
+  overflow: hidden;
+  &:before {
+    background: radial-gradient(rgba(242, 116, 116, 0.2), rgba(242, 116, 116, 0) 50%);
+    content: '';
+    background-size: 100%;
+    position: absolute;
+    width: 200%;
+    height: 200%;
+    transform: translateX(-50%) translateY(-50%);
+    z-index: -1;
+  }
+}

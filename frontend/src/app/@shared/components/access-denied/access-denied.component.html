@@ -1,0 +1,27 @@
+<!--
+ * @license
+ * Copyright TWISS.IO
+ * All Rights Reserved.
+ * Licensed under the MIT License.
+ -->
+
+<!-- Start Access Denied Component :: Material Card -->
+<mat-card class="mat-elevation-z border border-white">
+
+  <!-- Start Material Card Content -->
+  <mat-card-content class="align-self-center mat-card-content text-mat-red fs-20 mt-3 mb-5 text-center mat-card-content flex-column">
+
+    <!-- Animated X -->
+    <i class="fal fa-times-circle fs-100 text-danger-lt faa-shake animated"></i>
+
+    <!-- Title & Subtitle -->
+    <div>{{title}}</div>
+    <div>
+      <a class="text-danger-lt fs-15 ls-15" [routerLink]="[link]">{{linkText}}</a>
+    </div>
+
+  </mat-card-content>
+  <!-- End Material Card Content-->
+
+</mat-card>
+<!-- End Access Denied Component :: Material Card -->

@@ -1,0 +1,19 @@
+<!--
+ * @license
+ * Copyright TWISS.IO
+ * All Rights Reserved.
+ * Licensed under the MIT License.
+ -->
+
+<!-- Start Main Blue Gradient Area -->
+<div id="main" *ngIf="banner">
+  <div class="summary-type d-flex flex-column flex-lg-row justify-content-center btn-group pb-2">
+    <div class="d-flex mx-auto ml-lg-0 mb-2 text-left text-lg-center flex-column">
+      <span class="d-flex mx-auto mx-lg-0 font-proxima fs-24 ls-13 text-white text-center">{{ title }}</span>
+      <span class="d-flex mx-auto mx-lg-0 fs-11 ls-15 font-montserrat text-muted text-center fw-500">View and manage all case submissions records...</span>
+    </div>
+  </div>
+</div>
+<!-- End Main Blue Gradient Area -->
+
+<router-outlet></router-outlet>

@@ -1,0 +1,97 @@
+/**
+ * @license
+ * Copyright TWISS.IO
+ * All Rights Reserved.
+ * Licensed under the MIT License.
+ */
+
+@import '~src/assets/styles/variables';
+
+button.mat-flat-button {
+  padding: 0 16px !important;
+  &:not(.btn-submit):not(.btn-upload):not(.btn-capture) { background: #bfe8df; }
+}
+
+.btn-close-interface {
+  background-color: #ddd;
+  color: #888;
+}
+
+.btn-upload {
+  border-radius: 10px;
+  border: 4px dashed #E0E0FF;
+  height: 130px;
+  &:hover {
+    border-color: $mat-lt-blue;
+    .text-master {
+      color: $mat-lt-blue !important;
+    }
+  }
+}
+
+.id-image {
+  border: 4px dashed #E0E0FF;
+  border-radius: 10px;
+}
+
+webcam {
+  position: relative;
+  border: 4px dashed #E0E0FF;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.btn-capture {
+  position: absolute;
+  z-index: 2;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.webcam-overlay {
+  position: absolute;
+  z-index: 1;
+  top: 50%;
+  left: 50%;
+  width: 75%;
+  transform: translate(-50%, -50%);
+  opacity: .2;
+}
+
+.btn_remove_file {
+  position: absolute;
+  background: rgba(255,255,255,0.2);
+  color: rgba(0,0,0,0.3);
+  top: 10px;
+  right: 10px;
+  width: 30px;
+  height: 30px;
+  line-height: 30px;
+  &:hover {
+    background: rgba(255,255,255,0.8);
+  }
+}
+
+// @media (max-width: 1199px) {
+//   .buttons-zone {
+//     button {
+//       width: 50%;
+//       &:first-of-type {
+//         margin-right: 10px;
+//       }
+//       &:last-of-type {
+//         margin-left: 10px;
+//       }
+//     }
+//   }
+// }
+
+@media (min-width: 1200px) {
+  .buttons-zone {
+    width: 500px;
+  }
+  section.col-xl-6:first-of-type {
+    border-right: 1px solid #f5f5f5;
+  }
+}

@@ -1,0 +1,38 @@
+/**
+ * @license
+ * Copyright TWISS.IO
+ * All Rights Reserved.
+ * Licensed under the MIT License.
+ */
+
+@import '~src/assets/styles/variables';
+
+mat-card-content {
+  background: white;
+}
+
+.mat-form-field {
+  vertical-align: middle;
+  &.multiple { width: calc(100% - 65px); }
+  &:not(.multiple) { width: 100%; }
+}
+
+.profile-thumbnail-wrapper {
+  width: 40px;
+  height: 40px;
+}
+
+ngx-datatable { min-height: 170px !important; }
+
+@media (min-width: 992px) {
+  ngx-datatable.product-options { max-height: calc(100vh - 345px) !important; }
+  .riders-container {
+    padding-top: 60px;
+    min-width: 400px;
+  }
+}
+
+
+@media (max-width: 991px) {
+  ngx-datatable { max-height: calc(100vh - 360px) !important; }
+}

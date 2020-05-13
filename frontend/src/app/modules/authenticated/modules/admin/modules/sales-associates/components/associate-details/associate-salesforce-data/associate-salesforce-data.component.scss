@@ -1,0 +1,61 @@
+/**
+ * @license
+ * Copyright TWISS.IO
+ * All Rights Reserved.
+ * Licensed under the MIT License.
+ */
+
+@import '~src/assets/styles/variables';
+
+:host {width: 100%;}
+
+button.mat-fab {
+  position: fixed;
+  z-index: 2;
+  bottom: 60px;
+  right: 30px;
+}
+
+.list-group .list-group-item {
+  .btn-hover-remove { transition: .3s ease; }
+  &:not(:hover) .btn-hover-remove { opacity: .3; }
+  &.active { z-index: 0; }
+}
+
+.profile-thumbnail-wrapper {
+  width: 120px;
+  height: 120px;
+}
+
+.mat-card-header {
+  z-index: 1;
+  background: #fafaff;
+  box-shadow: 0px 1px 3px rgba(200, 200, 200, 0.2);
+  color: $mat-lt-blue;
+  a.link {
+    color: $mat-blue;
+    border-color: $mat-lt-blue;
+  }
+}
+
+.mat-card-footer {
+  z-index: 1;
+  bottom: 0;
+  border-top: 1px solid #f5f5f5;
+  background: #fafafa;
+  box-shadow: 0px -1px 3px rgba(200, 200, 200, 0.2);
+}
+
+@media (max-width: 991px) {
+  .mat-card-header { top: 35px; }
+}
+
+@media (min-width: 992px) {
+  .mat-card-header { top: 245px; }
+}
+
+@media (min-width: 1200px) {
+  section.col-xl-6:first-of-type {
+    border-right: 1px solid #f5f5f5;
+  }
+}

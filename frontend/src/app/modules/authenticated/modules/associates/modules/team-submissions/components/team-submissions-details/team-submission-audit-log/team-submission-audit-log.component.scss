@@ -1,0 +1,71 @@
+/**
+ * @license
+ * Copyright TWISS.IO
+ * All Rights Reserved.
+ * Licensed under the MIT License.
+ */
+
+@import '~src/assets/styles/variables';
+
+:host { width: 100%; }
+
+mat-card.mat-card {
+  min-height: unset;
+  background: linear-gradient(-30deg, rgba(25, 25, 25, 0.03) -40%, white 100%);
+  // .mat-card-content { border-bottom: 1px solid rgba(255, 255, 255, .5); }
+  // .mat-card-footer {
+    // border-top: 1px solid rgba(50,50,50,0.03);
+    // background-color: rgba(255,255,255,.5);
+  // }
+  &:after {
+    top: calc(50% - 5px);
+    content: "";
+    height: 0;
+    width: 0;
+    position: absolute;
+    pointer-events: none;
+    width: 10px;
+    height: 10px;
+    z-index: 0;
+  }
+
+  .mat-card-content {
+    padding-left: 60px;
+    &:before {
+      content: "“";
+      font-size: 170px;
+      position: absolute;
+      font-family: Proxima;
+      line-height: 116px;
+      font-weight: bold;
+      left: -5px;
+      color: rgba(0,0,0,0.03);
+      letter-spacing: unset;
+      z-index: -1;
+      top: 0;
+    }
+  }
+}
+
+@media (min-width: 992px) {
+  .timeline-block {
+    &:nth-child(even) mat-card.mat-card:after {
+      right: calc(100% - 5px);
+      background: linear-gradient(45deg, transparent 50%, #ffffff 50%);
+      transform: rotate(-135deg);
+    }
+    &:nth-child(odd) mat-card.mat-card:after {
+      left: calc(100% - 5px);
+      background: linear-gradient(45deg, transparent 50%, #ffffff 50%);
+      transform: rotate(45deg);
+    }
+  }
+}
+
+@media (max-width: 991px) {
+  .timeline-block mat-card.mat-card:after {
+    right: calc(100% - 5px);
+    background: linear-gradient(45deg, transparent 50%, #ffffff 50%);
+    transform: rotate(-135deg);
+  }
+}

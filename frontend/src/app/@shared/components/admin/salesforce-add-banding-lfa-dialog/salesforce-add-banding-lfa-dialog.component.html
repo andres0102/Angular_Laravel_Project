@@ -1,0 +1,54 @@
+<!--
+ * @license
+ * Copyright TWISS.IO
+ * All Rights Reserved.
+ * Licensed under the MIT License.
+ -->
+
+<!-- Dialog Title -->
+<h2 mat-dialog-title>Add LFA Banding Record</h2>
+
+<!-- Start Mat Dialog Content -->
+<mat-dialog-content>
+  <form [formGroup]="authForm" (ngSubmit)="authForm.valid && submitForm()">
+
+    <div class="row">
+      <!-- Mat-Select -- Banding -->
+      <mat-form-field class="w-100 mb-3 col-sm-6">
+        <mat-label>LFA Banding</mat-label>
+        <mat-select panelClass="mat-selection-panel mat-light-blue" formControlName="rate" tabindex="1" required>
+          <mat-option [value]="0.5">Band 1 (50%)</mat-option>
+          <mat-option [value]="0.55">Band 2 (55%)</mat-option>
+          <mat-option [value]="0.6">Band 3 (60%)</mat-option>
+          <mat-option [value]="0.65">Band 4 (65%)</mat-option>
+          <mat-option [value]="0.7">Band 5 (70%)</mat-option>
+          <mat-option [value]="0.75">Band 6 (75%)</mat-option>
+          <mat-option [value]="0.8">Band 7 (80%)</mat-option>
+        </mat-select>
+        <mat-error *ngIf="(rate.touched || rate.dirty) && rate.invalid">Banding Rate is required.</mat-error>
+      </mat-form-field>
+
+      <!-- Date Start -->
+      <mat-form-field class="w-100 mb-3 col-sm-6">
+        <mat-label>Date Start</mat-label>
+        <input class="text-muted" matInput [matDatepicker]="date_start" formControlName="date_start" [readonly]="true" required tabindex="2">
+        <mat-datepicker-toggle matSuffix [for]="date_start"></mat-datepicker-toggle>
+        <mat-datepicker #date_start disabled="false"></mat-datepicker>
+        <mat-error *ngIf="(date_start.touched || date_start.dirty) && date_start.invalid">Date Start is required.</mat-error>
+      </mat-form-field>
+
+    </div>
+
+  </form>
+</mat-dialog-content>
+<!-- End Mat Dialog Content -->
+
+
+
+<!-- Start Mat Dialog Actions -->
+<mat-dialog-actions align="end">
+  <button mat-button [mat-dialog-close]="authForm.value" class="fs-12 fw-600 text-master-lt mr-auto" *ngIf="!processing">Cancel</button>
+  <button mat-stroked-button class="fs-12 fw-600 text-master-lt" type="reset" *ngIf="!processing" (click)="resetForm()">Reset Fields</button>
+  <button mat-flat-button color="primary" class="ml-2 fs-12 fw-600 btn-submit" [disabled]="processing || authForm.invalid" type="submit" (click)="submitForm()">{{(processing) ? 'Processing' : 'Add Record'}}</button>
+</mat-dialog-actions>
+<!-- End Mat Dialog Actions -->

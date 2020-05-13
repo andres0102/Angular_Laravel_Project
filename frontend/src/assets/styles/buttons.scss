@@ -1,0 +1,73 @@
+/**
+ * @license
+ * Copyright TWISS.IO
+ * All Rights Reserved.
+ * Licensed under the MIT License.
+ */
+@import '~src/assets/styles/variables';
+
+@mixin button($text-color, $background-color, $border-color) {
+  &, &:focus{
+    color: $text-color;
+    background-color: $background-color;
+    border-color: $background-color;
+  }
+
+  &.active, &.active:focus, &.active:hover,
+  &:not(:disabled):not(.disabled):active,
+  &:not(:disabled):not(.disabled):active:focus,
+  &:not(:disabled):not(.disabled):active:hover,
+  .show .dropdown-toggle#{&} {
+    background: linear-gradient($background-color, mix($background-color, $color-black, $mix-percentage-dark));
+    border-color: mix($background-color, $color-black, $mix-percentage-dark);
+    color: $text-color;
+    box-shadow: none;
+  }
+  &:hover, &.hover,
+  .show .dropdown-toggle#{&} {
+    background: linear-gradient($background-color, mix($background-color, $color-white, $mix-percentage-light));
+    border-color: mix($background-color, $color-white, $mix-percentage-light);
+    color: $text-color;
+  }
+
+  &.disabled, &[disabled], fieldset[disabled] & {
+    &, &:hover, &:focus, &:active, &.active {
+      background-color: $background-color;
+      border-color: $border-color;
+      color: #fff;
+    }
+  }
+
+  .badge {
+    color: $background-color;
+    background-color: $text-color;
+  }
+}
+
+.btn {
+  @include border-radius(3px);
+  background-image: none;
+  -webkit-font-smoothing: antialiased;
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+  -webkit-font-feature-settings: "kern" 1;
+  -moz-font-feature-settings: "kern" 1;
+  text-align: center;
+  vertical-align: middle;
+  cursor: pointer;
+  text-shadow: none;
+  box-shadow: none;
+  position: relative;
+  transition: $pg-transition;
+  padding: 7px $padding-base;
+}
+
+.btn-rounded  { border-radius: 200px !important; }
+.btn-light    { background: $color-master-lightest !important; }
+.btn-primary  { @include button($color-white, $color-primary, $color-primary); }
+.btn-success  { @include button($color-white, $color-success, $color-success); }
+.btn-complete { @include button($color-white, $color-complete, $color-complete); }
+.btn-info     { @include button($color-white, $color-info, $color-info); }
+.btn-warning  { @include button($color-white, $color-warning, $color-warning); }
+.btn-danger   { @include button($color-white, $color-danger, $color-danger); }
+.btn-default  { @include button($color-master-dark, $color-master-lighter, $color-master-light); }

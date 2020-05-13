@@ -1,0 +1,72 @@
+<!--
+ * @license
+ * Copyright TWISS.IO
+ * All Rights Reserved.
+ * Licensed under the MIT License.
+ -->
+
+<!-- Progress Loader -->
+<card-loader *ngIf="!dataLoaded"></card-loader>
+
+<div *ngIf="dataLoaded" class="p-4 position-relative">
+
+  <div class="loading d-flex" *ngIf="processing">
+    <mat-spinner class="m-auto"></mat-spinner>
+  </div>
+
+  <p class="fw-700 mb-4 fs-20 ls-10 text-master">Client Identity</p>
+  <div class="list-group row flex-row">
+
+    <div class="col-12">
+      <div class="list-group-item d-flex" *ngIf="media.length == 0">
+        <span class="fs-10 fw-600 ls-13 text-uppercase text-master my-4 mx-auto">No Data Found</span>
+      </div>
+    </div>
+
+
+    <div class="col-md-6 mb-4" *ngFor="let item of media" [ngClass]="{'d-none': item.collection_name !== 'client-identity'}">
+      <div class="list-group-item list-group-item-action" (click)="downloadMedia(item.id, item.file_name)">
+        <div class="d-flex w-100">
+          <div class="d-flex my-auto">
+            <i class="fad fa-file-image fs-30 text-master-lt mr-3"></i>
+          </div>
+          <div class="d-flex flex-column my-auto">
+            <span class="mt-0 fw-500 fs-20 lh-30">{{item.file_name}}</span>
+            <small class="fs-12 ls-8 lh-16 text-master-lt">{{item.size | filesize}} <span class="mx-1">|</span> {{item.mime_type}}</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+
+  <p class="fw-700 mb-4 fs-20 ls-10 text-master mt-5">Client PFR</p>
+  <div class="list-group row flex-row">
+
+    <div class="col-12">
+      <div class="list-group-item d-flex" *ngIf="media.length == 0">
+        <span class="fs-10 fw-600 ls-13 text-uppercase text-master my-4 mx-auto">No Data Found</span>
+      </div>
+    </div>
+    <div class="col-md-6 mb-4" *ngFor="let item of media" [ngClass]="{'d-none': item.collection_name !== 'pfr'}">
+      <div class="list-group-item list-group-item-action" (click)="downloadMedia(item.id, item.file_name)">
+        <div class="d-flex w-100">
+          <div class="d-flex my-auto">
+            <i class="fad fa-file-image fs-30 text-master-lt mr-3"></i>
+          </div>
+          <div class="d-flex flex-column my-auto">
+            <span class="mt-0 fw-500 fs-20 lh-30">{{item.file_name}}</span>
+            <small class="fs-12 ls-8 lh-16 text-master-lt">{{item.size | filesize}} <span class="mx-1">|</span> {{item.mime_type}}</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+</div>
+
+<ng-template #profile>
+  <img class="mr-2 my-auto" retina src1x="/assets/logo/symbol.png" src2x="/assets/logo/symbol@2x.png" height="25" width="25" alt="LFA Symbol">
+</ng-template>

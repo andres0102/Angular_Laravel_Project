@@ -1,0 +1,270 @@
+<div class="header" [ngClass]="{ 'has-breadcrumb': breadcrumb }">
+  <!-- START MOBILE SIDEBAR TOGGLE -->
+  <button
+    mat-button
+    class="btn btn-link d-lg-none pointer float-left text-master-lt h-100"
+    (click)="sidebarService.openMobile()"
+  >
+    <i class="material-icons fs-20">menu</i>
+  </button>
+  <!-- END MOBILE SIDEBAR TOGGLE -->
+
+  <div class="header-container d-flex">
+    <!-- MAIN BRANDING -->
+    <div class="brand d-flex my-auto mx-auto mx-lg-0">
+      <div class="brand-symbol faa-spin" [ngClass]="{ animated: spinSymbol }">
+        <img
+          retina
+          src1x="/assets/logo/symbol.png"
+          src2x="/assets/logo/symbol@2x.png"
+          height="35"
+          alt="LFA Symbol"
+        />
+      </div>
+      <img
+        retina
+        src1x="/assets/logo/text.png"
+        src2x="/assets/logo/text@2x.png"
+        height="30"
+        alt="LFA Logo"
+      />
+    </div>
+    <!-- START NOTIFICATION LIST -->
+    <ul class="d-lg-flex d-none notification-list my-auto align-middle">
+      <li class="d-inline-block border-left position-relative pr-1">
+        <a
+          href="javascript:void(0);"
+          class="stretched-link header-icon fal fa-globe-asia relative active {{
+            online.connection_status ? 'text-success' : 'text-danger'
+          }} faa-parent animated-hover"
+          (click)="openConnectionSwal()"
+        >
+          <span
+            class="bubble {{
+              online.connection_status ? 'online' : 'offline'
+            }} faa-pulse"
+          ></span>
+          <span
+            class="desc font-montserrat fs-8 lh-10 fw-600"
+            [ngClass]="{ 'text-success offline': !online.connection_status }"
+            >{{ online.connection_status ? "Online" : "Offline" }}</span
+          >
+        </a>
+      </li>
+
+      <li class="d-inline-block position-relative pr-1">
+        <a
+          href="javascript:void(0)"
+          class="stretched-link header-icon fal active {{
+            online.connection_status && online.secure_status
+              ? 'fa-shield-check text-success'
+              : 'offline fa-unlink text-danger'
+          }}"
+          ><span class="desc font-montserrat fs-8 lh-10 fw-600">{{
+            online.connection_status && online.secure_status
+              ? "Secured"
+              : "Insecured"
+          }}</span></a
+        >
+      </li>
+
+      <li
+        class="d-inline-block position-relative pr-1"
+        [routerLink]="['/authenticated/general/notices']"
+      >
+        <a
+          href="javascript:void(0)"
+          class="stretched-link header-icon fal active fa-bell"
+          ><span class="desc font-montserrat fs-8 lh-10 fw-600"
+            >Notices</span
+          ></a
+        >
+      </li>
+      <li class="d-inline-block position-relative pr-1" *ngIf="_moduleTeams">
+        <a
+          href="javascript:void(0)"
+          class="stretched-link header-icon fal active fa-users"
+          ><span class="desc font-montserrat fs-8 lh-10 fw-600">Teams</span></a
+        >
+      </li>
+      <li class="d-inline-block position-relative pr-1" *ngIf="_moduleChats">
+        <a
+          href="javascript:void(0)"
+          class="stretched-link header-icon fal active fa-comments"
+          ><span class="desc font-montserrat fs-8 lh-10 fw-600">Chats</span></a
+        >
+      </li>
+      <li class="d-inline-block position-relative pr-1" *ngIf="_moduleSearch">
+        <a
+          href="javascript:void(0)"
+          class="stretched-link header-icon fal active fa-search fs-16"
+          (click)="openSearch($event)"
+        >
+          <span class="desc font-montserrat fs-8 lh-10 fw-600">Search</span>
+        </a>
+      </li>
+    </ul>
+    <!-- END NOTIFICATIONS LIST -->
+    <a
+      href="javascript:void(0)"
+      class="search-link d-xl-table-cell align-middle d-none ls-15"
+      (click)="openSearch($event)"
+      style="transform: translateX(-9px) translateY(-2px);"
+      *ngIf="_moduleSearch"
+    >
+      <span class="text-master-lt ml-3 mr-4">::</span>Type anywhere to search
+      your <b class="typed-element"></b
+    ></a>
+  </div>
+
+  <!-- START User Info-->
+  <div class="d-lg-inline-block d-none user-dropdown h-100 ml-auto mr-2">
+    <div
+      class="p-0 profile-dropdown-toggle faa-parent animated-hover d-flex h-100"
+    >
+      <div
+        class="d-flex flex-column text-master text-right fs-14 font-montserrat my-auto mr-3"
+      >
+        <span *ngIf="authService.user" class="d-block fw-500 ls-15">{{
+          authService.user?.personal?.full_name
+        }}</span>
+        <span
+          *ngIf="authService.user"
+          class="d-block fw-500 fs-10 ls-20 lh-15 text-uppercase text-master-lt"
+          >{{ authService.user?.lfa.designation }}</span
+        >
+        <!-- <ngx-content-loading *ngIf="!authService.user" class="d-block" [ngStyle]="{'width': '200px', 'height': '30px'}">
+          <svg:g ngx-rect width="150" height="10" x="0" y="3" rx="2" ry="2"></svg:g>
+          <svg:g ngx-rect width="100" height="7" x="50" y="16" rx="2" ry="2"></svg:g>
+        </ngx-content-loading> -->
+      </div>
+      <span
+        class="d-flex my-auto profile-thumbnail-wrapper overflow-hidden {{
+          authService.user?.display_photo.original ||
+          authService.user?.display_photo.thumbnail
+            ? 'rounded-circle faa-tada animated-hover'
+            : 'rounded ' + authService.user?.personal.gender_slug
+        }}"
+      >
+        <!-- <ngx-content-loading *ngIf="!authService.user" class="data_short" [ngStyle]="{'width': '50px', 'height': '50px'}">
+          <svg:g ngx-rect width="50" height="50" rx="50" ry="50"></svg:g>
+        </ngx-content-loading> -->
+        <!-- Profile Photo of (User/Rep) if exist -->
+        <img
+          *ngIf="
+            authService.user?.display_photo.original ||
+            authService.user?.display_photo.thumbnail
+          "
+          retina
+          src1x="{{ authService.user?.display_photo.thumbnail }}"
+          src2x="{{ authService.user?.display_photo.original }}"
+          width="50"
+          height="50"
+          alt=""
+        />
+        <!-- Profile Photo of (User/Rep) does not exist -->
+        <img
+          *ngIf="
+            !(
+              authService.user?.display_photo.original ||
+              authService.user?.display_photo.thumbnail
+            )
+          "
+          src="/assets/images/spacer.png"
+          width="50"
+          height="50"
+          alt=""
+        />
+      </span>
+    </div>
+    <!-- <div class="dropdown-menu dropdown-menu-right profile-dropdown font-proxima" *dropdownMenu role="menu">
+      <div class="profile-dropdown-header d-flex flex-row bg-light">
+        <div class="profile-image">
+          <span class="profile-thumbnail-wrapper rounded-0 overflow-hidden w-auto h-auto {{(authService.user?.display_photo.original || authService.user?.display_photo.thumbnail) ? '' : authService.user?.personal.gender_slug }}">
+              <ngx-content-loading *ngIf="!authService.user" class="data_short" [ngStyle]="{'width': '80px', 'height': '80px'}">
+                <svg:g ngx-rect width="50" height="50"></svg:g>
+              </ngx-content-loading>
+              <img *ngIf="authService.user" retina
+                src1x="{{ authService.user?.display_photo.thumbnail }}"
+                src2x="{{ authService.user?.display_photo.original }}"
+                width="80" height="80" alt="">
+              <img *ngIf="!(authService.user?.display_photo.original || authService.user?.display_photo.thumbnail)"
+                  src="/assets/images/spacer.png" width="80" height="80" alt="">
+          </span>
+        </div>
+        <div class="profile-details d-flex">
+          <div class="user-info font-montserrat my-auto">
+            <span *ngIf="authService.user" class="d-block fs-16 fw-500 ls-15 lh-25 text-master text-truncate" style="max-width: 300px;">{{ authService.user?.personal?.full_name }}</span>
+            <span *ngIf="authService.user" class="d-block fs-8 fw-500 ls-20 lh-15 text-muted text-uppercase">{{ authService.user?.lfa.designation }}</span>
+            <ngx-content-loading *ngIf="!authService.user" class="d-block" [ngStyle]="{'width': '200px', 'height': '30px'}">
+              <svg:g ngx-rect width="150" height="10" x="0" y="3" rx="2" ry="2"></svg:g>
+              <svg:g ngx-rect width="100" height="7" x="50" y="16" rx="2" ry="2"></svg:g>
+            </ngx-content-loading>
+          </div>
+        </div>
+      </div>
+      <a href="javascript:void(0)" class="d-flex dropdown-item ls-10 fs-14 lh-20 danger faa-parent animated-hover" *ngIf="authService.user?.roles.is_associate === false && authService.associate" (click)="authService.associate_change.next(null)">
+        <i class="fs-18 text-danger-lt fas fa-times my-auto faa-pulse"></i>
+        <div class="d-flex flex-column">
+          <span class="title ls-10 text-mat-red">Exit Third-Party Access</span>
+          <span class="desc fs-8 ls-20 lh-10 text-uppercase fw-600 text-danger-lt">Stop Accessing As: {{authService.associate?.name}}</span>
+        </div>
+      </a>
+      <a href="javascript:void(0)" class="d-flex dropdown-item ls-10 fs-14 lh-20 faa-parent animated-hover" *ngIf="authService.user?.permissions.includes('reps__manage')" (click)="openConnectionSwal()">
+        <i class="fs-18 text-master-lter far fa-eye my-auto faa-pulse"></i>
+        <div class="d-flex flex-column">
+          <span class="title ls-10">Manage Associates</span>
+          <span class="desc fs-8 ls-20 lh-10 text-uppercase fw-600 text-master-lter">Access as Selected Associate</span>
+        </div>
+      </a>
+      <a href="javascript:void(0)" class="d-flex dropdown-item ls-10 fs-14 lh-20 faa-parent animated-hover" [routerLink]="['/authenticated/personal/profile/update']">
+        <i class="fs-18 text-master-lter far fa-user my-auto faa-pulse"></i>
+        <div class="d-flex flex-column">
+          <span class="title ls-10">Edit User Profile</span>
+          <span class="desc fs-8 ls-20 lh-10 text-uppercase fw-600 text-master-lter">Update Personal Information</span>
+        </div>
+      </a>
+      <a href="javascript:void(0)" class="d-flex dropdown-item ls-10 fs-14 lh-20 faa-parent animated-hover">
+        <i class="fs-18 text-master-lter far fa-cog my-auto faa-pulse"></i>
+        <div class="d-flex flex-column">
+          <span class="title ls-10">Application Settings</span>
+          <span class="desc fs-8 ls-20 lh-10 text-uppercase fw-600 text-master-lter">Manage Workflow Preferences</span>
+        </div>
+      </a>
+      <a href="javascript:void(0)" class="d-flex dropdown-item ls-10 fs-14 lh-20 faa-parent animated-hover">
+        <i class="fs-18 text-master-lter far fa-info-square"></i>Help
+      </a>
+      <a href="javascript:void(0)" class="d-flex dropdown-item ls-10 fs-14 lh-20 clearfix bg-master-light faa-parent animated-hover" (click)="authService.logout()">
+        <i class="fs-16 lh-18 text-master-lter far fa-power-off my-auto faa-pulse"></i>
+        <div class="d-flex flex-column">
+          <span class="title">Log Out</span>
+          <span class="desc fs-8 ls-20 lh-10 text-uppercase fw-600 text-master-lter">Invalidate Session Instance</span>
+        </div>
+      </a>
+    </div> -->
+  </div>
+
+  <div class="header-menu d-flex" [ngClass]="{ active: logout_menu_show }">
+    <button
+      mat-button
+      class="btn btn-link pointer float-right text-master-light h-100"
+      style="min-width: 40px;"
+      (click)="logout_menu_show = !logout_menu_show"
+    >
+      <i class="fal fa-ellipsis-v fs-30"></i>
+    </button>
+    <button
+      mat-button
+      class="btn-logout btn pointer float-right text-master-lt h-100 animated slideInRight"
+      (click)="authService.logout()"
+      *ngIf="logout_menu_show"
+      style="min-width: unset;"
+    >
+      <i class="fal fa-power-off fs-20"></i>
+      <span class="d-block desc font-montserrat fs-8 lh-10 fw-600">Logout</span>
+    </button>
+  </div>
+
+  <!-- END User Info-->
+  <!-- <a href="javascript:void(0)" class="header-icon pg pg-alt_menu btn-link m-l-10 sm-no-margin d-inline-block" (click)="openQuickView($event)"></a> -->
+</div>

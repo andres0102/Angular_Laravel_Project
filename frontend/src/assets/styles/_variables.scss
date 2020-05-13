@@ -1,0 +1,158 @@
+/**
+ * @license
+ * Copyright TWISS.IO
+ * All Rights Reserved.
+ * Licensed under the MIT License.
+ */
+@import '~src/assets/styles/mixins';
+
+$pg-transition:           400ms cubic-bezier(0.05, 0.74, 0.27, 0.99);
+$pg-shadow:               0px 0px 5px rgba(98, 98, 98, 0.2);
+
+$assets-url:              "~src/assets";
+$img-url:                 "~src/assets/images";
+
+/*
+ * Spacings
+ */
+$padding-base:            15px;
+$margin-base:             10px;
+
+/*
+ * Fonts
+ */
+$font-proxima:            'Proxima', sans-serif;
+$font-montserrat:         'Montserrat', sans-serif;
+$font-source-sans:        'Source Sans Pro', sans-serif;
+$font-source-code:        'Source Code Pro', monospace;
+$font-roboto:             'Roboto', monospace;
+$font-size:               13px;
+$font-weight:             400;
+$letter-spacing:          0.05em;
+
+/*
+ * Colors
+ */
+$tw-blue:                 #5b65ae;
+$lfa-gradient:            linear-gradient(#23395a,#1f1d36);
+$lfa-green:               #54b948;
+$lfa-blue:                #0054a4;
+$mat-light-blue:          #e7e7ff;
+$mat-lt-blue:             #7777cc;
+$mat-blue:                #3f51b5;
+$mat-red:                 #f44336;
+$mat-green:               #87c987;
+$mat-yellow:              #96820a;
+$mat-light-yellow:        #fffbdc;
+$base-scroll-color:       #697686;
+$muted-color:             #777 !important;
+$color-master:            #626262;
+$color-white:             #fff;
+$color-black:             #000;
+$color-success:           #54b948;
+$color-complete:          #48b0f7;
+$color-primary:           #0054a4;
+$color-warning:           #f8d053;
+$color-danger:            #f55753;
+$color-info:              #3b4752;
+
+// Mixing Color varriable for creating both light and dark colors
+$mix-percentage-dark:     81%;
+$mix-percentage-darker:   60%;
+$mix-percentage-lt:       65%;
+$mix-percentage-lter:     50%;
+$mix-percentage-light:    25%;
+$mix-percentage-lighter:  15%;
+$mix-percentage-lightest: 5%;
+
+// Lighter colors
+$color-master-lt:         mix($color-master, #fff, $mix-percentage-lt);
+$color-master-lter:       mix($color-master, #fff, $mix-percentage-lter);
+$color-master-light:      mix($color-master, #fff, $mix-percentage-light);
+$color-master-lighter:    mix($color-master, #fff, $mix-percentage-lighter);
+$color-master-lightest:   mix($color-master, #fff, $mix-percentage-lightest);
+
+$color-danger-lt:         mix($color-danger, #fff, $mix-percentage-lt);
+$color-danger-lter:       mix($color-danger, #fff, $mix-percentage-lter);
+$color-danger-light:      mix($color-danger, #fff, $mix-percentage-light);
+$color-danger-lighter:    mix($color-danger, #fff, $mix-percentage-lighter);
+$color-danger-lightest:   mix($color-danger, #fff, $mix-percentage-lightest);
+
+
+$color-success-light:     mix($color-success, $color-white, $mix-percentage-light);
+$color-success-lighter:   mix($color-success, $color-white, $mix-percentage-lighter);
+$color-complete-light:    mix($color-complete, $color-white, $mix-percentage-light);
+$color-complete-lighter:  mix($color-complete, $color-white, $mix-percentage-lighter);
+$color-primary-light:     mix($color-primary, $color-white, $mix-percentage-light);
+$color-primary-lighter:   mix($color-primary, $color-white, $mix-percentage-lighter);
+$color-warning-light:     mix($color-warning, $color-white, $mix-percentage-light);
+$color-warning-lighter:   mix($color-warning, $color-white, $mix-percentage-lighter);
+// $color-danger-light:      mix($color-danger, $color-white, $mix-percentage-light);
+// $color-danger-lighter:    mix($color-danger, $color-white, $mix-percentage-lighter);
+$color-info-light:        mix($color-info, $color-white, $mix-percentage-light);
+$color-info-lighter:      mix($color-info, $color-white, $mix-percentage-lighter);
+
+// Darker colors
+$color-master-dk:         mix($color-master, #000, 65%);
+$color-master-dark:       mix($color-master, #000, 45%);
+$color-master-darker:     mix($color-master, #000, 27%);
+$color-master-darkest:    mix($color-master, #000, 18%);
+$color-success-dark:      mix($color-success, $color-black, $mix-percentage-dark);
+$color-success-darker:    mix($color-success, $color-black, $mix-percentage-darker);
+$color-complete-dark:     mix($color-complete, $color-black, $mix-percentage-dark);
+$color-complete-darker:   mix($color-complete, $color-black, $mix-percentage-darker);
+$color-primary-dark:      mix($color-primary, $color-black, $mix-percentage-dark);
+$color-primary-darker:    mix($color-primary, $color-black, $mix-percentage-darker);
+$color-warning-dark:      mix($color-warning, $color-black, $mix-percentage-dark);
+$color-warning-darker:    mix($color-warning, $color-black, $mix-percentage-darker);
+$color-danger-dark:       mix($color-danger, $color-black, $mix-percentage-dark);
+$color-danger-darker:     mix($color-danger, $color-black, $mix-percentage-darker);
+$color-info-dark:         mix($color-info, $color-black, $mix-percentage-dark);
+$color-info-darker:       mix($color-info, $color-black, $mix-percentage-darker);
+
+/*
+ * Z-Indexes
+ */
+$zIndex-1:   100;
+$zIndex-2:   200;
+$zIndex-3:   300;
+$zIndex-4:   400;
+$zIndex-5:   500;
+$zIndex-6:   600;
+$zIndex-7:   700;
+$zIndex-8:   800;
+$zIndex-9:   900;
+$zIndex-10: 1000;
+
+
+
+
+
+/*
+ * Header
+ */
+$header-height:           80px;
+
+
+
+
+/*
+ * Sidebar && Menu Items
+ */
+$sidebar-header-bg:       #191919;
+$sidebar-main-bg:         linear-gradient(#191919 #{$header-height}, #252525  #{$header-height}, #111);
+$sidebar-width-col:       70px;
+$sidebar-width:           280px;
+$sidebar-zIndex:          $zIndex-10;
+$menu-bezier:             .05, .74, .27, .99;
+$menu-icon-size:          40px;
+$color-menu:              #2b303b;
+$color-menu-dark:         mix($color-menu, #000, 77%);
+$color-menu-darker:       mix($color-menu, #000, 90%);
+$menu-mix-temp:           mix($color-menu, #fff, 92%);
+$menu:                    blend-hardlight($menu-mix-temp,#fff);
+$color-menu-light:        $menu;
+$color-menu-link-hover:   #fff;
+
+
+@mixin default-font-family { font-family: 'Montserrat' !important; }

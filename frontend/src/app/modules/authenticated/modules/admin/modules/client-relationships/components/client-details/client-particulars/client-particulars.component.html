@@ -1,0 +1,627 @@
+<!--
+ * @license
+ * Copyright TWISS.IO
+ * All Rights Reserved.
+ * Licensed under the MIT License.
+ -->
+
+<button class="btn-submit fs-18" mat-fab color="primary" matTooltip="Edit Client" [matTooltipPosition]="'above'" (click)="editing = true;" *ngIf="dataLoaded && !editing">
+  <i class="fas fa-edit text-white" style="transform: translate(2px,-5px);"></i>
+</button>
+
+<!-- Start Padded Container -->
+<div class="container-fluid animated bounceInUp mt-4">
+
+  <!-- Start Material Card -->
+  <mat-card class="client-profile mat-elevation-z">
+
+    <!-- Progress Loader -->
+    <card-loader *ngIf="!dataLoaded"></card-loader>
+
+    <!-- Start Material Card Header -->
+    <mat-card-header *ngIf="dataLoaded && !editing" class="position-sticky">
+      <div class="fs-10 fw-600 ls-13 text-uppercase text-master-lt mx-auto"><a class="ls-13 link" (click)="editing = true;">Enable Editing Mode</a> to update Clients Particulars</div>
+    </mat-card-header>
+    <!-- End Material Card Header -->
+
+    <!-- Start Material Card Content -->
+    <mat-card-content class="container-fluid" *ngIf="dataLoaded">
+
+      <!-- Start Bootstrap Grid System -->
+      <div class="row align-items-start pt-4">
+        <div class="col-12">
+
+          <!-- Start Auth Form -->
+          <form [formGroup]="authForm" (ngSubmit)="authForm.valid && submitForm()">
+            <div class="row">
+
+              <!-- Start Left Section -->
+              <section class="col-xl-6">
+
+                <!-- Heading Text Component -->
+                <heading-text [title]="'Client Record'" [subtitle]="'Client details that help you describe and identify customers within the system. Writing profiles of your client allows you to find products  that are best suited for them and market to them more effectively.'" class="mb-4"></heading-text>
+
+                <!-- Mat-Input -- Client UUID -->
+                <mat-form-field class="w-100 mb-3 no-underline">
+                  <mat-label>Client UUID</mat-label>
+                  <input matInput type="text" formControlName="client_uuid" [readonly]="true">
+                </mat-form-field>
+
+                <div class="row">
+                  <div class="col-xl-6">
+                    <!-- Mat-Input -- Client Type -->
+                    <mat-form-field class="w-100 mb-3 hover-underline">
+                      <mat-label>Client Type</mat-label>
+                      <mat-select class="mat-light-blue" formControlName="client_type_slug" tabindex="2">
+                        <mat-option [value]="'individual'">Individual</mat-option>
+                        <mat-option [value]="'business'">Business</mat-option>
+                      </mat-select>
+                      <button type="button" mat-button *ngIf="client_type_slug.value && !client_type_slug.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm('client_type_slug')" style="transform: translateY(2px);">
+                        <mat-icon class="mat-light-blue">close</mat-icon>
+                      </button>
+                      <mat-error *ngIf="client_type_slug.invalid">Client Type is required.</mat-error>
+                    </mat-form-field>
+                  </div>
+                  <div class="col-xl-6">
+                    <!-- Mat-Input -- Client Source -->
+                    <mat-form-field class="w-100 mb-3 hover-underline">
+                      <mat-label>Client Source</mat-label>
+                      <mat-select class="mat-light-blue" formControlName="source_slug" tabindex="3">
+                        <mat-option *ngFor="let obj of client_sources | sortBy:'asc':'title'" [value]="obj.slug">{{obj.title}}</mat-option>
+                      </mat-select>
+                      <button type="button" mat-button *ngIf="source_slug.value && !source_slug.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm('source_slug')" style="transform: translateY(2px);">
+                        <mat-icon class="mat-light-blue">close</mat-icon>
+                      </button>
+                      <mat-error *ngIf="source_slug.invalid">Client Source is required.</mat-error>
+                    </mat-form-field>
+                  </div>
+                </div>
+
+                <!-- Mat-Input -- Client Display Name -->
+                <mat-form-field class="w-100 mb-3 hover-underline">
+                  <mat-label>Display Name</mat-label>
+                  <input matInput type="text" placeholder="Type Display Name here..." formControlName="display_name" maxlength="128" tabindex="4">
+                  <button type="button" mat-button *ngIf="display_name.value && !display_name.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm('display_name')">
+                    <mat-icon class="mat-light-blue">close</mat-icon>
+                  </button>
+                  <mat-hint align="end" class="d-none d-sm-inline-block">{{display_name.value?.length || 0}} / 128</mat-hint>
+                  <mat-error *ngIf="display_name.invalid">Display Name is required.</mat-error>
+                </mat-form-field>
+
+                <!-- Mat-Input -- Client Description -->
+                <mat-form-field class="w-100 mb-3 hover-underline" *ngIf="editing || description.value">
+                  <mat-label>Client Description</mat-label>
+                  <textarea matInput formControlName="description" placeholder="Type something about the Client here..." cdkTextareaAutosize [cdkAutosizeMinRows]="2" maxlength="1200" tabindex="5"></textarea>
+                  <mat-hint align="end" class="d-none d-sm-inline-block">{{description.value?.length || 0}} / 1200</mat-hint>
+                </mat-form-field>
+
+                <!-- Mat-Input -- Client Interests -->
+                <mat-form-field class="w-100 mb-3 hover-underline" *ngIf="(editing || interest.value) && client_type_slug.value == 'individual'">
+                  <mat-label>Interests/Hobbies</mat-label>
+                  <textarea matInput formControlName="interest" placeholder="List some interests/hobbies about the Client here..." cdkTextareaAutosize [cdkAutosizeMinRows]="2" maxlength="1200" tabindex="6"></textarea>
+                  <mat-hint align="end" class="d-none d-sm-inline-block">{{interest.value?.length || 0}} / 1200</mat-hint>
+                </mat-form-field>
+
+                <!-- Mat-Input -- Client Important Stuffs -->
+                <mat-form-field class="w-100 mb-3 hover-underline" *ngIf="editing || important.value">
+                  <mat-label>What's Most Important to this Client?</mat-label>
+                  <textarea matInput formControlName="important" placeholder="Type important stuffs about the Client here..." cdkTextareaAutosize [cdkAutosizeMinRows]="2" maxlength="1200" tabindex="7"></textarea>
+                  <mat-hint align="end" class="d-none d-sm-inline-block">{{important.value?.length || 0}} / 1200</mat-hint>
+                </mat-form-field>
+
+
+
+
+
+                <div *ngIf="client_type_slug.value == 'individual'">
+
+                  <!-- Heading Text Component -->
+                  <heading-text [title]="'Personal Information'" [subtitle]="'A little more details of the individual.'" class="mt-5 mb-4"></heading-text>
+
+                  <div class="row">
+                    <div class="col-xl-4">
+                      <!-- Mat-Input -- Personal Salutation -->
+                      <mat-form-field class="w-100 mb-3 hover-underline">
+                        <mat-label>Salutation</mat-label>
+                        <mat-select class="mat-light-blue" formControlName="salutation_slug" tabindex="8">
+                          <mat-option *ngFor="let obj of salutations" [value]="obj.slug">{{obj.title}}</mat-option>
+                        </mat-select>
+                        <button type="button" mat-button *ngIf="salutation_slug.value && !salutation_slug.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm('salutation_slug')" style="transform: translateY(2px);">
+                          <mat-icon class="mat-light-blue">close</mat-icon>
+                        </button>
+                      </mat-form-field>
+                    </div>
+                    <div class="col-xl-8">
+                      <!-- Mat-Input -- Personal Full Name -->
+                      <mat-form-field class="w-100 mb-3 hover-underline">
+                        <mat-label>Full Name (NRIC)</mat-label>
+                        <input matInput type="text" placeholder="Type Full Name here..." formControlName="full_name" maxlength="128" tabindex="9">
+                        <button type="button" mat-button *ngIf="full_name.value && !full_name.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm('full_name')">
+                          <mat-icon class="mat-light-blue">close</mat-icon>
+                        </button>
+                        <mat-hint align="end" class="d-none d-sm-inline-block">{{full_name.value?.length || 0}} / 128</mat-hint>
+                        <mat-error *ngIf="full_name.invalid">Full Name is required.</mat-error>
+                      </mat-form-field>
+                    </div>
+                  </div>
+
+                  <div class="row">
+                    <div class="col-xl-6">
+                      <!-- Mat-Input -- Personal Alias -->
+                      <mat-form-field class="w-100 mb-3 hover-underline">
+                        <mat-label>Alias</mat-label>
+                        <input matInput type="text" placeholder="Type Alias here..." formControlName="alias" maxlength="64" tabindex="10">
+                        <button type="button" mat-button *ngIf="alias.value && !alias.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm('alias')">
+                          <mat-icon class="mat-light-blue">close</mat-icon>
+                        </button>
+                        <mat-hint align="end" class="d-none d-sm-inline-block">{{alias.value?.length || 0}} / 64</mat-hint>
+                      </mat-form-field>
+                    </div>
+                    <div class="col-xl-6">
+                      <!-- Mat-Input -- Personal Chinese Name -->
+                      <mat-form-field class="w-100 mb-3 hover-underline">
+                        <mat-label>Chinese Name</mat-label>
+                        <input matInput type="text" placeholder="Type Chinese Name here..." formControlName="chinese_name" maxlength="64" tabindex="11">
+                        <button type="button" mat-button *ngIf="chinese_name.value && !chinese_name.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm('chinese_name')">
+                          <mat-icon class="mat-light-blue">close</mat-icon>
+                        </button>
+                        <mat-hint align="end" class="d-none d-sm-inline-block">{{chinese_name.value?.length || 0}} / 64</mat-hint>
+                      </mat-form-field>
+                    </div>
+                  </div>
+
+                  <div class="row">
+                    <div class="col-xl-4">
+                      <!-- Mat-Input -- Personal NRIC No -->
+                      <mat-form-field class="w-100 mb-3 hover-underline">
+                        <mat-label>NRIC No</mat-label>
+                        <input matInput type="text" placeholder="Type NRIC Number here..." formControlName="nric_no" maxlength="32" tabindex="12">
+                        <button type="button" mat-button *ngIf="nric_no.value && !nric_no.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm('nric_no')">
+                          <mat-icon class="mat-light-blue">close</mat-icon>
+                        </button>
+                        <mat-hint align="end" class="d-none d-sm-inline-block">{{nric_no.value?.length || 0}} / 32</mat-hint>
+                      </mat-form-field>
+                    </div>
+                    <div class="col-xl-4">
+                      <!-- Mat-Input -- Personal FIN No -->
+                      <mat-form-field class="w-100 mb-3 hover-underline">
+                        <mat-label>FIN No</mat-label>
+                        <input matInput type="text" placeholder="Type FIN Number here..." formControlName="fin_no" maxlength="32" tabindex="13">
+                        <button type="button" mat-button *ngIf="fin_no.value && !fin_no.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm('fin_no')">
+                          <mat-icon class="mat-light-blue">close</mat-icon>
+                        </button>
+                        <mat-hint align="end" class="d-none d-sm-inline-block">{{fin_no.value?.length || 0}} / 32</mat-hint>
+                      </mat-form-field>
+                    </div>
+                    <div class="col-xl-4">
+                      <!-- Mat-Input -- Personal Passport No -->
+                      <mat-form-field class="w-100 mb-3 hover-underline">
+                        <mat-label>Passport No</mat-label>
+                        <input matInput type="text" placeholder="Type Passport Number here..." formControlName="passport_no" maxlength="32" tabindex="14">
+                        <button type="button" mat-button *ngIf="passport_no.value && !passport_no.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm('passport_no')">
+                          <mat-icon class="mat-light-blue">close</mat-icon>
+                        </button>
+                        <mat-hint align="end" class="d-none d-sm-inline-block">{{passport_no.value?.length || 0}} / 32</mat-hint>
+                      </mat-form-field>
+                    </div>
+                  </div>
+
+                  <div class="row">
+                    <div class="col-xl-4">
+                      <!-- Mat-Input -- Personal Gender -->
+                      <mat-form-field class="w-100 mb-3 hover-underline">
+                        <mat-label>Gender</mat-label>
+                        <mat-select class="mat-light-blue" formControlName="gender_slug" tabindex="15">
+                          <mat-option *ngFor="let obj of genders" [value]="obj.slug">{{obj.title}}</mat-option>
+                        </mat-select>
+                        <button type="button" mat-button *ngIf="gender_slug.value && !gender_slug.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm('gender_slug')" style="transform: translateY(2px);">
+                          <mat-icon class="mat-light-blue">close</mat-icon>
+                        </button>
+                      </mat-form-field>
+                    </div>
+                    <div class="col-xl-4">
+                      <!-- Mat-Input -- Date of Birth -->
+                      <mat-form-field class="w-100 mb-3 hover-underline">
+                        <mat-label>Date of Birth</mat-label>
+                        <input class="text-muted" matInput [matDatepicker]="datebirth" formControlName="date_birth" [readonly]="true" tabindex="16">
+                        <mat-datepicker-toggle matSuffix [for]="datebirth"></mat-datepicker-toggle>
+                        <mat-datepicker #datebirth disabled="false"></mat-datepicker>
+                      </mat-form-field>
+                    </div>
+                    <div class="col-xl-4">
+                      <!-- Mat-Input -- Personal Address Country -->
+                      <mat-form-field class="w-100 mb-3 hover-underline">
+                        <mat-label>Country of Birth</mat-label>
+                        <mat-select class="mat-light-blue" formControlName="country_birth_slug" tabindex="17">
+                          <mat-option *ngFor="let obj of countries | sortBy:'asc':'title'" [value]="obj.slug">{{obj.title}}</mat-option>
+                        </mat-select>
+                        <button type="button" mat-button *ngIf="country_birth_slug.value && !country_birth_slug.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm('country_birth_slug')" style="transform: translateY(2px);">
+                          <mat-icon class="mat-light-blue">close</mat-icon>
+                        </button>
+                      </mat-form-field>
+                    </div>
+                  </div>
+
+                  <div class="row">
+                    <div class="col-xl-6">
+                      <!-- Mat-Input -- Personal Marital Status -->
+                      <mat-form-field class="w-100 mb-3 hover-underline">
+                        <mat-label>Marital Status</mat-label>
+                        <mat-select class="mat-light-blue" formControlName="marital_status_slug" tabindex="18">
+                          <mat-option *ngFor="let obj of marital_status" [value]="obj.slug">{{obj.title}}</mat-option>
+                        </mat-select>
+                        <button type="button" mat-button *ngIf="marital_status_slug.value && !marital_status_slug.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm('marital_status_slug')" style="transform: translateY(2px);">
+                          <mat-icon class="mat-light-blue">close</mat-icon>
+                        </button>
+                      </mat-form-field>
+                    </div>
+                    <div class="col-xl-6">
+                      <!-- Mat-Input -- Personal Race -->
+                      <mat-form-field class="w-100 mb-3 hover-underline">
+                        <mat-label>Race</mat-label>
+                        <input type="text" matInput formControlName="race_slug" [matAutocomplete]="race_select" tabindex="19" class="text-uppercase">
+                        <mat-autocomplete #race_select="matAutocomplete">
+                          <mat-option *ngFor="let obj of filteredRaces | async | sortBy:'asc':'title'" [value]="obj.slug">{{obj.title}}</mat-option>
+                        </mat-autocomplete>
+                      </mat-form-field>
+                    </div>
+                  </div>
+
+                  <div class="row">
+                    <div class="col-xl-6">
+                      <!-- Mat-Input -- Personal Nationality -->
+                      <mat-form-field class="w-100 mb-3 hover-underline">
+                        <mat-label>Nationality</mat-label>
+                        <mat-select class="mat-light-blue" formControlName="nationality_slug" tabindex="20">
+                          <mat-option *ngFor="let obj of countries" [value]="obj.slug">{{obj.nationality || obj.title}}</mat-option>
+                        </mat-select>
+                        <button type="button" mat-button *ngIf="nationality_slug.value && !nationality_slug.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm('nationality_slug')" style="transform: translateY(2px);">
+                          <mat-icon class="mat-light-blue">close</mat-icon>
+                        </button>
+                      </mat-form-field>
+                    </div>
+                    <div class="col-xl-6">
+                      <!-- Mat-Input -- Personal Residency Status -->
+                      <mat-form-field class="w-100 mb-3 hover-underline">
+                        <mat-label>Residency Status</mat-label>
+                        <mat-select class="mat-light-blue" formControlName="residency_status_slug" tabindex="21">
+                          <mat-option *ngFor="let obj of residency_status" [value]="obj.slug">{{obj.title}}</mat-option>
+                        </mat-select>
+                        <button type="button" mat-button *ngIf="residency_status_slug.value && !residency_status_slug.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm('residency_status_slug')" style="transform: translateY(2px);">
+                          <mat-icon class="mat-light-blue">close</mat-icon>
+                        </button>
+                      </mat-form-field>
+                    </div>
+                  </div>
+
+                  <mat-form-field floatLabel="always" appearance="none" class="w-100 mb-3 ml-4">
+                    <mat-slide-toggle formControlName="smoker" [color]="'primary'">Client is {{(smoker.value == true) ? '' : 'not'}}  a smoker.</mat-slide-toggle>
+                    <textarea matInput hidden></textarea>
+                  </mat-form-field>
+
+                  <mat-form-field floatLabel="always" appearance="none" class="w-100 mb-3 ml-4">
+                    <mat-slide-toggle formControlName="selected" [color]="'primary'">Client is {{(selected.value == true) ? '' : 'not'}} a selected Individual.</mat-slide-toggle>
+                    <textarea matInput hidden></textarea>
+                  </mat-form-field>
+
+                  <mat-form-field floatLabel="always" appearance="none" class="w-100 mb-3 ml-4">
+                    <mat-slide-toggle formControlName="pdpa" [color]="'primary'">Client has {{(pdpa.value == true) ? '' : 'not'}} given consent for PDPA.</mat-slide-toggle>
+                    <textarea matInput hidden></textarea>
+                  </mat-form-field>
+                </div>
+              </section>
+              <!-- End Left Section -->
+
+              <!-- Start Right Section -->
+              <section class="col-xl-6" *ngIf="client_type_slug.value == 'business'">
+
+                <!-- Heading Text Component -->
+                <heading-text [title]="'Business Information'" [subtitle]="'A little more details of the business.'" class="mt-5 mt-xl-0 mb-4"></heading-text>
+
+                <!-- Mat-Input -- Business Name -->
+                <mat-form-field class="w-100 mb-3 hover-underline">
+                  <mat-label>Business Name</mat-label>
+                  <input matInput type="text" placeholder="Type Business Name here..." formControlName="business_name" maxlength="128" tabindex="22">
+                  <button type="button" mat-button *ngIf="business_name.value && !business_name.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm('business_name')">
+                    <mat-icon class="mat-light-blue">close</mat-icon>
+                  </button>
+                  <mat-hint align="end" class="d-none d-sm-inline-block">{{business_name.value?.length || 0}} / 128</mat-hint>
+                  <mat-error *ngIf="business_name.invalid">Business Name is required.</mat-error>
+                </mat-form-field>
+
+                <!-- Mat-Input -- Business UEN -->
+                <mat-form-field class="w-100 mb-3 hover-underline">
+                  <mat-label>Business UEN</mat-label>
+                  <input matInput type="text" placeholder="Type Business UEN here..." formControlName="business_uen" maxlength="128" tabindex="23">
+                  <button type="button" mat-button *ngIf="business_uen.value && !business_uen.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm('business_uen')">
+                    <mat-icon class="mat-light-blue">close</mat-icon>
+                  </button>
+                  <mat-hint align="end" class="d-none d-sm-inline-block">{{business_uen.value?.length || 0}} / 128</mat-hint>
+                </mat-form-field>
+              </section>
+
+
+
+              <section class="col-xl-6" *ngIf="client_type_slug.value == 'individual'">
+
+                <!-- Heading Text Component -->
+                <heading-text [title]="'Educational Information'" [subtitle]="'Educational information pertaining to the individual.'" class="mt-5 mt-xl-0 mb-4" *ngIf="editing || education_level_slug.value || education_institution.value || field_of_study.value"></heading-text>
+
+                <!-- Mat-Input -- Personal Educational Level -->
+                <mat-form-field class="w-100 mb-3 hover-underline" *ngIf="editing || education_level_slug.value">
+                  <mat-label>Educational Level</mat-label>
+                  <mat-select class="mat-light-blue" formControlName="education_level_slug" tabindex="24">
+                    <mat-option *ngFor="let obj of educational_levels" [value]="obj.slug">{{obj.title}}</mat-option>
+                  </mat-select>
+                  <button type="button" mat-button *ngIf="education_level_slug.value && !education_level_slug.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm('education_level_slug')" style="transform: translateY(2px);">
+                    <mat-icon class="mat-light-blue">close</mat-icon>
+                  </button>
+                </mat-form-field>
+
+                <!-- Mat-Input -- Personal Educational Institution -->
+                <mat-form-field class="w-100 mb-3 hover-underline" *ngIf="editing || education_institution.value">
+                  <mat-label>Institution</mat-label>
+                  <input matInput type="text" placeholder="Type Institution here..." formControlName="education_institution" maxlength="128" tabindex="25">
+                  <button type="button" mat-button *ngIf="education_institution.value && !education_institution.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm('education_institution')">
+                    <mat-icon class="mat-light-blue">close</mat-icon>
+                  </button>
+                  <mat-hint align="end" class="d-none d-sm-inline-block">{{education_institution.value?.length || 0}} / 128</mat-hint>
+                </mat-form-field>
+
+                <!-- Mat-Input -- Personal Field of Study -->
+                <mat-form-field class="w-100 mb-3 hover-underline" *ngIf="editing || field_of_study.value">
+                  <mat-label>Field of Study</mat-label>
+                  <input matInput type="text" placeholder="Type Field of Study here..." formControlName="field_of_study" maxlength="128" tabindex="26">
+                  <button type="button" mat-button *ngIf="field_of_study.value && !field_of_study.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm('field_of_study')">
+                    <mat-icon class="mat-light-blue">close</mat-icon>
+                  </button>
+                  <mat-hint align="end" class="d-none d-sm-inline-block">{{field_of_study.value?.length || 0}} / 128</mat-hint>
+                </mat-form-field>
+
+
+
+                <!-- Heading Text Component -->
+                <heading-text [title]="'Employment Information'" [subtitle]="'Work information pertaining to the individual.'" class="mt-5 mb-4" *ngIf="editing || employment_status_slug.value || job_title.value || company_name.value || business_nature.value"></heading-text>
+
+                <!-- Mat-Input -- Personal Employment Status -->
+                <mat-form-field class="w-100 mb-3 hover-underline" *ngIf="editing || employment_status_slug.value">
+                  <mat-label>Employment Status</mat-label>
+                  <mat-select class="mat-light-blue" formControlName="employment_status_slug" tabindex="27">
+                    <mat-option *ngFor="let obj of employment_status" [value]="obj.slug">{{obj.title}}</mat-option>
+                  </mat-select>
+                  <button type="button" mat-button *ngIf="employment_status_slug.value && !employment_status_slug.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm('employment_status_slug')" style="transform: translateY(2px);">
+                    <mat-icon class="mat-light-blue">close</mat-icon>
+                  </button>
+                </mat-form-field>
+
+                <div *ngIf="client.personal?.employment_status_slug != 'unemployed'">
+                  <!-- Mat-Input -- Personal Work Job Title-->
+                  <mat-form-field class="w-100 mb-3 hover-underline" *ngIf="editing || job_title.value">
+                    <mat-label>Job Title</mat-label>
+                    <input matInput type="text" placeholder="Type Job Title here..." formControlName="job_title" maxlength="128" tabindex="28">
+                    <button type="button" mat-button *ngIf="job_title.value && !job_title.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm('job_title')">
+                      <mat-icon class="mat-light-blue">close</mat-icon>
+                    </button>
+                    <mat-hint align="end" class="d-none d-sm-inline-block">{{job_title.value?.length || 0}} / 128</mat-hint>
+                  </mat-form-field>
+
+                  <!-- Mat-Input -- Personal Work Company Name-->
+                  <mat-form-field class="w-100 mb-3 hover-underline" *ngIf="editing || company_name.value">
+                    <mat-label>Company Name</mat-label>
+                    <input matInput type="text" placeholder="Type Company Name here..." formControlName="company_name" maxlength="128" tabindex="29">
+                    <button type="button" mat-button *ngIf="company_name.value && !company_name.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm('company_name')">
+                      <mat-icon class="mat-light-blue">close</mat-icon>
+                    </button>
+                    <mat-hint align="end" class="d-none d-sm-inline-block">{{company_name.value?.length || 0}} / 128</mat-hint>
+                  </mat-form-field>
+
+                  <!-- Mat-Input -- Personal Work Business Nature-->
+                  <mat-form-field class="w-100 mb-3 hover-underline" *ngIf="editing || business_nature.value">
+                    <mat-label>Business Nature</mat-label>
+                    <input matInput type="text" placeholder="Type Business Nature here..." formControlName="business_nature" maxlength="128" tabindex="30">
+                    <button type="button" mat-button *ngIf="business_nature.value && !business_nature.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm('business_nature')">
+                      <mat-icon class="mat-light-blue">close</mat-icon>
+                    </button>
+                    <mat-hint align="end" class="d-none d-sm-inline-block">{{business_nature.value?.length || 0}} / 128</mat-hint>
+                  </mat-form-field>
+
+                  <!-- Mat-Input -- Personal Income Range -->
+                  <mat-form-field class="w-100 mb-3 hover-underline" *ngIf="editing || income_range.value">
+                    <mat-label>Income Range</mat-label>
+                    <mat-select class="mat-light-blue" formControlName="income_range" tabindex="27">
+                      <mat-option [value]="0">$0 - $29,999</mat-option>
+                      <mat-option [value]="30000">$30,000 - $49,999</mat-option>
+                      <mat-option [value]="50000">$50,000 - $99,999</mat-option>
+                      <mat-option [value]="100000">$100,000 - $149,999</mat-option>
+                      <mat-option [value]="150000">$150,000 - $299,999</mat-option>
+                      <mat-option [value]="300000">$300,000 and above</mat-option>
+                    </mat-select>
+                    <button type="button" mat-button *ngIf="income_range.value && !income_range.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm('income_range')" style="transform: translateY(2px);">
+                      <mat-icon class="mat-light-blue">close</mat-icon>
+                    </button>
+                  </mat-form-field>
+                </div>
+
+
+
+                <!-- Heading Text Component -->
+                <heading-text [title]="'Contact Information'" [subtitle]="'Contact information pertaining to the individual.'" class="mt-5 mb-4"></heading-text>
+
+                <!-- Mat-Input -- Personal Contact Email -->
+                <mat-form-field class="w-100 mb-3 hover-underline">
+                  <mat-icon matPrefix class="mr-2 text-center"><i class="fs-18 fad fa-at text-master-lt"></i></mat-icon>
+                  <mat-label>Personal Email</mat-label>
+                  <input matInput type="text" placeholder="Type Email here..." formControlName="email" maxlength="128" tabindex="31">
+                  <button type="button" mat-button *ngIf="email.value && !email.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm('email')">
+                    <mat-icon class="mat-light-blue">close</mat-icon>
+                  </button>
+                  <mat-hint align="end" class="d-none d-sm-inline-block">{{email.value?.length || 0}} / 128</mat-hint>
+                </mat-form-field>
+
+                <div class="row">
+                  <div class="col-xl-4">
+                    <!-- Mat-Input -- Personal Contact Home -->
+                    <mat-form-field class="w-100 mb-3 hover-underline">
+                      <mat-icon matPrefix class="mr-2 text-center"><i class="fs-18 fad fa-phone-rotary text-master-lt"></i></mat-icon>
+                      <mat-label>Home No</mat-label>
+                      <input matInput type="text" placeholder="Type Home Number here..." formControlName="home_no" maxlength="32" tabindex="32">
+                      <button type="button" mat-button *ngIf="home_no.value && !home_no.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm('home_no')">
+                        <mat-icon class="mat-light-blue">close</mat-icon>
+                      </button>
+                      <mat-hint align="end" class="d-none d-sm-inline-block">{{home_no.value?.length || 0}} / 32</mat-hint>
+                    </mat-form-field>
+                  </div>
+                  <div class="col-xl-4">
+                    <!-- Mat-Input -- Personal Contact Mobile -->
+                    <mat-form-field class="w-100 mb-3 hover-underline">
+                      <mat-icon matPrefix class="mr-2 text-center"><i class="fs-18 fad fa-mobile text-master-lt"></i></mat-icon>
+                      <mat-label>Mobile No</mat-label>
+                      <input matInput type="text" placeholder="Type Mobile Number here..." formControlName="mobile_no" maxlength="32" tabindex="33">
+                      <button type="button" mat-button *ngIf="mobile_no.value && !mobile_no.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm('mobile_no')">
+                        <mat-icon class="mat-light-blue">close</mat-icon>
+                      </button>
+                      <mat-hint align="end" class="d-none d-sm-inline-block">{{mobile_no.value?.length || 0}} / 32</mat-hint>
+                    </mat-form-field>
+                  </div>
+                  <div class="col-xl-4">
+                    <!-- Mat-Input -- Personal Contact Fax -->
+                    <mat-form-field class="w-100 mb-3 hover-underline">
+                      <mat-icon matPrefix class="mr-2 text-center"><i class="fs-18 fad fa-fax text-master-lt"></i></mat-icon>
+                      <mat-label>Fax No</mat-label>
+                      <input matInput type="text" placeholder="Type Fax Number here..." formControlName="fax_no" maxlength="32" tabindex="34">
+                      <button type="button" mat-button *ngIf="fax_no.value && !fax_no.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm('fax_no')">
+                        <mat-icon class="mat-light-blue">close</mat-icon>
+                      </button>
+                      <mat-hint align="end" class="d-none d-sm-inline-block">{{fax_no.value?.length || 0}} / 32</mat-hint>
+                    </mat-form-field>
+                  </div>
+                </div>
+
+
+
+                <!-- Heading Text Component -->
+                <heading-text [title]="'Address Information'" [subtitle]="'Address information pertaining to the individual.'" class="mt-5 mb-4"></heading-text>
+
+                <div class="row">
+                  <div class="col-4">
+                    <!-- Mat-Input -- Personal Address Block -->
+                    <mat-form-field class="w-100 mb-3 hover-underline">
+                      <mat-icon matPrefix class="mr-2 text-center"><i class="fs-18 fad fa-home text-master-lt"></i></mat-icon>
+                      <mat-label>Block</mat-label>
+                      <input matInput type="text" placeholder="Block" formControlName="block" maxlength="32" tabindex="35">
+                      <button type="button" mat-button *ngIf="block.value && !block.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm('block')">
+                        <mat-icon class="mat-light-blue">close</mat-icon>
+                      </button>
+                      <mat-hint align="end" class="d-none d-sm-inline-block">{{block.value?.length || 0}} / 32</mat-hint>
+                    </mat-form-field>
+                  </div>
+                  <div class="col-8">
+                    <!-- Mat-Input -- Personal Address Street -->
+                    <mat-form-field class="w-100 mb-3 hover-underline">
+                      <mat-icon matPrefix class="mr-2 text-center"><i class="fs-18 fad fa-road text-master-lt"></i></mat-icon>
+                      <mat-label>Street</mat-label>
+                      <input matInput type="text" placeholder="Street" formControlName="street" maxlength="128" tabindex="36">
+                      <button type="button" mat-button *ngIf="street.value && !street.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm('street')">
+                        <mat-icon class="mat-light-blue">close</mat-icon>
+                      </button>
+                      <mat-hint align="end" class="d-none d-sm-inline-block">{{street.value?.length || 0}} / 128</mat-hint>
+                    </mat-form-field>
+                  </div>
+                </div>
+
+                <div class="row">
+                  <div class="col-4">
+                    <!-- Mat-Input -- Personal Address Unit -->
+                    <mat-form-field class="w-100 mb-3 hover-underline">
+                      <mat-icon matPrefix class="mr-2 text-center"><i class="fs-18 fab fa-slack-hash text-master-lt"></i></mat-icon>
+                      <mat-label>Unit</mat-label>
+                      <input matInput type="text" placeholder="Unit" formControlName="unit" maxlength="32" tabindex="37">
+                      <button type="button" mat-button *ngIf="unit.value && !unit.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm('unit')">
+                        <mat-icon class="mat-light-blue">close</mat-icon>
+                      </button>
+                      <mat-hint align="end" class="d-none d-sm-inline-block">{{unit.value?.length || 0}} / 32</mat-hint>
+                    </mat-form-field>
+                  </div>
+                  <div class="col-8">
+                    <!-- Mat-Input -- Personal Address Building -->
+                    <mat-form-field class="w-100 mb-3 hover-underline">
+                      <mat-icon matPrefix class="mr-2 text-center"><i class="fs-18 fad fa-building text-master-lt"></i></mat-icon>
+                      <mat-label>Building</mat-label>
+                      <input matInput type="text" placeholder="Building" formControlName="building" maxlength="128" tabindex="38">
+                      <button type="button" mat-button *ngIf="building.value && !building.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm('building')">
+                        <mat-icon class="mat-light-blue">close</mat-icon>
+                      </button>
+                      <mat-hint align="end" class="d-none d-sm-inline-block">{{building.value?.length || 0}} / 128</mat-hint>
+                    </mat-form-field>
+                  </div>
+                </div>
+
+                <div class="row">
+                  <div class="col-4">
+                    <!-- Mat-Input -- Personal Address City -->
+                    <mat-form-field class="w-100 mb-3 hover-underline">
+                      <mat-icon matPrefix class="mr-2 text-center"><i class="fs-18 fad fa-city text-master-lt"></i></mat-icon>
+                      <mat-label>City</mat-label>
+                      <input matInput type="text" placeholder="City" formControlName="city" maxlength="32" tabindex="39">
+                      <button type="button" mat-button *ngIf="city.value && !city.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm('city')">
+                        <mat-icon class="mat-light-blue">close</mat-icon>
+                      </button>
+                      <mat-hint align="end" class="d-none d-sm-inline-block">{{city.value?.length || 0}} / 32</mat-hint>
+                    </mat-form-field>
+                  </div>
+                  <div class="col-4">
+                    <!-- Mat-Input -- Personal Address Postal -->
+                    <mat-form-field class="w-100 mb-3 hover-underline">
+                      <mat-icon matPrefix class="mr-2 text-center"><i class="fs-18 fad fa-mailbox text-master-lt"></i></mat-icon>
+                      <mat-label>Postal</mat-label>
+                      <input matInput type="text" placeholder="Postal" formControlName="postal" maxlength="32" tabindex="40">
+                      <button type="button" mat-button *ngIf="postal.value && !postal.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm('postal')">
+                        <mat-icon class="mat-light-blue">close</mat-icon>
+                      </button>
+                      <mat-hint align="end" class="d-none d-sm-inline-block">{{postal.value?.length || 0}} / 32</mat-hint>
+                    </mat-form-field>
+                  </div>
+                  <div class="col-4">
+                    <!-- Mat-Input -- Personal Address Country -->
+                    <mat-form-field class="w-100 mb-3 hover-underline">
+                      <mat-icon matPrefix class="mr-2 text-center"><i class="fs-18 fad fa-globe-asia text-master-lt"></i></mat-icon>
+                      <mat-label>Country</mat-label>
+                      <mat-select class="mat-light-blue" formControlName="country_slug" tabindex="41">
+                        <mat-option *ngFor="let obj of countries | sortBy:'asc':'title'" [value]="obj.slug">{{obj.title}}</mat-option>
+                      </mat-select>
+                      <button type="button" mat-button *ngIf="country_slug.value && !country_slug.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm('country_slug')" style="transform: translateY(2px);">
+                        <mat-icon class="mat-light-blue">close</mat-icon>
+                      </button>
+                    </mat-form-field>
+                  </div>
+                </div>
+              </section>
+              <!-- End Right Section -->
+            </div>
+
+          </form>
+          <!-- End Auth Form -->
+        </div>
+      </div>
+      <!-- End Bootstrap Grid System -->
+
+      <!-- Form Loader :: Processing -->
+      <div class="mat-card-content-overlay" *ngIf="processing"></div>
+      <div class="mat-card-content-overlay bg-transparent not-allowed" *ngIf="!editing"></div>
+
+    </mat-card-content>
+    <!-- End Material Card Content -->
+
+    <!-- Start Material Card Footer -->
+    <mat-card-footer class="text-right p-3 w-100" [ngClass]="{'position-sticky animated bounceInUp': editing, 'd-none': !dataLoaded || !editing}">
+      <button mat-button class="fs-12 fw-600 text-master-lt mr-auto" *ngIf="editing" (click)="editing = false">Quit Editing Mode</button>
+      <button mat-stroked-button class="ml-auto fs-12 fw-600 text-master-lt lh-35" type="reset" [disabled]="!dataLoaded" *ngIf="editing" (click)="resetForm()">Reset to Default Values</button>
+      <button mat-flat-button color="primary" class="ml-2 fs-12 fw-600 btn-submit lh-35" [disabled]="processing || !dataLoaded || authForm.invalid || authForm.pristine" type="submit" *ngIf="editing" (click)="submitForm()">{{(processing) ? 'Processing' : 'Update Client'}}</button>
+    </mat-card-footer>
+    <!-- End Material Card Footer -->
+
+  </mat-card>
+  <!-- End Material Card -->
+
+</div>
+<!-- End Padded Container -->

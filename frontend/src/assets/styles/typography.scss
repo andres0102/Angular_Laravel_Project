@@ -1,0 +1,128 @@
+/**
+ * @license
+ * Copyright TWISS.IO
+ * All Rights Reserved.
+ * Licensed under the MIT License.
+ */
+@import '~src/assets/styles/variables';
+
+.font-proxima { font-family: $font-proxima !important;}
+.font-montserrat { font-family: $font-montserrat !important;}
+.font-source-sans { font-family: $font-source-sans !important; }
+.font-source-code { font-family: $font-source-code !important; }
+
+html {
+  font-size: 100%;
+  -ms-text-size-adjust: 100%;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  color: $color-master;
+  font-family: $font-proxima;
+  font-size: $font-size;
+  font-weight: $font-weight;
+  letter-spacing: $letter-spacing;
+  -webkit-font-smoothing: antialiased;
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+  -webkit-font-feature-settings: "kern" 1;
+  -moz-font-feature-settings: "kern" 1;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: $color-master-dark;
+  font-family: $font-montserrat;
+  font-weight: $font-weight;
+  -webkit-font-smoothing: antialiased;
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+  margin: $margin-base 0;
+}
+h1 { font-size: 44px; line-height: 55px; }
+h2 { font-size: 31px; line-height: 40px; }
+h3 { font-size: 27px; line-height: 35px; }
+h4 { font-size: 22px; line-height: 30px; }
+h5 { font-size: 18px; line-height: 25px; }
+
+br { line-height: normal; clear: both; }
+
+a {
+  cursor: pointer;
+  text-shadow: none;
+  color: $color-master-lt;
+  transition: $pg-transition;
+  outline: 0 !important;
+  &:focus, &:hover, &:active { color: $color-primary; }
+}
+
+p {
+  display: block;
+  line-height: 22px;
+  font-style: normal;
+  white-space: normal;
+  margin-bottom: $margin-base;
+}
+
+small, .small{
+  line-height: 1;
+  font-size: 75%;
+}
+
+.text-bold { font-weight: bold; }
+.text-italic { font-style: italic; }
+.text-underline { text-decoration: underline; }
+.text-overflow {
+  text-overflow:ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.text-tw-blue { color: $lfa-blue !important; }
+.text-lfa-green { color: $lfa-green !important; }
+.text-lfa-blue { color: $lfa-blue !important; }
+.text-mat-blue { color: $mat-blue !important; }
+.text-mat-red { color: $mat-red !important; }
+.text-muted { color: $muted-color !important; }
+.text-master { color: $color-master !important; }
+.text-master-dk { color: $color-master-dk !important; }
+.text-master-dark { color: $color-master-dark !important; }
+.text-master-darker { color: $color-master-darker !important; }
+.text-master-darkest { color: $color-master-darkest !important; }
+.text-master-lter { color: $color-master-lter !important; }
+.text-master-lt { color: $color-master-lt !important; }
+.text-master-light { color: $color-master-light !important; }
+.text-master-lighter { color: $color-master-lighter !important; }
+.text-master-lightest { color: $color-master-lightest !important; }
+.text-black { color: $color-black !important; }
+.text-white { color: $color-white !important; }
+
+.text-danger { color: $color-danger !important; }
+.text-danger-lt { color: $color-danger-lt !important; }
+.text-danger-lter { color: $color-danger-lter !important; }
+.text-danger-light { color: $color-danger-light !important; }
+.text-danger-lighter { color: $color-danger-lighter !important; }
+.text-danger-lightest { color: $color-danger-lightest !important; }
+
+.text-complete { color: $color-complete !important; }
+.text-success { color: $color-success !important; }
+.text-info { color: $mat-blue !important; }
+.text-warning { color: $color-warning !important; }
+.text-warning-dark { color: $mat-yellow !important; }
+.text-primary { color: $color-primary !important; }
+
+/*
+ * Font Helpers
+ */
+@for $i from 5 through 100 {
+  .fs-#{$i} { font-size: #{$i}px !important; }
+  .lh-#{$i} { line-height: #{$i}px !important; }
+  .ls-#{$i} { letter-spacing: #{$i / 100}em !important; }
+}
+
+@for $i from 1 through 9 {
+  .fw-#{$i * 100} { font-weight: #{$i * 100} !important; }
+}
+
+
+

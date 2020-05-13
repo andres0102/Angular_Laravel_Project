@@ -1,0 +1,34 @@
+<!--
+ * @license
+ * Copyright TWISS.IO
+ * All Rights Reserved.
+ * Licensed under the MIT License.
+ -->
+
+<!-- Start Main Blue Gradient Area -->
+<div id="main" *ngIf="banner">
+  <div class="summary-type d-flex flex-column flex-lg-row justify-content-center btn-group pb-2">
+    <div class="d-flex mx-auto ml-lg-0 mb-2 text-left text-lg-center flex-column">
+      <span class="d-flex mx-auto mx-lg-0 font-proxima fs-24 ls-13 text-white text-center">{{ title }}</span>
+      <span class="d-flex mx-auto mx-lg-0 fs-11 ls-15 font-montserrat text-muted text-center fw-500">View and manage Sales Associates...</span>
+    </div>
+
+    <div class="ml-auto mr-auto mr-lg-0 align-self-center my-2 my-lg-auto page-action-buttons" *ngIf="authService.user?.permissions?.includes('associates_mgmt_create') && adminSalesAssocService.selections_loaded">
+      <button mat-button (click)="adminSalesAssocService.addAssociateDialog()">New Associate</button>
+    </div>
+  </div>
+</div>
+<!-- End Main Blue Gradient Area -->
+
+<router-outlet></router-outlet>
+
+<!-- Sweet-Alerts -->
+<swal #createdSwal title="Voilà!" text="" type="success" html="You have successfully added a new Sales Associate Record.<span class='d-block fs-7 fw-600 text-uppercase text-master-lt ls-15 lh-15'>Record will be reflected in the database shortly</span>" [showConfirmButton]="false"></swal>
+
+<swal #createdLfaBandingSwal title="Voilà!" text="" type="success" html="You have successfully added a new LFA Banding Record.<span class='d-block fs-7 fw-600 text-uppercase text-master-lt ls-15 lh-15'>Record will be reflected in the database shortly</span>" [showConfirmButton]="false"></swal>
+
+<swal #createdGIBandingSwal title="Voilà!" text="" type="success" html="You have successfully added a new GI Banding Record.<span class='d-block fs-7 fw-600 text-uppercase text-master-lt ls-15 lh-15'>Record will be reflected in the database shortly</span>" [showConfirmButton]="false"></swal>
+
+<swal #createdMovementSwal title="Voilà!" text="" type="success" html="You have successfully added a new Movement Record.<span class='d-block fs-7 fw-600 text-uppercase text-master-lt ls-15 lh-15'>Record will be reflected in the database shortly</span>" [showConfirmButton]="false"></swal>
+
+<swal #createdProviderCodeSwal title="Voilà!" text="" type="success" html="You have successfully added a new Provider Code Record.<span class='d-block fs-7 fw-600 text-uppercase text-master-lt ls-15 lh-15'>Record will be reflected in the database shortly</span>" [showConfirmButton]="false"></swal>

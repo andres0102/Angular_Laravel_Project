@@ -1,0 +1,246 @@
+<!--
+ * @license
+ * Copyright TWISS.IO
+ * All Rights Reserved.
+ * Licensed under the MIT License.
+ -->
+
+<!-- Start Padded Container -->
+<div class="container-fluid animated bounceInUp">
+
+  <!-- Start Hover-Top Containers -->
+  <div class="row align-items-start" [ngClass]="{'hover-top':!authService.user?.permissions?.includes(page_permission), 'hover-top-high':authService.user?.permissions?.includes(page_permission)}">
+
+    <!-- Start Bootstrap Grid -->
+    <div class="col-12">
+
+      <!-- Restricted Area -->
+      <access-denied *ngIf="!authService.user?.permissions?.includes(page_permission)"></access-denied>
+
+      <!-- Start Main Database Area -->
+      <mat-card class="mat-elevation-z bg-transparent" *ngIf="authService.user?.permissions?.includes(page_permission)">
+
+        <!-- Start Navigation Tabs -->
+        <nav mat-tab-nav-bar class="full-database">
+
+          <!-- Start Mat Tab :: All -->
+          <a mat-tab-link [routerLink]="['/authenticated/admin/clients']" [queryParams]="{type: null, f: null}" queryParamsHandling="merge" routerLinkActive #rla1="routerLinkActive" [active]="rla1.isActive" style="width: 210px;" [routerLinkActiveOptions]="{exact:true}" (click)="clearFilters()">
+            <div class="mat-tab-label-content">
+              <div class="d-inline-flex flex-row">
+                <span class="mat-tab-icon"><i class="fad fa-list"></i></span>
+                <div class="d-inline-flex flex-column ml-3 mat-titles">
+                  <span class="mat-tab-title align-self-start">All Clients</span>
+                  <span class="mat-tab-subtitle align-self-start">{{(dataLoaded && filtersLoaded && clients) ? clients.length + ' Records' : 'Loading...'}}</span>
+                </div>
+              </div>
+            </div>
+          </a>
+          <!-- End Mat Tab :: All -->
+
+          <!-- Start Mat Tab :: Individuals -->
+          <a class="sub-category align-self-end" mat-tab-link [routerLink]="['/authenticated/admin/clients']" [queryParams]="{type: 'individual'}" queryParamsHandling="merge" routerLinkActive #rla2="routerLinkActive" [active]="rla2.isActive" [routerLinkActiveOptions]="{exact:true}" (click)="typeChange('individual')">
+            <div class="mat-tab-label-content h-100">
+              <div class="d-inline-flex flex-row">
+                <span class="mat-tab-icon fs-20 lh-36"><i class="fad fa-user"></i></span>
+                <div class="d-inline-flex flex-column ml-2 mat-titles">
+                  <span class="mat-tab-title align-self-start">Individuals</span>
+                  <span class="mat-tab-subtitle align-self-start">{{(dataLoaded && filtersLoaded && clients) ? typeFilterCount['individual'] + ' Records' : 'Loading...'}}</span>
+                </div>
+              </div>
+            </div>
+          </a>
+          <!-- End Mat Tab :: Individuals -->
+
+          <!-- Start Mat Tab :: Businesses -->
+          <a class="sub-category align-self-end" mat-tab-link [routerLink]="['/authenticated/admin/clients']" [queryParams]="{type: 'business'}" queryParamsHandling="merge" routerLinkActive #rla3="routerLinkActive" [active]="rla3.isActive" [routerLinkActiveOptions]="{exact:true}" (click)="typeChange('business')">
+            <div class="mat-tab-label-content h-100">
+              <div class="d-inline-flex flex-row">
+                <span class="mat-tab-icon fs-20 lh-36"><i class="fad fa-industry text-warning"></i></span>
+                <div class="d-inline-flex flex-column ml-2 mat-titles">
+                  <span class="mat-tab-title align-self-start text-warning-dark">Businesses</span>
+                  <span class="mat-tab-subtitle align-self-start text-warning">{{(dataLoaded && filtersLoaded && clients) ? typeFilterCount['business'] + ' Records' : 'Loading...'}}</span>
+                </div>
+              </div>
+            </div>
+          </a>
+          <!-- End Mat Tab :: Businesses -->
+
+          <!-- Start Mat Tab :: Deleted Records -->
+          <a class="sub-category align-self-end" mat-tab-link [routerLink]="['/authenticated/admin/clients']" [queryParams]="{type: 'deleted'}" queryParamsHandling="merge" routerLinkActive #rla4="routerLinkActive" [active]="rla4.isActive" [routerLinkActiveOptions]="{exact:true}" (click)="typeChange('deleted')">
+            <div class="mat-tab-label-content h-100">
+              <div class="d-inline-flex flex-row">
+                <span class="mat-tab-icon fs-20 lh-36"><i class="fad fa-trash text-danger"></i></span>
+                <div class="d-inline-flex flex-column ml-2 mat-titles">
+                  <span class="mat-tab-title align-self-start text-danger">Deleted Records</span>
+                  <span class="mat-tab-subtitle align-self-start text-danger">{{(dataLoaded && filtersLoaded && clients) ? typeFilterCount['deleted'] + ' Records' : 'Loading...'}}</span>
+                </div>
+              </div>
+            </div>
+          </a>
+          <!-- End Mat Tab :: Deleted Records -->
+
+        </nav>
+        <!-- End Navigation Tabs -->
+
+        <!-- Start Material Card Content -->
+        <mat-card-content class="no-inner-padding flex-column">
+
+            <!-- Start Table Filters -->
+            <div class="d-flex py-2 px-4 row datatable-form-fields">
+              <div class="col-lg-6">
+                <mat-form-field appearance="outline" class="mat-light-blue" [ngClass]="{'d-none': !dataLoaded}">
+                  <mat-icon matPrefix>filter_list</mat-icon>
+                  <mat-label>Filter by Client Source</mat-label>
+                  <mat-select [(ngModel)]="sourceSelected" panelClass="mat-selection-panel mat-light-blue" (selectionChange)="filterChange()">
+                    <mat-option [value]="''" class="show-all" *ngIf="dataLoaded && clients">Show All Client Sources <span class="filter_count">({{sourceFilterCount['all'] || 0}})</span></mat-option>
+                    <ng-container *ngFor="let source of client_sources">
+                      <mat-option [value]="source.slug" *ngIf="dataLoaded && clients && sourceFilterCount[source.slug] > 0">{{source.title}} <span class="filter_count">({{sourceFilterCount[source.slug] || 0}})</span></mat-option>
+                    </ng-container>
+                  </mat-select>
+                  <button type="button" mat-button *ngIf="sourceSelected" matSuffix mat-icon-button aria-label="Clear" (click)="$event.stopPropagation(); sourceSelected = ''; filterChange();" class="d-inline-block" style="transform: translateY(9px);">
+                    <mat-icon class="mat-light-blue">close</mat-icon>
+                  </button>
+                </mat-form-field>
+              </div>
+              <div class="col-lg-6 text-right">
+                <mat-form-field appearance="outline" [ngClass]="{'d-none': !dataLoaded, 'activated': searchActive || pageService.isMobile || pageService.isDesktopSmall}" class="mat-light-blue multiple auto-hide pointer align-middle" (click)="searchActive = true;">
+                  <mat-icon matPrefix>search</mat-icon>
+                  <mat-label>Search Client Records</mat-label>
+                  <input matInput #searchInput type="text" placeholder="Type anything here..." tabindex="1" [(ngModel)]="searchTerm" (blur)="searchChange(true)" (keyup.esc)="searchChange(true);$event.target.blur();" spellcheck="false" autocomplete="off">
+                  <button type="button" mat-button *ngIf="searchTerm" matSuffix mat-icon-button aria-label="Clear" (click)="searchTerm = null; searchChange();" class="d-inline-block">
+                    <mat-icon class="mat-light-blue">close</mat-icon>
+                  </button>
+                </mat-form-field>
+
+                <button mat-stroked-button class="btn" (click)="getClients(true)" tooltip="Refresh Database" container="body">
+                  <i class="far fa-sync-alt" *ngIf="dataLoaded && !dataUpdating"></i>
+                  <mat-spinner [diameter]="20" [strokeWidth]="3" *ngIf="!dataLoaded || dataUpdating"></mat-spinner>
+                </button>
+              </div>
+            </div>
+            <!-- End Table Filters -->
+
+
+            <!-- Progress Loader -->
+            <card-loader *ngIf="!dataLoaded"></card-loader>
+
+
+            <!-- Datatable Start -->
+            <ngx-datatable
+              [rows]="clients"
+              class="material w-100"
+              [ngClass]="{'mobile': pageService.isMobile || pageService.isDesktopSmall}"
+              [ngStyle]="{'height': (getDatatableHeight(clients, 60) + 105) + 'px'}"
+              [columnMode]="'force'"
+              [headerHeight]="50"
+              [footerHeight]="50"
+              [scrollbarV]="true"
+              [scrollbarH]="true"
+              [reorderable]="false"
+              [rowHeight]="60"
+              [messages]="messages"
+              *ngIf="dataLoaded"
+              [sorts]="[{ prop: 'name', dir: 'asc'}]"
+              (keyup.esc)="quitEditing($event); editing = {};">
+
+              <!-- Client Type -->
+              <ngx-datatable-column [resizeable]="false" name="Client Type" prop="client_type_slug" headerClass="text-center" cellClass="editable px-3" [width]="155" [canAutoResize]="false" [draggable]="false">
+                <ng-template ngx-datatable-cell-template let-row="row" let-value="value" let-rowIndex="rowIndex">
+                  <div class="text-center">
+                    <mat-select [value]="value" panelClass="mat-select-edit {{(value == 'individual')?'blue':''}} {{(value == 'business')?'yellow':''}}"
+                    (selectionChange)="updateValue($event, 'client_type_slug', rowIndex, row.uuid);">
+                      <mat-option value="individual">Individual</mat-option>
+                      <mat-option value="business">Business</mat-option>
+                    </mat-select>
+                  </div>
+                </ng-template>
+              </ngx-datatable-column>
+
+              <!-- Client Display Photo -->
+              <ngx-datatable-column [resizeable]="false" name="" [width]="70" [draggable]="false" [canAutoResize]="false" cellClass="position-relative pr-0">
+                <ng-template ngx-datatable-cell-template let-row="row">
+                  <div class="profile-thumbnail-wrapper overflow-hidden stretched-link {{(!row.display_photo.original && !row.display_photo.thumbnail) ? 'rounded ' + ((row.client_type_slug == 'individual') ? row.personal?.gender_slug || 'camera' : 'business') : 'rounded-circle faa-tada animated-hover'}}"
+                      [routerLink]="[row.uuid]">
+                    <img src="{{ row.display_photo.original || '/assets/images/spacer.png' }}" width="40" height="40" alt="">
+                  </div>
+                </ng-template>
+              </ngx-datatable-column>
+
+              <!-- Client Particulars -->
+              <ngx-datatable-column [resizeable]="false" name="Client Information" prop="display_name" [minWidth]="300" [draggable]="false" headerClass="pl-1" cellClass="position-relative pl-1">
+                <ng-template ngx-datatable-cell-template let-row="row" let-value="value">
+                  <div [routerLink]="[row.uuid]" class="stretched-link hover-padding text-truncate">{{value || '-'}}</div>
+                  <div class="hover-padding fs-10 text-uppercase text-master-lt desc text-truncate info-container" *ngIf="row.client_type_slug == 'individual'">
+                    <span class="ls-13" *ngIf="row.personal?.job_title || row.personal?.company_name">{{(row.personal.job_title && row.personal.company_name) ? row.personal.job_title + ' @ ' + row.personal.company_name : row.personal.job_title || row.personal.company_name}}</span>
+                    <span class="ls-13" *ngIf="row.personal?.gender_slug">{{row.personal?.gender_slug | uppercase}}</span>
+                    <span class="ls-13" *ngIf="row.personal?.date_birth">{{-(row.personal?.date_birth | amDifference:today:'years') + ' year old' | uppercase}}</span>
+                  </div>
+                  <div class="hover-padding fs-10 ls-13 text-uppercase text-master-lt desc text-truncate" *ngIf="row.client_type_slug == 'business' && row.business?.uen">Business UEN: {{row.business.uen}}</div>
+                </ng-template>
+              </ngx-datatable-column>
+
+              <!-- Client Contact Information -->
+              <ngx-datatable-column [resizeable]="false" name="Contact No" headerClass="text-center" [width]="200" [canAutoResize]="false" [draggable]="false" [sortable]="false" cellClass="position-relative">
+                <ng-template ngx-datatable-cell-template let-row="row">
+                  <!-- Priority #1 == Mobile -->
+                  <div [routerLink]="[row.uuid + '/particulars']" class="stretched-link text-center" *ngIf="row.personal?.contact_information?.mobile_no">{{row.personal?.contact_information?.mobile_no | phone:'SG'}}</div>
+                  <div class="hover-padding fs-10 ls-13 text-uppercase text-master-lt text-center desc text-truncate" *ngIf="row.personal?.contact_information?.mobile_no">Mobile Number</div>
+                  <!-- Priority #2 == Home -->
+                  <div [routerLink]="[row.uuid + '/particulars']" class="stretched-link text-center" *ngIf="!row.personal?.contact_information?.mobile_no && row.personal?.contact_information?.home_no">{{row.personal?.contact_information?.home_no | phone:'SG'}}</div>
+                  <div class="hover-padding fs-10 ls-13 text-uppercase text-master-lt text-center desc text-truncate" *ngIf="!row.personal?.contact_information?.mobile_no && row.personal?.contact_information?.home_no">Home Number</div>
+                  <!-- No Mobile & Home -->
+                  <div [routerLink]="[row.uuid + '/particulars']" class="stretched-link text-center text-master-lt" *ngIf="!row.personal?.contact_information?.mobile_no && !row.personal?.contact_information?.home_no">-</div>
+                </ng-template>
+              </ngx-datatable-column>
+
+              <!-- Client Submissions Count -->
+              <ngx-datatable-column [resizeable]="false" name="Submissions" prop="submissions_count" headerClass="text-center" [width]="115" [canAutoResize]="false" [draggable]="false" cellClass="position-relative">
+                <ng-template ngx-datatable-cell-template let-row="row" let-value="value">
+                  <div [routerLink]="[row.uuid + '/submissions']" class="stretched-link text-center">{{value}}</div>
+                </ng-template>
+              </ngx-datatable-column>
+
+              <!-- Client Policies Count -->
+              <ngx-datatable-column [resizeable]="false" name="Policies" prop="policies_count" headerClass="text-center" [width]="115" [canAutoResize]="false" [draggable]="false" cellClass="position-relative">
+                <ng-template ngx-datatable-cell-template let-row="row" let-value="value">
+                  <div [routerLink]="[row.uuid + '/incepted-policies']" class="stretched-link text-center">{{value}}</div>
+                </ng-template>
+              </ngx-datatable-column>
+
+              <!-- Client Source -->
+              <ngx-datatable-column [resizeable]="false" name="Client Source" prop="source_slug" cellClass="editable" [width]="280" [canAutoResize]="false" [draggable]="false">
+                <ng-template ngx-datatable-cell-template let-row="row" let-value="value" let-rowIndex="rowIndex">
+                  <div class="text-truncate editable-wrapper" (dblclick)="scrollToView($event, 'source', rowIndex, row.uuid);" [ngClass]="{'editing': editing[rowIndex + '-source']}">
+                    <span *ngIf="!editing[rowIndex + '-source'] && source_map">{{source_map.get(value)}}</span>
+
+                    <div class="w-100 m-auto" *ngIf="editing[rowIndex + '-source']">
+                      <mat-form-field class="pl-0 pr-2 no-underline">
+                        <mat-select [value]="value" panelClass="mat-selection-panel mat-light-yellow" (selectionChange)="updateValue($event, 'source_slug', rowIndex, row.uuid);">
+                          <mat-option *ngFor="let source of client_sources" [value]="source.slug" class="font-proxima"><span style="letter-spacing: 0.03em">{{source.title}}</span></mat-option>
+                        </mat-select>
+                        <button type="button" mat-button matSuffix mat-icon-button aria-label="Clear" class="d-inline-block" (click)="quitEditing($event); editing = {};" style="transform: translateY(3px);">
+                          <mat-icon class="mat-yellow">close</mat-icon>
+                        </button>
+                      </mat-form-field>
+                    </div>
+                  </div>
+                </ng-template>
+              </ngx-datatable-column>
+
+            </ngx-datatable>
+            <!-- Datatable End -->
+
+        </mat-card-content>
+        <!-- End Material Card Content -->
+
+      </mat-card>
+      <!-- End Main Database Area -->
+
+    </div>
+    <!-- End Bootstrap Grid -->
+
+  </div>
+  <!-- End Hover-Top Containers -->
+
+</div>
+<!-- End Padded Container -->

@@ -1,0 +1,313 @@
+/**
+ * @license
+ * Copyright TWISS.IO
+ * All Rights Reserved.
+ * Licensed under the MIT License.
+ */
+
+// $base-img-url: "~src/app/vendor/@pages/images" !global;
+// $assets-url: "/assets" !global;
+
+@import '~src/assets/styles/variables';
+
+// @import '~src/app/vendor/@pages/styles/modules/overlay-search';
+// @import '~src/app/vendor/@pages/styles/modules/split-view';
+// @import '~src/app/vendor/@pages/styles/modules/list';
+
+//UI Components
+// @import "~src/app/vendor/@pages/styles/icons";
+// --- @import "~src/app/vendor/@pages/styles/modules/typography";
+// --- @import '~src/app/vendor/@pages/styles/modules/breadcrumb';
+// @import "~src/app/vendor/@pages/styles/modules/buttons";
+// @import "~src/app/vendor/@pages/styles/modules/notifications";
+// @import "~src/app/vendor/@pages/styles/modules/alerts";
+// @import "~src/app/vendor/@pages/styles/modules/tabs_accordian";
+// @import "~src/app/vendor/@pages/styles/modules/modals";
+// @import "~src/app/vendor/@pages/styles/modules/progress_indicators";
+
+//Pages Components
+// @import "~src/app/vendor/@pages/styles/modules/datepicker";
+// @import "~src/app/vendor/@pages/styles/modules/timepicker";
+// @import "~src/app/vendor/@pages/styles/modules/select";
+// @import "~src/app/vendor/@pages/styles/modules/slider";
+// @import "~src/app/vendor/@pages/styles/modules/switch";
+// @import "~src/app/vendor/@pages/styles/modules/tabs";
+// @import "~src/app/vendor/@pages/styles/modules/tags";
+// @import "~src/app/vendor/@pages/styles/modules/uploader";
+// @import "~src/app/vendor/@pages/styles/modules/pagination";
+
+//Email App
+// @import '~src/app/vendor/@pages/styles/modules/email';
+
+//View
+// @import "~src/app/vendor/@pages/styles/modules/view";
+
+//Cards
+// @import "~src/app/vendor/@pages/styles/modules/cards";
+
+//Form Elements
+// @import "~src/app/vendor/@pages/styles/modules/form_elements";
+
+//Tables
+// @import "~src/app/vendor/@pages/styles/modules/tables";
+
+//Charts
+// @import "~src/app/vendor/@pages/styles/modules/charts";
+
+//List
+// @import "~src/app/vendor/@pages/styles/modules/list";
+
+//Social
+// @import "~src/app/vendor/@pages/styles/modules/social";
+
+//Login
+// @import "~src/app/vendor/@pages/styles/modules/login";
+
+//Lock screen
+// @import "~src/app/vendor/@pages/styles/modules/lock_screen";
+
+//Timeline
+// @import "~src/app/vendor/@pages/styles/modules/timeline";
+
+//Gallery
+// @import "~src/app/vendor/@pages/styles/modules/gallery";
+
+//Chat
+// @import "~src/app/vendor/@pages/styles/modules/chat";
+
+//Z-indexes
+// @import "~src/app/vendor/@pages/styles/modules/z_index";
+
+//Print
+// @import "~src/app/vendor/@pages/styles/modules/print";
+
+//Misc Helpers
+// @import "~src/app/vendor/@pages/styles/modules/misc";
+
+//Demo - Remove in production
+// @import "~src/app/vendor/@pages/styles/modules/demo";
+
+//Responsive Classes
+// @import "~src/app/vendor/@pages/styles/responsive";
+
+//Utils
+// @import "~src/app/vendor/@pages/styles/utils";
+
+//Vendor
+// @import "~src/app/vendor/@pages/styles/vendor/perfect-scroller";
+// @import "~src/app/vendor/@pages/styles/vendor/typehead";
+// @import "~src/app/vendor/@pages/styles/vendor/ng-tree";
+// @import "~src/app/vendor/@pages/styles/vendor/quill";
+// @import "~src/app/vendor/@pages/styles/vendor/ng-datatable";
+// @import "~src/app/vendor/@pages/styles/vendor/ngx-nvd3";
+// @import "~src/app/vendor/@pages/styles/vendor/ngx-google-map";
+
+
+.brand-symbol {
+  line-height: 1;
+  display: inline-block;
+  margin-right: 13px;
+}
+
+.device-icon {
+  font-weight: 600;
+  font-size: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+}
+
+
+@media (max-width: 991px) {
+  .brand-symbol { display: none; }
+}
+
+html { background: $color-master-lightest; }
+body {
+  background: $color-master-lightest;
+  -moz-osx-font-smoothing: grayscale;
+  &.fixed-header {
+    pg-header {
+      position: fixed;
+      left: 0;
+      right: 0;
+      top: 0;
+      z-index: 10;
+    }
+  }
+  &.dashboard{
+    background: #f5f5f5;
+    .page-container{
+      background: #f5f5f5;
+    }
+  }
+  &.menu-pin{
+    .overlay{
+      padding-left:0;
+      .overlay-brand{
+        margin-left: 0;
+      }
+    }
+  }
+}
+
+@media (min-width: 992px) {
+  .page-container .page-content-wrapper .content { padding-bottom: 85px; }
+}
+
+@media (max-width: 991px) {
+  .page-container .page-content-wrapper .content { padding-bottom: 100px; }
+}
+
+.page-container {
+  display: block;
+  width:100%;
+  min-height:100vh;
+  background-image: url('/assets/logo/symbol-opacity@2x.png');
+  background-repeat: no-repeat;
+  background-size: 750px;
+  background-position: calc(100vw - 600px) calc(100vh - 500px);
+  transition: $pg-transition;
+  background-attachment: fixed;
+  background-color: #f2f3f8;
+
+  .page-content-wrapper{
+    min-height: 100vh;
+    position: relative;
+    .content {
+      * { line-height: 1.5; }
+      /* Content holder */
+      z-index: 10;
+      padding-top: $header-height;
+      min-height: 100%;
+      @include transition(all 0.3s ease);
+      &.full-width{
+          width: 100%;
+      }
+      .content-inner{
+          display: inline-block;
+          vertical-align: top;
+          height: 100%;
+          padding-left: 30px;
+          position: relative;
+      }
+      &:only-child{
+          padding-bottom:0px;
+      }
+      &.overlay-footer{
+          padding-bottom:0px;
+      }
+
+      #main {
+        transition: $pg-transition;
+        transition-duration: 1500ms !important;
+        background: linear-gradient(#23395a,#1f1d36);
+        padding: 30px 30px 100px;
+        max-height: calc(100vh - 170px);
+        .mat-button-toggle-group {
+          border-radius: 50px;
+          box-shadow: 0 0 5px rgba(0,0,0,0.25) inset;
+          border: 1px solid rgba(255,255,255,0.05);
+          > .mat-button-toggle-appearance-standard {
+            background: rgba(0,0,0,0.15);
+            color: rgba(255,255,255,0.5);
+            &.mat-button-toggle-checked {
+              background: linear-gradient(#ffffff, rgba(255, 255, 255, 0.65));
+              color: #1f1d36;
+            }
+          }
+        }
+      }
+      .hover-top {
+        z-index: 1;
+        margin-top: -72px;
+      }
+      .hover-top-high {
+        z-index: 1;
+        margin-top: -85px;
+      }
+    }
+    .footer{
+      /* Footer */
+      width: auto;
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      font-size: 12px;
+      @include transition(left 0.3s ease);
+      &.fixed{
+          position: fixed;
+      }
+    }
+  }
+}
+.page-title{ margin-top: 0px; }
+
+.group-container {
+      white-space: nowrap !important;
+    .single-group {
+      vertical-align: top;
+      display: inline-block;
+      white-space: normal;
+      }
+}
+
+// .jumbotron{
+//   position: relative;
+//   overflow: hidden;
+//   display: block;
+//   padding: 0;
+//       .inner{
+//           position: relative;
+//           z-index: 2;
+//       }
+//       &.lg{
+//           height: 600px;
+//       }
+
+//   background-color: $color-master-lighter;
+//   .cover-photo{
+//       width: 100%;
+//       height: inherit;
+//       overflow: hidden;
+//       @include transition(opacity .3s ease);
+//       background-size: cover;
+//       background-color: $color-success;
+//   }
+//   h1 {
+//       font-size: 44px;
+//   }
+// }
+
+
+.container-fluid {
+  padding-left: 30px;
+  padding-right: 30px;
+  position: relative;
+}
+
+.pager{
+  margin: 0;
+}
+
+@media (min-width: 992px) {
+  .page-container, .page-container > pg-header { padding-left: $sidebar-width-col; }
+}
+
+@media (max-width: 767px) {
+  .container-fluid {
+    padding-left: 15px !important;
+    padding-right: 15px !important;
+  }
+}
+
+@media (min-width: 600px) and (max-width: 767px) {
+  .page-container {
+    background-size: 650px;
+    background-position: calc(100vw - 550px) calc(100vh - 600px);
+  }
+}
+
+@media (max-width: 599px) {
+  .page-container { background-image: none; }
+}

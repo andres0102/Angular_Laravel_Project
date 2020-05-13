@@ -1,0 +1,546 @@
+<!--
+ * @license
+ * Copyright TWISS.IO
+ * All Rights Reserved.
+ * Licensed under the MIT License.
+ -->
+
+<!-- Progress Loader -->
+<card-loader *ngIf="!dataLoaded"></card-loader>
+
+<div class="list-group p-4 row position-relative" *ngIf="dataLoaded">
+  <div class="loading d-flex" *ngIf="processing">
+    <mat-spinner class="m-auto"></mat-spinner>
+  </div>
+
+  <div class="col-12">
+    <div class="list-group-item d-flex" *ngIf="cases.length == 0">
+      <span class="fs-10 fw-600 ls-13 text-uppercase text-master my-4 mx-auto">No Data Found</span>
+    </div>
+  </div>
+
+  <div class="col-12 mb-5" *ngFor="let case of cases; let i = index;">
+    <div class="list-group-item d-flex justify-content-between">
+      <span class="my-auto fs-18 ls-13 text-bold text-master">Case #{{i+1}}</span>
+
+      <div class="ml-auto case-action-buttons" *ngIf="submission.status_slug == 'draft'">
+        <!-- <a class="mr-3" (click)="editCase(case)">
+          <span>
+            <i class="fad fa-edit fs-25 ls-25"></i>
+          </span>
+        </a> -->
+
+        <a [swal]="{
+              title: 'Delete Case Record',
+              text: 'Please note that this action is irreversible.',
+              showCancelButton: true,
+              cancelButtonColor: '#ddd',
+              confirmButtonColor: '#ef4968',
+              confirmButtonText: 'Delete',
+              allowOutsideClick: false
+            }"
+            (confirm)="removeCase(case.uuid)">
+          <span>
+            <i class="fas fa-trash fs-25 ls-25"></i>
+          </span>
+        </a>
+      </div>
+    </div>
+    <div class="list-group-item d-flex flex-column flex-lg-row p-0">
+      <!-- Case :: Left Panel -->
+      <div class="d-flex flex-column provider-info">
+
+        <div class="p-3 border-bottom">
+
+            <div class="d-flex" style="height: 100px;" [ngStyle]="{'background': case.provider.background}">
+              <img class="m-auto" src="{{case.provider.thumbnail_png}}" height="50">
+            </div>
+
+            <table class="bootstrap table table-sm table-bordered fs-12 m-0">
+              <tr *ngIf="case.submission.category_slug == 'insurance' || case.submission.category_slug == 'gi' || case.submission.category_slug == 'cis'">
+                <td class="res-width text-master text-uppercase fs-9 ls-8 pt-2">Product</td>
+                <td class="text-bold">{{case.product.option}}</td>
+              </tr>
+              <tr *ngIf="case.submission.category_slug == 'insurance' || case.submission.category_slug == 'gi' || case.submission.category_slug == 'cis'">
+                <td class="res-width text-master text-uppercase fs-9 ls-8 pt-2">Series</td>
+                <td>{{case.product.name}}</td>
+              </tr>
+              <tr *ngIf="case.submission.category_slug == 'insurance' || case.submission.category_slug == 'gi' || case.submission.category_slug == 'cis'">
+                <td class="res-width text-master text-uppercase fs-9 ls-8 pt-2">Category</td>
+                <td>{{case.product.category}}</td>
+              </tr>
+              <tr>
+                <td class="res-width text-master text-uppercase fs-9 ls-8 pt-2">Provider</td>
+                <td>{{case.provider.full_name}}</td>
+              </tr>
+            </table>
+
+        </div>
+
+        <div class="p-3">
+
+            <table class="bootstrap table table-sm table-bordered fs-12 m-0">
+              <thead>
+                <td colspan="2" class="text-bold ls-8 color-lfa-blue">Case Information</td>
+              </thead>
+              <tr>
+                <td class="res-width text-master text-uppercase fs-9 ls-8 pt-2">Category</td>
+                <td>{{case.submission.category}}</td>
+              </tr>
+              <tr>
+                <td class="res-width text-master text-uppercase fs-9 ls-8 pt-2">Mode</td>
+                <td>{{case.submission.mode | titlecase}}</td>
+              </tr>
+              <tr>
+                <td class="res-width text-master text-uppercase fs-9 ls-8 pt-2">Currency</td>
+                <td>{{case.submission.currency | uppercase}}</td>
+              </tr>
+              <tr *ngIf="case.submission.category_slug == 'insurance' || case.submission.category_slug == 'gi' || case.submission.category_slug == 'cis'">
+                <td class="res-width text-master text-uppercase fs-9 ls-8 pt-2">APE</td>
+                <td>{{case.submission.ape | currency}}</td>
+              </tr>
+            </table>
+
+        </div>
+
+        <div class="p-3 flex-lg-grow-1" *ngIf="case.submission.category_slug == 'insurance'">
+
+            <table class="bootstrap table table-sm table-bordered fs-12 m-0">
+              <thead>
+                <td colspan="2" class="text-bold ls-8 color-lfa-blue">Life Assured Summary</td>
+              </thead>
+              <tr>
+                <td class="res-width text-master text-uppercase fs-9 ls-8 pt-2">Is Client</td>
+                <td>{{(case.submission.life_assured.is_client) ? 'YES' : 'NO'}}</td>
+              </tr>
+              <tr *ngIf="!case.submission.life_assured.is_client">
+                <td class="res-width text-master text-uppercase fs-9 ls-8 pt-2">Relationship</td>
+                <td *ngIf="case.submission.life_assured.relationship else empty_column">{{case.submission.life_assured.relationship | uppercase}}</td>
+              </tr>
+              <tr *ngIf="!case.submission.life_assured.is_client && case.submission.life_assured?.personal?.salutation_slug">
+                <td class="res-width text-master text-uppercase fs-9 ls-8 pt-2">Salutation</td>
+                <td>{{case.submission.life_assured?.personal?.salutation_slug | uppercase}}</td>
+              </tr>
+              <tr *ngIf="!case.submission.life_assured.is_client">
+                <td class="font-italic text-master-lt text-uppercase fs-9 ls-8 pt-2" colspan="2">Personal Information</td>
+              </tr>
+              <tr *ngIf="!case.submission.life_assured.is_client">
+                <td class="res-width text-master text-uppercase fs-9 ls-8 pt-2">Full Name</td>
+                <td>{{case.submission.life_assured?.personal?.full_name | uppercase}}</td>
+              </tr>
+              <tr *ngIf="!case.submission.life_assured.is_client && case.submission.life_assured?.personal?.alias">
+                <td class="res-width text-master text-uppercase fs-9 ls-8 pt-2">Alias</td>
+                <td>{{case.submission.life_assured?.personal?.alias | uppercase}}</td>
+              </tr>
+              <tr *ngIf="!case.submission.life_assured.is_client && case.submission.life_assured?.personal?.chinese_name">
+                <td class="res-width text-master text-uppercase fs-9 ls-8 pt-2">Chinese Name</td>
+                <td>{{case.submission.life_assured?.personal?.chinese_name}}</td>
+              </tr>
+              <tr *ngIf="!case.submission.life_assured.is_client && case.submission.life_assured?.personal?.nric_no">
+                <td class="res-width text-master text-uppercase fs-9 ls-8 pt-2">NRIC No</td>
+                <td>{{case.submission.life_assured?.personal?.nric_no | uppercase}}</td>
+              </tr>
+              <tr *ngIf="!case.submission.life_assured.is_client && case.submission.life_assured?.personal?.fin_no">
+                <td class="res-width text-master text-uppercase fs-9 ls-8 pt-2">FIN No</td>
+                <td>{{case.submission.life_assured?.personal?.fin_no | uppercase}}</td>
+              </tr>
+              <tr *ngIf="!case.submission.life_assured.is_client && case.submission.life_assured?.personal?.passport_no">
+                <td class="res-width text-master text-uppercase fs-9 ls-8 pt-2">Passport No</td>
+                <td>{{case.submission.life_assured?.personal?.passport_no | uppercase}}</td>
+              </tr>
+              <tr *ngIf="!case.submission.life_assured.is_client && case.submission.life_assured?.personal?.gender_slug">
+                <td class="res-width text-master text-uppercase fs-9 ls-8 pt-2">Gender</td>
+                <td>{{case.submission.life_assured?.personal?.gender_slug | uppercase}}</td>
+              </tr>
+              <tr *ngIf="!case.submission.life_assured.is_client && case.submission.life_assured?.personal?.date_birth">
+                <td class="res-width text-master text-uppercase fs-9 ls-8 pt-2">Date Birth</td>
+                <td>{{case.submission.life_assured?.personal?.date_birth | date:'longDate'}}</td>
+              </tr>
+              <tr *ngIf="!case.submission.life_assured.is_client && case.submission.life_assured?.personal?.country_birth_slug">
+                <td class="res-width text-master text-uppercase fs-9 ls-8 pt-2">Country Birth</td>
+                <td>{{case.submission.life_assured?.personal?.country_birth_slug | uppercase}}</td>
+              </tr>
+              <tr *ngIf="!case.submission.life_assured.is_client && case.submission.life_assured?.personal?.marital_status_slug">
+                <td class="res-width text-master text-uppercase fs-9 ls-8 pt-2">Marital Status</td>
+                <td>{{case.submission.life_assured?.personal?.marital_status_slug | uppercase}}</td>
+              </tr>
+              <tr *ngIf="!case.submission.life_assured.is_client && case.submission.life_assured?.personal?.race_slug">
+                <td class="res-width text-master text-uppercase fs-9 ls-8 pt-2">Race</td>
+                <td>{{case.submission.life_assured?.personal?.race_slug | uppercase | uppercase}}</td>
+              </tr>
+              <tr *ngIf="!case.submission.life_assured.is_client && case.submission.life_assured?.personal?.nationality_slug">
+                <td class="res-width text-master text-uppercase fs-9 ls-8 pt-2">Nationality</td>
+                <td>{{case.submission.life_assured?.personal?.nationality_slug | uppercase}}</td>
+              </tr>
+              <tr *ngIf="!case.submission.life_assured.is_client && case.submission.life_assured?.personal?.residency_status_slug">
+                <td class="res-width text-master text-uppercase fs-9 ls-8 pt-2">Residency Status</td>
+                <td>{{case.submission.life_assured?.personal?.residency_status_slug | uppercase}}</td>
+              </tr>
+              <tr *ngIf="!case.submission.life_assured.is_client && (
+              case.submission.life_assured?.personal?.education_level_slug ||
+              case.submission.life_assured?.personal?.education_institution ||
+              case.submission.life_assured?.personal?.field_of_study)">
+                <td class="font-italic text-master-lt text-uppercase fs-9 ls-8 pt-2" colspan="2">Educational Information</td>
+              </tr>
+              <tr *ngIf="!case.submission.life_assured.is_client && case.submission.life_assured?.personal?.education_level_slug">
+                <td class="res-width text-master text-uppercase fs-9 ls-8 pt-2">Educational Level</td>
+                <td>{{case.submission.life_assured?.personal?.education_level_slug | uppercase}}</td>
+              </tr>
+              <tr *ngIf="!case.submission.life_assured.is_client && case.submission.life_assured?.personal?.education_institution">
+                <td class="res-width text-master text-uppercase fs-9 ls-8 pt-2">Educational Institution</td>
+                <td>{{case.submission.life_assured?.personal?.education_institution | uppercase}}</td>
+              </tr>
+              <tr *ngIf="!case.submission.life_assured.is_client && case.submission.life_assured?.personal?.field_of_study">
+                <td class="res-width text-master text-uppercase fs-9 ls-8 pt-2">Field of Study</td>
+                <td>{{case.submission.life_assured?.personal?.field_of_study | uppercase}}</td>
+              </tr>
+              <tr *ngIf="!case.submission.life_assured.is_client && (
+              case.submission.life_assured?.personal?.employment_status_slug ||
+              case.submission.life_assured?.personal?.job_title ||
+              case.submission.life_assured?.personal?.company_name ||
+              case.submission.life_assured?.personal?.business_nature ||
+              case.submission.life_assured?.personal?.income_range)">
+                <td class="font-italic text-master-lt text-uppercase fs-9 ls-8 pt-2" colspan="2">Employment Information</td>
+              </tr>
+              <tr *ngIf="!case.submission.life_assured.is_client && case.submission.life_assured?.personal?.employment_status_slug">
+                <td class="res-width text-master text-uppercase fs-9 ls-8 pt-2">Employment Status</td>
+                <td>{{case.submission.life_assured?.personal?.employment_status_slug | uppercase}}</td>
+              </tr>
+              <tr *ngIf="!case.submission.life_assured.is_client && case.submission.life_assured?.personal?.job_title">
+                <td class="res-width text-master text-uppercase fs-9 ls-8 pt-2">Job Title</td>
+                <td>{{case.submission.life_assured?.personal?.job_title | uppercase}}</td>
+              </tr>
+              <tr *ngIf="!case.submission.life_assured.is_client && case.submission.life_assured?.personal?.company_name">
+                <td class="res-width text-master text-uppercase fs-9 ls-8 pt-2">Company Name</td>
+                <td>{{case.submission.life_assured?.personal?.company_name | uppercase}}</td>
+              </tr>
+              <tr *ngIf="!case.submission.life_assured.is_client && case.submission.life_assured?.personal?.business_nature">
+                <td class="res-width text-master text-uppercase fs-9 ls-8 pt-2">Business Nature</td>
+                <td>{{case.submission.life_assured?.personal?.business_nature | uppercase}}</td>
+              </tr>
+              <tr *ngIf="!case.submission.life_assured.is_client && case.submission.life_assured?.personal?.income_range">
+                <td class="res-width text-master text-uppercase fs-9 ls-8 pt-2">Income Range</td>
+                <td>{{incomeRangeText(case.submission.life_assured?.personal?.income_range)}}</td>
+              </tr>
+              <tr *ngIf="!case.submission.life_assured.is_client && (
+              case.submission.life_assured?.personal?.contact_information?.email ||
+              case.submission.life_assured?.personal?.contact_information?.home_no ||
+              case.submission.life_assured?.personal?.contact_information?.mobile_no ||
+              case.submission.life_assured?.personal?.contact_information?.fax_no)">
+                <td class="font-italic text-master-lt text-uppercase fs-9 ls-8 pt-2" colspan="2">Contact Information</td>
+              </tr>
+              <tr *ngIf="!case.submission.life_assured.is_client && case.submission.life_assured?.personal?.contact_information?.email">
+                <td class="res-width text-master text-uppercase fs-9 ls-8 pt-2">Email Address</td>
+                <td>{{case.submission.life_assured?.personal?.contact_information?.email}}</td>
+              </tr>
+              <tr *ngIf="!case.submission.life_assured.is_client && case.submission.life_assured?.personal?.contact_information?.mobile_no">
+                <td class="res-width text-master text-uppercase fs-9 ls-8 pt-2">Mobile No</td>
+                <td>{{case.submission.life_assured?.personal?.contact_information?.mobile_no | phone:'SG'}}</td>
+              </tr>
+              <tr *ngIf="!case.submission.life_assured.is_client && case.submission.life_assured?.personal?.contact_information?.home_no">
+                <td class="res-width text-master text-uppercase fs-9 ls-8 pt-2">Home No</td>
+                <td>{{case.submission.life_assured?.personal?.contact_information?.home_no | phone:'SG'}}</td>
+              </tr>
+              <tr *ngIf="!case.submission.life_assured.is_client && case.submission.life_assured?.personal?.contact_information?.fax_no">
+                <td class="res-width text-master text-uppercase fs-9 ls-8 pt-2">Fax No</td>
+                <td>{{case.submission.life_assured?.personal?.contact_information?.fax_no | phone:'SG'}}</td>
+              </tr>
+              <tr *ngIf="!case.submission.life_assured.is_client && (
+              case.submission.life_assured?.personal?.address_information?.block ||
+              case.submission.life_assured?.personal?.address_information?.street ||
+              case.submission.life_assured?.personal?.address_information?.unit ||
+              case.submission.life_assured?.personal?.address_information?.building ||
+              case.submission.life_assured?.personal?.address_information?.city ||
+              case.submission.life_assured?.personal?.address_information?.postal ||
+              case.submission.life_assured?.personal?.address_information?.country_slug)">
+                <td class="font-italic text-master-lt text-uppercase fs-9 ls-8 pt-2" colspan="2">Address Information</td>
+              </tr>
+              <tr *ngIf="!case.submission.life_assured.is_client && case.submission.life_assured?.personal?.address_information?.block">
+                <td class="res-width text-master text-uppercase fs-9 ls-8 pt-2">Block</td>
+                <td>{{case.submission.life_assured?.personal?.address_information?.block}}</td>
+              </tr>
+              <tr *ngIf="!case.submission.life_assured.is_client && case.submission.life_assured?.personal?.address_information?.street">
+                <td class="res-width text-master text-uppercase fs-9 ls-8 pt-2">Street</td>
+                <td>{{case.submission.life_assured?.personal?.address_information?.street}}</td>
+              </tr>
+              <tr *ngIf="!case.submission.life_assured.is_client && case.submission.life_assured?.personal?.address_information?.unit">
+                <td class="res-width text-master text-uppercase fs-9 ls-8 pt-2">Unit</td>
+                <td>{{case.submission.life_assured?.personal?.address_information?.unit}}</td>
+              </tr>
+              <tr *ngIf="!case.submission.life_assured.is_client && case.submission.life_assured?.personal?.address_information?.building">
+                <td class="res-width text-master text-uppercase fs-9 ls-8 pt-2">Building</td>
+                <td>{{case.submission.life_assured?.personal?.address_information?.building}}</td>
+              </tr>
+              <tr *ngIf="!case.submission.life_assured.is_client && case.submission.life_assured?.personal?.address_information?.city">
+                <td class="res-width text-master text-uppercase fs-9 ls-8 pt-2">City</td>
+                <td>{{case.submission.life_assured?.personal?.address_information?.city}}</td>
+              </tr>
+              <tr *ngIf="!case.submission.life_assured.is_client && case.submission.life_assured?.personal?.address_information?.postal">
+                <td class="res-width text-master text-uppercase fs-9 ls-8 pt-2">Postal Code</td>
+                <td>{{case.submission.life_assured?.personal?.address_information?.postal}}</td>
+              </tr>
+              <tr *ngIf="!case.submission.life_assured.is_client && case.submission.life_assured?.personal?.address_information?.country_slug">
+                <td class="res-width text-master text-uppercase fs-9 ls-8 pt-2">Country</td>
+                <td>{{case.submission.life_assured?.personal?.address_information?.country_slug}}</td>
+              </tr>
+            </table>
+
+        </div>
+
+      </div>
+      <!-- Case :: Right Panel -->
+      <div class="d-flex flex-column flex-lg-grow-1">
+
+        <div class="p-3 border-bottom">
+
+            <table class="bootstrap table table-sm table-bordered fs-12 m-0">
+              <thead>
+                <td colspan="2" class="text-bold ls-8 color-lfa-blue">Policy Information</td>
+              </thead>
+              <tr *ngIf="case.submission.category_slug == 'cis'">
+                <td width="150" class="text-master text-uppercase fs-9 ls-8 pt-2">Account Type</td>
+                <td>{{case.investment.account_type | titlecase}}</td>
+              </tr>
+              <tr *ngIf="case.submission.category_slug == 'cis'">
+                <td width="150" class="text-master text-uppercase fs-9 ls-8 pt-2">Transaction Type</td>
+                <td>{{case.investment.transaction_type | titlecase}}</td>
+              </tr>
+              <tr *ngIf="case.submission.category_slug == 'insurance'">
+                <td width="150" class="text-master text-uppercase fs-9 ls-8 pt-2">Sum Assured</td>
+                <td>{{case.policy.sum_assured | currency}}</td>
+              </tr>
+              <tr *ngIf="case.submission.category_slug == 'insurance'">
+                <td width="150" class="text-master text-uppercase fs-9 ls-8 pt-2">Policy Term</td>
+                <td *ngIf="case.policy.policy_term; else empty_column">{{case.policy.policy_term}}</td>
+              </tr>
+              <tr *ngIf="case.submission.category_slug == 'insurance' || case.submission.category_slug == 'gi' || case.submission.category_slug == 'cis'">
+                <td width="150" class="text-master text-uppercase fs-9 ls-8 pt-2">Payment Term</td>
+                <td *ngIf="case.policy.payment_term; else empty_column">{{case.policy.payment_term}}</td>
+              </tr>
+              <tr>
+                <td width="150" class="text-master text-uppercase fs-9 ls-8 pt-2">Payment Mode</td>
+                <td>{{case.policy.payment_mode}}</td>
+              </tr>
+              <tr *ngIf="case.submission.category_slug == 'insurance' || case.submission.category_slug == 'gi' || case.submission.category_slug == 'cis'">
+                <td width="150" class="text-master text-uppercase fs-9 ls-8 pt-2">Premium Frequency</td>
+                <td>{{case.policy.frequency | titlecase}}</td>
+              </tr>
+              <tr *ngIf="case.submission.category_slug == 'insurance' || case.submission.category_slug == 'gi' || case.submission.category_slug == 'cis'">
+                <td width="150" class="text-master text-uppercase fs-9 ls-8 pt-2">Premium Type</td>
+                <td>{{case.policy.payment_type | titlecase}}</td>
+              </tr>
+              <!-- <tr>
+                <td width="150" class="text-master text-uppercase fs-9 ls-8 pt-2">Premium Amount</td>
+                <td>{{case.policy.premium | currency}}</td>
+              </tr>
+              <tr>
+                <td width="150" class="text-master text-uppercase fs-9 ls-8 pt-2">Premium GST</td>
+                <td>{{case.policy.gst | currency}}</td>
+              </tr> -->
+            </table>
+
+            <table class="bootstrap table table-sm table-bordered fs-12 m-0" *ngIf="case.submission.category_slug == 'loans'">
+              <thead>
+                <td colspan="2" class="text-bold ls-8 color-lfa-blue">Loan Details</td>
+              </thead>
+              <tr>
+                <td width="150" class="text-master text-uppercase fs-9 ls-8 pt-2">Property Address</td>
+                <td>{{case.loan.property_address}}</td>
+              </tr>
+              <tr>
+                <td width="150" class="text-master text-uppercase fs-9 ls-8 pt-2">Amount</td>
+                <td>{{case.loan.amount | currency}}</td>
+              </tr>
+              <tr>
+                <td width="150" class="text-master text-uppercase fs-9 ls-8 pt-2">Consent</td>
+                <td>{{case.loan.consent}}</td>
+              </tr>
+            </table>
+        </div>
+
+        <div class="p-3" *ngIf="case.documents.doc_pfr_original ||
+                                case.documents.doc_nric_original ||
+                                case.documents.doc_app_original ||
+                                case.documents.doc_bi_original ||
+                                case.documents.doc_supporting_original ||
+                                case.documents.doc_others_original ||
+                                case.documents.doc_consent_original">
+
+            <table class="bootstrap table table-sm table-bordered fs-12 m-0">
+              <thead>
+                <td colspan="2" class="text-bold ls-8 color-lfa-blue">Uploaded Attachments (Imported from Old Portal)</td>
+              </thead>
+              <tr>
+                <td width="150" class="text-master text-uppercase fs-9 ls-8 pt-2">PFR</td>
+                <td *ngIf="case.documents.doc_pfr_original else empty_column">
+                  <a class="pointer link dark" (click)="downloadFile(case.uuid, 'doc_pfr', case.documents.doc_pfr_original)">{{ case.documents.doc_pfr_original }}</a>
+                </td>
+              </tr>
+              <tr>
+                <td width="150" class="text-master text-uppercase fs-9 ls-8 pt-2">NRIC</td>
+                <td *ngIf="case.documents.doc_nric_original else empty_column">
+                  <a class="pointer link dark" (click)="downloadFile(case.uuid, 'doc_nric', case.documents.doc_nric_original)">{{ case.documents.doc_nric_original }}</a>
+                </td>
+              </tr>
+              <tr>
+                <td width="150" class="text-master text-uppercase fs-9 ls-8 pt-2">Application Form</td>
+                <td *ngIf="case.documents.doc_app_original else empty_column">
+                  <a class="pointer link dark" (click)="downloadFile(case.uuid, 'doc_app', case.documents.doc_app_original)">{{ case.documents.doc_app_original }}</a>
+                </td>
+              </tr>
+              <tr>
+                <td width="150" class="text-master text-uppercase fs-9 ls-8 pt-2">BI</td>
+                <td *ngIf="case.documents.doc_bi_original else empty_column">
+                  <a class="pointer link dark" (click)="downloadFile(case.uuid, 'doc_bi', case.documents.doc_bi_original)">{{ case.documents.doc_bi_original }}</a>
+                </td>
+              </tr>
+              <tr>
+                <td width="150" class="text-master text-uppercase fs-9 ls-8 pt-2">Supporting Documents</td>
+                <td *ngIf="case.documents.doc_supporting_original else empty_column">
+                  <a class="pointer link dark" (click)="downloadFile(case.uuid, 'doc_supporting', case.documents.doc_supporting_original)">{{ case.documents.doc_supporting_original }}</a>
+                </td>
+              </tr>
+              <tr>
+                <td width="150" class="text-master text-uppercase fs-9 ls-8 pt-2">Others</td>
+                <td *ngIf="case.documents.doc_others_original else empty_column">
+                  <a class="pointer link dark" (click)="downloadFile(case.uuid, 'doc_others', case.documents.doc_others_original)">{{ case.documents.doc_others_original }}</a>
+                </td>
+              </tr>
+              <tr>
+                <td width="150" class="text-master text-uppercase fs-9 ls-8 pt-2">Consent Form</td>
+                <td *ngIf="case.documents.doc_consent_original else empty_column">
+                  <a class="pointer link dark" (click)="downloadFile(case.uuid, 'doc_consent', case.documents.doc_consent_original)">{{ case.documents.doc_consent_original }}</a>
+                </td>
+              </tr>
+            </table>
+
+        </div>
+
+        <div class="p-3" *ngIf="submission.status_slug == 'draft' || case.media?.documents">
+
+            <table class="bootstrap table table-sm table-bordered fs-12 m-0">
+              <thead>
+                <td class="text-bold ls-8 color-lfa-blue">Case Documents</td>
+              </thead>
+              <tr>
+                <td class="p-4">
+                  <div class="list-group flex-column">
+                    <div class="mb-4 w-100" *ngFor="let media of case.media?.documents">
+                      <div class="list-group-item list-group-item-action" (click)="downloadMedia(media.id, media.file_name, case.uuid)">
+                        <div class="d-flex w-100">
+                          <div class="d-flex my-auto">
+                            <i class="fad fa-file-image fs-30 text-master-lt mr-3"></i>
+                          </div>
+                          <div class="d-flex flex-column my-auto">
+                            <span class="mt-0 fw-500 fs-15 lh-20">{{media.file_name}}</span>
+                            <small class="fs-12 ls-8 lh-16 text-master-lt">{{media.size | filesize}} <span class="mx-1">|</span> {{media.mime_type}}</small>
+                          </div>
+                        </div>
+                      </div>
+                      <button mat-flat-button class="d-flex list-group-item list-group-item-action delete justify-content-center" type="button" *ngIf="submission.status_slug == 'draft'" [swal]="{
+                                                                  title: 'Delete Case Document',
+                                                                  text: 'Please note that this action is irreversible.',
+                                                                  showCancelButton: true,
+                                                                  cancelButtonColor: '#ddd',
+                                                                  confirmButtonColor: '#ef4968',
+                                                                  confirmButtonText: 'Delete',
+                                                                  allowOutsideClick: false
+                                                                }"
+                                                                (confirm)="removeMedia(media.id, case.uuid)">
+                        <span class="fs-10 fw-600 ls-13 text-uppercase text-master mx-auto py-2 d-block">Remove File</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div ngx-dropzone (change)="onDropzoneSelectCaseDocuments($event, case.uuid)" [accept]="'image/*,.pdf'" [id]="'dz_multiple'" [multiple]="true" class="id-image" *ngIf="submission.status_slug == 'draft'">
+                    <ngx-dropzone-label>
+                      <div class="d-flex flex-column text-truncate faa-parent animated-hover"><!-- dz-placeholder -->
+                        <i class="mx-auto mb-3 faa-float fad fa-file-alt fs-60" style="color: #60b6b5;"></i>
+
+                        <span class="fs-15 ls-18 lh-15 fw-600 text-master mb-1 text-truncate">Upload Case Documents</span>
+                        <span class="fs-12 ls-13 lh-15 text-master-lt text-wrap">Click here, or simply just drag & drop your file(s) here...</span>
+                      </div>
+                    </ngx-dropzone-label>
+                  </div>
+                </td>
+              </tr>
+            </table>
+
+        </div>
+
+      </div>
+    </div>
+    <div class="list-group-item p-3" *ngIf="case.submission.category_slug == 'insurance' || case.submission.category_slug == 'gi' || case.submission.category_slug == 'cis'">
+        <table class="bootstrap table table-sm table-bordered fs-12 m-0 table-responsive">
+          <thead>
+            <td colspan="9" class="text-bold ls-8 color-lfa-blue">Premium Information</td>
+          </thead>
+          <tr *ngIf="case.policy.gst_rate != 0">
+            <td rowspan="2" style="width: 100%; vertical-align: bottom;">Name</td>
+            <td rowspan="2" style="min-width: 80px; vertical-align: bottom; text-align: center;">GST Rate</td>
+            <td colspan="3" style="vertical-align: bottom; text-align: center;">Gross Premium</td>
+            <td rowspan="2" style="min-width: 80px; vertical-align: bottom; text-align: center;">Premium Discount</td>
+            <td colspan="3" style="vertical-align: bottom; text-align: center;">Nett Premium</td>
+          </tr>
+          <tr *ngIf="case.policy.gst_rate != 0">
+            <td style="min-width: 80px; vertical-align: bottom; text-align: center;">Bef GST</td>
+            <td style="min-width: 80px; vertical-align: bottom; text-align: center;">GST</td>
+            <td style="min-width: 80px; vertical-align: bottom; text-align: center;">Aft GST</td>
+            <td style="min-width: 80px; vertical-align: bottom; text-align: center;">Bef GST</td>
+            <td style="min-width: 80px; vertical-align: bottom; text-align: center;">GST</td>
+            <td style="min-width: 80px; vertical-align: bottom; text-align: center;">Aft GST</td>
+          </tr>
+          <tr *ngIf="case.policy.gst_rate == 0">
+            <td style="width: 100%; vertical-align: bottom;">Name</td>
+            <td style="min-width: 80px; vertical-align: bottom; text-align: center;">Gross Premium</td>
+            <td style="min-width: 80px; vertical-align: bottom; text-align: center;">Premium Discount</td>
+            <td style="min-width: 80px; vertical-align: bottom; text-align: center;">Nett Premium</td>
+          </tr>
+          <tr>
+            <td>{{case.product.option || case.product.category}}</td>
+            <td *ngIf="case.policy.gst_rate != 0" class="text-center">{{case.policy.gst_rate | percent}}</td>
+            <td *ngIf="case.policy.gst_rate != 0" class="text-center">{{case.policy.gross_payment_before_gst | currency}}</td>
+            <td *ngIf="case.policy.gst_rate != 0" class="text-center">{{case.policy.gross_payment_gst | currency}}</td>
+            <td class="text-center">{{case.policy.gross_payment_after_gst | currency}}</td>
+            <td class="text-center">{{case.policy.payment_discount | percent}}</td>
+            <td *ngIf="case.policy.gst_rate != 0" class="text-center">{{case.policy.nett_payment_before_gst | currency}}</td>
+            <td *ngIf="case.policy.gst_rate != 0" class="text-center">{{case.policy.nett_payment_gst | currency}}</td>
+            <td class="text-center">{{case.policy.nett_payment_after_gst | currency}}</td>
+          </tr>
+          <tr *ngFor="let rider of case.riders">
+            <td>{{rider.name}}</td>
+            <td *ngIf="case.policy.gst_rate != 0" class="text-center">{{rider.gst_rate | percent}}</td>
+            <td *ngIf="case.policy.gst_rate != 0" class="text-center">{{rider.gross_payment_before_gst | currency}}</td>
+            <td *ngIf="case.policy.gst_rate != 0" class="text-center">{{rider.gross_payment_gst | currency}}</td>
+            <td class="text-center">{{rider.gross_payment_after_gst | currency}}</td>
+            <td class="text-center">{{rider.payment_discount | percent}}</td>
+            <td *ngIf="case.policy.gst_rate != 0" class="text-center">{{rider.nett_payment_before_gst | currency}}</td>
+            <td *ngIf="case.policy.gst_rate != 0" class="text-center">{{rider.nett_payment_gst | currency}}</td>
+            <td class="text-center">{{rider.nett_payment_after_gst | currency}}</td>
+          </tr>
+        </table>
+    </div>
+    <button mat-flat-button class="d-flex list-group-item list-group-item-action delete justify-content-center" type="button" *ngIf="submission.status_slug == 'draft'"
+      [swal]="{
+          title: 'Delete Case Record',
+          text: 'Please note that this action is irreversible.',
+          showCancelButton: true,
+          cancelButtonColor: '#ddd',
+          confirmButtonColor: '#ef4968',
+          confirmButtonText: 'Delete',
+          allowOutsideClick: false
+        }"
+        (confirm)="removeCase(case.uuid)">
+      <span class="fs-10 fw-600 ls-13 text-uppercase text-master mx-auto py-2 d-block">Remove Case</span>
+    </button>
+  </div>
+</div>
+
+<ng-template #empty_column>
+  <td class="text-master-lt">-</td>
+</ng-template>
+
+
+<div class="connectivity-warning ls-15 lh-22 fs-13 active" *ngIf="downloading">
+  <i class="fas fa-circle fs-12 text-warning m-r-5 faa-flash animated"></i> Initializing secure file transfer from server... <i class="fas fa-spinner-third float-right lh-20 faa-spin animated"></i>
+</div>

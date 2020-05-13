@@ -1,0 +1,23 @@
+<!-- BEGIN SIDEBAR MOBILE OVERLAY-->
+<div class="sidebar-mobile-overlay" [ngClass]="{'d-block': sidebarService.isOpenMobile, 'd-none': !sidebarService.isOpenMobile}" (click)="sidebarService.closeMobile()"></div>
+<!-- END SIDEBAR MOBILE OVERLAY-->
+
+
+<!-- BEGIN SIDEBAR MENU HEADER-->
+<div class="sidebar-header">
+  <!-- BEGIN HEADER CONTENT-->
+  <ng-container *ngTemplateOutlet="sidebarHeader"></ng-container>
+  <!-- END HEADER CONTENT-->
+</div>
+<!-- END SIDEBAR MENU HEADER-->
+
+
+<!-- BEGIN SIDEBAR MENU -->
+<div class="sidebar-menu">
+  <!-- BEGIN MENU ITEMS-->
+  <ng-container *ngTemplateOutlet="menuItems"></ng-container>
+  <!-- END MENU ITEMS-->
+  <div class="clearfix"></div>
+  <img class="d-none d-lg-block faa-float animated tab-button" src="/assets/images/tab.png">
+</div>
+<!-- END SIDEBAR MENU -->

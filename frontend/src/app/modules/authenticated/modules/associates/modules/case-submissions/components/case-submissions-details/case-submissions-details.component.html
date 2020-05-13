@@ -1,0 +1,665 @@
+<!--
+ * @license
+ * Copyright TWISS.IO
+ * All Rights Reserved.
+ * Licensed under the MIT License.
+ -->
+
+<!-- Start Padded Container -->
+<div class="container-fluid animated bounceInUp" *ngIf="!authService.user?.permissions?.includes(page_permission) || !submission">
+  <div class="row align-items-start pt-4">
+    <div class="col-12">
+      <!-- Restricted Area -->
+      <access-denied [title]="'Submission record does not exist. Please contact IT Support if this error persists.'" [link]="'..'" [linkText]="'Back to Submissions Database'"></access-denied>
+    </div>
+  </div>
+</div>
+<!-- End Padded Container -->
+
+
+
+<!-- Start Submission Details -->
+<div *ngIf="authService.user?.permissions?.includes(page_permission) && submission" class="container-fluid pt-4 d-flex flex-column">
+
+    <button class="btn-submit btn-warning fs-18" mat-fab color="primary" matTooltip="Add New Case" [matTooltipPosition]="'above'" (click)="enableEditingMode()" *ngIf="submission.status_slug == 'draft'">
+      <i class="fas fa-plus text-white" style="transform: translate(1px,-4px);"></i>
+    </button>
+
+    <!-- Start Submission Summary -->
+    <div class="d-flex">
+
+      <mat-card class="mat-elevation-z d-flex bg-white container-fluid">
+
+          <!-- Start Mat Card Header -->
+          <mat-card-header>
+
+            <!-- Start Summary Action Buttons -->
+            <div class="d-flex">
+              <a class="back-button py-2 my-auto rounded-pill fs-8 ls-15 text-uppercase position-relative mr-auto d-table" mat-stroked-button [routerLink]="[sessionStorageService.getItem('previous_url') || '/authenticated/associates/business/case-submissions']" (click)="routeBack()">
+                <span class="faa-parent animated-hover stretched-link">
+                  <i class="far fa-long-arrow-left mr-2 faa-passing-reverse" style="line-height: 5.5px;"></i> Back to {{sessionStorageService.getItem('previous_title') || 'Submissions Database'}}
+                </span>
+              </a>
+            </div>
+
+            <a class="d-flex back-button ml-auto position-relative" [routerLink]="[sessionStorageService.getItem('previous_url') || '/authenticated/associates/business/case-submissions']" (click)="routeBack()">
+              <span class="faa-parent animated-hover stretched-link">
+                <i class="fal fa-times faa-tada fs-30"></i>
+              </span>
+            </a>
+            <!-- End Summary Action Buttons -->
+
+          </mat-card-header>
+          <!-- End Mat Card Header -->
+
+          <!-- Start Mat Card Content -->
+          <mat-card-content class="flex-column">
+
+            <!-- Start Submission Progress -->
+            <div class="steps-wrap mb-3" *ngIf="submission.status_slug != 'rejected'">
+                <ul class="steps">
+                    <li [ngClass]="{'active': submission.status_slug == 'draft'}"></li>
+                    <li class="divider"></li>
+                    <li [ngClass]="{'active': submission.status_slug == 'pending-screening'}"></li>
+                    <li class="divider"></li>
+                    <li [ngClass]="{'active': submission.status_slug == 'pending-verification'}"></li>
+                    <li class="divider"></li>
+                    <li [ngClass]="{'active': submission.status_slug == 'pending-submission'}"></li>
+                    <li class="divider"></li>
+                    <li [ngClass]="{'active': submission.status_slug == 'submitted'}"></li>
+                </ul>
+                <div class="steps-caption">{{submission.status_desc}}</div>
+            </div>
+            <!-- End Submission Progress -->
+
+            <alert type="warning" [dismissible]="false" *ngIf="submission.status_slug == 'rejected'" class="mt-2">
+              <div class="d-flex justify-content-between">
+                <p class="mr-auto my-auto pl-2 overflow-ellipsis col-6 p-0 m-0">Your submission has been rejected. Please make the necessary amendments before submitting again.</p>
+                <p class="bold m-0"><button class="fw-600 fs-12 text-danger py-2" mat-button (click)="beginDraft()">BEGIN SUBMISSION DRAFT</button></p>
+              </div>
+            </alert>
+
+          </mat-card-content>
+          <!-- End Mat Card Content -->
+
+      </mat-card>
+
+    </div>
+    <!-- End Submission Summary -->
+
+
+    <!-- Start Client Summary && Submission Details Container -->
+    <div class="d-flex flex-xl-row flex-column mt-4">
+
+      <!-- Start Client Summary Component -->
+      <div class="d-flex client-summary align-self-xl-start flex-column">
+
+        <!-- Start Mat Card -->
+        <mat-card class="container-fluid mat-elevation-z d-flex bg-white mb-4">
+
+          <!-- Start Mat Card Header -->
+          <mat-card-header>
+            <mat-card-title>Submission Summary</mat-card-title>
+            <mat-card-subtitle>A Snapshot of Submission Record</mat-card-subtitle>
+          </mat-card-header>
+          <!-- End Mat Card Header -->
+
+          <!-- Start Mat Card Content -->
+          <mat-card-content class="no-inner-padding flex-column p-3">
+
+            <span class="tw-chip w-100 mb-3" [ngClass]="{
+                      'green': submission.status == 'Submitted',
+                      'yellow': submission.status == 'Draft',
+                      'red': submission.status == 'Rejected',
+                      'grey': submission.status == 'Pending' }">{{submission.status | uppercase}}</span>
+
+            <table class="bootstrap table table-sm table-bordered fs-12 m-0">
+              <tr>
+                <td width="100" class="text-master text-uppercase fs-9 ls-8 pt-2">Status</td>
+                <td>{{submission.status_desc}}</td>
+              </tr>
+              <tr>
+                <td width="100" class="text-master text-uppercase fs-9 ls-8 pt-2">Date</td>
+                <td>{{submission.date_submission | date:'longDate'}}</td>
+              </tr>
+              <tr>
+                <td width="100" class="text-master text-uppercase fs-9 ls-8 pt-2">Case Count</td>
+                <td>{{(submission.case_count || 0)}}</td>
+              </tr>
+              <tr>
+                <td width="100" class="text-master text-uppercase fs-9 ls-8 pt-2">Total Premiums</td>
+                <td>{{(submission.total_premiums || 0) | currency}}</td>
+              </tr>
+              <tr>
+                <td width="100" class="text-master text-uppercase fs-9 ls-8 pt-2">Total APE</td>
+                <td>{{(submission.total_ape || 0) | currency}}</td>
+              </tr>
+            </table>
+
+            <!-- Submission Rejected -->
+            <button mat-flat-button color="primary" class="fw-600 btn-submit lh-35 mt-3" *ngIf="submission.status_slug == 'rejected'" (click)="beginDraft()">Begin Submission Draft</button>
+
+            <!-- Submission Draft -->
+            <button mat-flat-button color="primary" class="fw-600 btn-submit lh-35 mt-3" *ngIf="submission.status_slug == 'draft'" [disabled]="submission.case_count == 0" [swal]="{
+                                                                  title: 'Submit Draft',
+                                                                  text: 'Please make sure all data are accurate.',
+                                                                  showCancelButton: true,
+                                                                  cancelButtonColor: '#ddd',
+                                                                  confirmButtonColor: '#0054a4',
+                                                                  confirmButtonText: 'Submit',
+                                                                  allowOutsideClick: false
+                                                                }"
+                                                                (confirm)="submitSubmission()">Submit Draft</button>
+            <button mat-flat-button color="primary" class="fw-600 btn-submit btn-delete lh-35 mt-2" *ngIf="submission.status_slug == 'draft' || submission.status_slug == 'rejected'" [swal]="{
+                                                                  title: 'Delete Submission',
+                                                                  text: 'Please note that this action is irreversible.',
+                                                                  showCancelButton: true,
+                                                                  cancelButtonColor: '#ddd',
+                                                                  confirmButtonColor: '#ef4968',
+                                                                  confirmButtonText: 'Delete',
+                                                                  allowOutsideClick: false
+                                                                }"
+                                                                (confirm)="deleteSubmission()">Delete Draft</button>
+
+          </mat-card-content>
+          <!-- End Mat Card Content -->
+
+        </mat-card>
+        <!-- End Mat Card -->
+
+        <!-- Start Mat Card -->
+        <mat-card class="container-fluid mat-elevation-z d-flex bg-white mb-4">
+
+          <!-- Start Mat Card Header -->
+          <mat-card-header>
+
+            <mat-card-title>Policy Holder Summary</mat-card-title>
+            <mat-card-subtitle>An Snapshot of Client Particulars</mat-card-subtitle>
+
+            <div class="actions position-relative">
+              <a target="_blank" [routerLink]="['/authenticated/associates/relationships/clients/' + submission.client?.uuid + '/particulars']" (click)="routeStore()" class="btn shadow-none route-button" tooltip="View Full Particulars">
+                <i class="fas fa-external-link"></i>
+              </a>
+            </div>
+          </mat-card-header>
+          <!-- End Mat Card Header -->
+
+
+          <!-- Start Mat Card Content -->
+          <mat-card-content class="no-inner-padding">
+
+            <!-- Start Client Summary -->
+            <div class="w-100 my-auto d-flex flex-column">
+
+                <!-- Start Padded Container -->
+                <div class="d-flex flex-grow-1 py-2 flex-column">
+
+                  <!-- Start Profile Image / Gender -->
+                  <div class="profile-thumbnail-wrapper align-self-center overflow-hidden {{(!submission.client?.display_photo?.original && !submission.client?.display_photo?.thumbnail) ? 'rounded ' + ((submission.client?.client_type == 'Individual') ? submission.client?.personal?.gender_slug || 'camera' : 'business') : 'rounded-circle faa-tada animated-hover'}}">
+                    <img src="{{ submission.client?.display_photo?.original || '/assets/images/spacer.png' }}" width="120" height="120" alt="">
+                  </div>
+                  <!-- End Profile Image / Gender -->
+
+                  <!-- Start Profile Details -->
+                  <div class="d-flex flex-column text-center pt-2">
+                    <div class="font-proxima fs-15 text-truncate">{{ submission.client?.display_name }}</div>
+                    <div class="font-proxima fs-10 text-uppercase text-master-lt desc text-truncate info-container" *ngIf="submission.client?.client_type == 'Individual'">
+                      <span class="ls-15" *ngIf="(submission.client?.personal?.job_title || submission.client?.personal?.company_name)">{{(submission.client?.personal?.job_title && submission.client?.personal?.company_name) ? submission.client?.personal?.job_title + ' @ ' + submission.client?.personal?.company_name : submission.client?.personal?.job_title || submission.client?.personal?.company_name}}</span>
+                    </div>
+                    <div class="font-proxima fs-12 text-uppercase text-master-lt desc text-truncate info-container" *ngIf="submission.client?.client_type == 'Business'">
+                      <span class="ls-15" *ngIf="submission.client?.business?.uen">Business UEN: {{submission.client?.business?.uen}}</span>
+                    </div>
+
+                    <div class="mt-3">
+                      <span class="d-inline-block m-auto ml-lg-0 tw-chip {{(submission.client?.client_type == 'Individual')?'blue':'yellow'}}" style="width: 150px;">{{(submission.client?.client_type == 'Individual')?'Individual':'Business'}}</span>
+                    </div>
+
+                    <div class="text-master-lt px-4 mt-3 text-justify" *ngIf="submission.client?.description">{{submission.client?.description}}</div>
+
+                    <!-- Start Mat Accordion :: Individual -->
+                    <mat-accordion class="mt-3" [displayMode]="'flat'" *ngIf="submission.client?.client_type == 'Individual'" style="border-top: 1px solid #e7e7ff;">
+                      <!-- Start Personal Information -->
+                      <mat-expansion-panel class="mat-elevation-z">
+                        <mat-expansion-panel-header>
+                          <mat-panel-title class="fs-12 ls-25 fw-600 font-proxima text-uppercase">Personal Information</mat-panel-title>
+                        </mat-expansion-panel-header>
+
+                        <div class="list-item d-flex text-left mb-3 pb-3 flex-column" *ngIf="submission.client?.personal?.salutation_slug">
+                          <span class="d-flex fs-10 lh-20 ls-25 text-uppercase text-master-lt desc">Salutation</span>
+                          <span class="d-flex fs-13 ls-15 text-truncate">{{submission.client?.personal?.salutation_slug | uppercase}}</span>
+                        </div>
+                        <div class="list-item d-flex text-left mb-3 pb-3 flex-column">
+                          <span class="d-flex fs-10 lh-20 ls-25 text-uppercase text-master-lt desc">Full Name</span>
+                          <span class="d-flex fs-13 ls-15 text-truncate">{{submission.client?.personal?.full_name | uppercase}}</span>
+                        </div>
+                        <div class="list-item d-flex text-left mb-3 pb-3 flex-column" *ngIf="submission.client?.personal?.alias">
+                          <span class="d-flex fs-10 lh-20 ls-25 text-uppercase text-master-lt desc">Alias</span>
+                          <span class="d-flex fs-13 ls-15 text-truncate">{{submission.client?.personal?.alias | uppercase}}</span>
+                        </div>
+                        <div class="list-item d-flex text-left mb-3 pb-3 flex-column" *ngIf="submission.client?.personal?.chinese_name">
+                          <span class="d-flex fs-10 lh-20 ls-25 text-uppercase text-master-lt desc">Chinese Name</span>
+                          <span class="d-flex fs-13 ls-15 text-truncate">{{submission.client?.personal?.chinese_name}}</span>
+                        </div>
+                        <div class="list-item d-flex text-left mb-3 pb-3 flex-column" *ngIf="submission.client?.personal?.nric_no">
+                          <span class="d-flex fs-10 lh-20 ls-25 text-uppercase text-master-lt desc">NRIC No</span>
+                          <span class="d-flex fs-13 ls-15 text-truncate">{{submission.client?.personal?.nric_no | uppercase}}</span>
+                        </div>
+                        <div class="list-item d-flex text-left mb-3 pb-3 flex-column" *ngIf="submission.client?.personal?.fin_no">
+                          <span class="d-flex fs-10 lh-20 ls-25 text-uppercase text-master-lt desc">FIN No</span>
+                          <span class="d-flex fs-13 ls-15 text-truncate">{{submission.client?.personal?.fin_no | uppercase}}</span>
+                        </div>
+                        <div class="list-item d-flex text-left mb-3 pb-3 flex-column" *ngIf="submission.client?.personal?.passport_no">
+                          <span class="d-flex fs-10 lh-20 ls-25 text-uppercase text-master-lt desc">Passport No</span>
+                          <span class="d-flex fs-13 ls-15 text-truncate">{{submission.client?.personal?.passport_no | uppercase}}</span>
+                        </div>
+                        <div class="list-item d-flex text-left mb-3 pb-3 flex-column" *ngIf="submission.client?.personal?.gender_slug">
+                          <span class="d-flex fs-10 lh-20 ls-25 text-uppercase text-master-lt desc">Gender</span>
+                          <span class="d-flex fs-13 ls-15 text-truncate">{{submission.client?.personal?.gender_slug | uppercase}}</span>
+                        </div>
+                        <div class="list-item d-flex text-left mb-3 pb-3 flex-column" *ngIf="submission.client?.personal?.date_birth">
+                          <span class="d-flex fs-10 lh-20 ls-25 text-uppercase text-master-lt desc">Date of Birth</span>
+                          <span class="d-flex fs-13 ls-15 text-truncate">{{submission.client?.personal?.date_birth | date:'longDate'}}</span>
+                        </div>
+                        <div class="list-item d-flex text-left mb-3 pb-3 flex-column" *ngIf="submission.client?.personal?.country_birth_slug">
+                          <span class="d-flex fs-10 lh-20 ls-25 text-uppercase text-master-lt desc">Country of Birth</span>
+                          <span class="d-flex fs-13 ls-15 text-truncate">{{submission.client?.personal?.country_birth_slug | uppercase}}</span>
+                        </div>
+                        <div class="list-item d-flex text-left mb-3 pb-3 flex-column" *ngIf="submission.client?.personal?.marital_status_slug">
+                          <span class="d-flex fs-10 lh-20 ls-25 text-uppercase text-master-lt desc">Marital Status</span>
+                          <span class="d-flex fs-13 ls-15 text-truncate">{{submission.client?.personal?.marital_status_slug | uppercase}}</span>
+                        </div>
+                        <div class="list-item d-flex text-left mb-3 pb-3 flex-column" *ngIf="submission.client?.personal?.race_slug">
+                          <span class="d-flex fs-10 lh-20 ls-25 text-uppercase text-master-lt desc">Race</span>
+                          <span class="d-flex fs-13 ls-15 text-truncate">{{submission.client?.personal?.race_slug | uppercase}}</span>
+                        </div>
+                        <div class="list-item d-flex text-left mb-3 pb-3 flex-column" *ngIf="submission.client?.personal?.nationality_slug">
+                          <span class="d-flex fs-10 lh-20 ls-25 text-uppercase text-master-lt desc">Nationality</span>
+                          <span class="d-flex fs-13 ls-15 text-truncate">{{submission.client?.personal?.nationality_slug | uppercase}}</span>
+                        </div>
+                        <div class="list-item d-flex text-left mb-3 pb-3 flex-column" *ngIf="submission.client?.personal?.residency_status_slug">
+                          <span class="d-flex fs-10 lh-20 ls-25 text-uppercase text-master-lt desc">Residency Status</span>
+                          <span class="d-flex fs-13 ls-15 text-truncate">{{submission.client?.personal?.residency_status_slug | uppercase}}</span>
+                        </div>
+                      </mat-expansion-panel>
+                      <!-- End Personal Information -->
+
+
+                      <!-- Start Educational Information -->
+                      <mat-expansion-panel class="mat-elevation-z list-info" *ngIf="
+                        submission.client?.personal?.education_level_slug ||
+                        submission.client?.personal?.education_institution ||
+                        submission.client?.personal?.field_of_study">
+                        <mat-expansion-panel-header>
+                          <mat-panel-title class="fs-12 ls-25 fw-600 font-proxima text-uppercase">Educational Information</mat-panel-title>
+                        </mat-expansion-panel-header>
+
+                        <div class="list-item d-flex text-left mb-3 pb-3 flex-column" *ngIf="submission.client?.personal?.education_level_slug">
+                          <span class="d-flex fs-10 lh-20 ls-25 text-uppercase text-master-lt desc">Educational Level</span>
+                          <span class="d-flex fs-13 ls-15 text-truncate">{{submission.client?.personal?.education_level_slug | uppercase}}</span>
+                        </div>
+                        <div class="list-item d-flex text-left mb-3 pb-3 flex-column" *ngIf="submission.client?.personal?.education_institution">
+                          <span class="d-flex fs-10 lh-20 ls-25 text-uppercase text-master-lt desc">Educational Institution</span>
+                          <span class="d-flex fs-13 ls-15 text-truncate">{{submission.client?.personal?.education_institution | uppercase}}</span>
+                        </div>
+                        <div class="list-item d-flex text-left mb-3 pb-3 flex-column" *ngIf="submission.client?.personal?.field_of_study">
+                          <span class="d-flex fs-10 lh-20 ls-25 text-uppercase text-master-lt desc">Field of Study</span>
+                          <span class="d-flex fs-13 ls-15 text-truncate">{{submission.client?.personal?.field_of_study | uppercase}}</span>
+                        </div>
+                      </mat-expansion-panel>
+                      <!-- End Educational Information -->
+
+
+                      <!-- Start Employment Information -->
+                      <mat-expansion-panel class="mat-elevation-z list-info" *ngIf="
+                        submission.client?.personal?.employment_status_slug ||
+                        submission.client?.personal?.job_title ||
+                        submission.client?.personal?.company_name ||
+                        submission.client?.personal?.business_nature ||
+                        submission.client?.personal?.income_range">
+                        <mat-expansion-panel-header>
+                          <mat-panel-title class="fs-12 ls-25 fw-600 font-proxima text-uppercase">Employment Information</mat-panel-title>
+                        </mat-expansion-panel-header>
+
+                        <div class="list-item d-flex text-left mb-3 pb-3 flex-column" *ngIf="submission.client?.personal?.employment_status_slug">
+                          <span class="d-flex fs-10 lh-20 ls-25 text-uppercase text-master-lt desc">Employment Status</span>
+                          <span class="d-flex fs-13 ls-15 text-truncate">{{submission.client?.personal?.employment_status_slug | uppercase}}</span>
+                        </div>
+                        <div class="list-item d-flex text-left mb-3 pb-3 flex-column" *ngIf="submission.client?.personal?.job_title">
+                          <span class="d-flex fs-10 lh-20 ls-25 text-uppercase text-master-lt desc">Job Title</span>
+                          <span class="d-flex fs-13 ls-15 text-truncate">{{submission.client?.personal?.job_title | uppercase}}</span>
+                        </div>
+                        <div class="list-item d-flex text-left mb-3 pb-3 flex-column" *ngIf="submission.client?.personal?.company_name">
+                          <span class="d-flex fs-10 lh-20 ls-25 text-uppercase text-master-lt desc">Company Name</span>
+                          <span class="d-flex fs-13 ls-15 text-truncate">{{submission.client?.personal?.company_name | uppercase}}</span>
+                        </div>
+                        <div class="list-item d-flex text-left mb-3 pb-3 flex-column" *ngIf="submission.client?.personal?.business_nature">
+                          <span class="d-flex fs-10 lh-20 ls-25 text-uppercase text-master-lt desc">Business Nature</span>
+                          <span class="d-flex fs-13 ls-15 text-truncate">{{submission.client?.personal?.business_nature | uppercase}}</span>
+                        </div>
+                        <div class="list-item d-flex text-left mb-3 pb-3 flex-column" *ngIf="submission.client?.personal?.income_range">
+                          <span class="d-flex fs-10 lh-20 ls-25 text-uppercase text-master-lt desc">Income Range</span>
+                          <span class="d-flex fs-13 ls-15 text-truncate">{{incomeRangeText(submission.client?.personal?.income_range)}}</span>
+                        </div>
+                      </mat-expansion-panel>
+                      <!-- End Employment Information -->
+
+
+                      <!-- Start Contact Information -->
+                      <mat-expansion-panel class="mat-elevation-z list-info" *ngIf="
+                        submission.client?.personal?.contact_information?.email ||
+                        submission.client?.personal?.contact_information?.mobile_no ||
+                        submission.client?.personal?.contact_information?.home_no ||
+                        submission.client?.personal?.contact_information?.fax_no">
+                        <mat-expansion-panel-header>
+                          <mat-panel-title class="fs-12 ls-25 fw-600 font-proxima text-uppercase">Contact Information</mat-panel-title>
+                        </mat-expansion-panel-header>
+
+                        <div class="list-item d-flex text-left mb-3 pb-3 flex-row" *ngIf="submission.client?.personal?.contact_information?.email">
+                          <i class="fad fa-at my-auto fs-18"></i>
+                          <div class="d-flex flex-column flex-grow-1">
+                            <span class="d-flex fs-10 lh-20 ls-25 text-uppercase text-master-lt desc">Email Address</span>
+                            <span class="d-flex fs-13 ls-15 text-wrap">{{submission.client?.personal?.contact_information?.email}}</span>
+                          </div>
+                        </div>
+                        <div class="list-item d-flex text-left mb-3 pb-3 flex-row" *ngIf="submission.client?.personal?.contact_information?.mobile_no">
+                          <i class="fad fa-mobile my-auto fs-18"></i>
+                          <div class="d-flex flex-column flex-grow-1">
+                            <span class="d-flex fs-10 lh-20 ls-25 text-uppercase text-master-lt desc">Mobile No</span>
+                            <span class="d-flex fs-13 ls-15 text-wrap">{{submission.client?.personal?.contact_information?.mobile_no | phone:'SG'}}</span>
+                          </div>
+                        </div>
+                        <div class="list-item d-flex text-left mb-3 pb-3 flex-row" *ngIf="submission.client?.personal?.contact_information?.home_no">
+                          <i class="fad fa-phone-rotary my-auto fs-18"></i>
+                          <div class="d-flex flex-column flex-grow-1">
+                            <span class="d-flex fs-10 lh-20 ls-25 text-uppercase text-master-lt desc">Home No</span>
+                            <span class="d-flex fs-13 ls-15 text-wrap">{{submission.client?.personal?.contact_information?.home_no | phone:'SG'}}</span>
+                          </div>
+                        </div>
+                        <div class="list-item d-flex text-left mb-3 pb-3 flex-row" *ngIf="submission.client?.personal?.contact_information?.fax_no">
+                          <i class="fad fa-fax my-auto fs-18"></i>
+                          <div class="d-flex flex-column flex-grow-1">
+                            <span class="d-flex fs-10 lh-20 ls-25 text-uppercase text-master-lt desc">Fax No</span>
+                            <span class="d-flex fs-13 ls-15 text-wrap">{{submission.client?.personal?.contact_information?.fax_no | phone:'SG'}}</span>
+                          </div>
+                        </div>
+                      </mat-expansion-panel>
+                      <!-- End Contact Information -->
+
+
+                      <!-- Start Address Information -->
+                      <mat-expansion-panel class="mat-elevation-z list-info" *ngIf="
+                        submission.client?.personal?.address_information?.block ||
+                        submission.client?.personal?.address_information?.street ||
+                        submission.client?.personal?.address_information?.unit ||
+                        submission.client?.personal?.address_information?.building ||
+                        submission.client?.personal?.address_information?.city ||
+                        submission.client?.personal?.address_information?.postal ||
+                        submission.client?.personal?.address_information?.country_slug">
+                        <mat-expansion-panel-header>
+                          <mat-panel-title class="fs-12 ls-25 fw-600 font-proxima text-uppercase">Address Information</mat-panel-title>
+                        </mat-expansion-panel-header>
+
+                        <div class="list-item d-flex text-left mb-3 pb-3 flex-row" *ngIf="submission.client?.personal?.address_information?.block">
+                          <i class="fad fa-home my-auto fs-18"></i>
+                          <div class="d-flex flex-column flex-grow-1">
+                            <span class="d-flex fs-10 lh-20 ls-25 text-uppercase text-master-lt desc">Block</span>
+                            <span class="d-flex fs-13 ls-15 text-wrap">{{submission.client?.personal?.address_information?.block | uppercase}}</span>
+                          </div>
+                        </div>
+
+                        <div class="list-item d-flex text-left mb-3 pb-3 flex-row" *ngIf="submission.client?.personal?.address_information?.street">
+                          <i class="fad fa-road my-auto fs-18"></i>
+                          <div class="d-flex flex-column flex-grow-1">
+                            <span class="d-flex fs-10 lh-20 ls-25 text-uppercase text-master-lt desc">Street</span>
+                            <span class="d-flex fs-13 ls-15 text-wrap">{{submission.client?.personal?.address_information?.street | uppercase}}</span>
+                          </div>
+                        </div>
+
+                        <div class="list-item d-flex text-left mb-3 pb-3 flex-row" *ngIf="submission.client?.personal?.address_information?.unit">
+                          <i class="fab fa-slack-hash my-auto fs-18"></i>
+                          <div class="d-flex flex-column flex-grow-1">
+                            <span class="d-flex fs-10 lh-20 ls-25 text-uppercase text-master-lt desc">Unit</span>
+                            <span class="d-flex fs-13 ls-15 text-wrap">{{submission.client?.personal?.address_information?.unit | uppercase}}</span>
+                          </div>
+                        </div>
+
+                        <div class="list-item d-flex text-left mb-3 pb-3 flex-row" *ngIf="submission.client?.personal?.address_information?.building">
+                          <i class="fad fa-building my-auto fs-18"></i>
+                          <div class="d-flex flex-column flex-grow-1">
+                            <span class="d-flex fs-10 lh-20 ls-25 text-uppercase text-master-lt desc">Building</span>
+                            <span class="d-flex fs-13 ls-15 text-wrap">{{submission.client?.personal?.address_information?.building | uppercase}}</span>
+                          </div>
+                        </div>
+
+                        <div class="list-item d-flex text-left mb-3 pb-3 flex-row" *ngIf="submission.client?.personal?.address_information?.city">
+                          <i class="fad fa-city my-auto fs-18"></i>
+                          <div class="d-flex flex-column flex-grow-1">
+                            <span class="d-flex fs-10 lh-20 ls-25 text-uppercase text-master-lt desc">City</span>
+                            <span class="d-flex fs-13 ls-15 text-wrap">{{submission.client?.personal?.address_information?.city | uppercase}}</span>
+                          </div>
+                        </div>
+
+                        <div class="list-item d-flex text-left mb-3 pb-3 flex-row" *ngIf="submission.client?.personal?.address_information?.postal">
+                          <i class="fad fa-mailbox my-auto fs-18"></i>
+                          <div class="d-flex flex-column flex-grow-1">
+                            <span class="d-flex fs-10 lh-20 ls-25 text-uppercase text-master-lt desc">Postal Code</span>
+                            <span class="d-flex fs-13 ls-15 text-wrap">{{submission.client?.personal?.address_information?.postal | uppercase}}</span>
+                          </div>
+                        </div>
+
+                        <div class="list-item d-flex text-left mb-3 pb-3 flex-row" *ngIf="submission.client?.personal?.address_information?.country_slug">
+                          <i class="fad fa-globe-asia my-auto fs-18"></i>
+                          <div class="d-flex flex-column flex-grow-1">
+                            <span class="d-flex fs-10 lh-20 ls-25 text-uppercase text-master-lt desc">Country</span>
+                            <span class="d-flex fs-13 ls-15 text-wrap">{{submission.client?.personal?.address_information?.country_slug | uppercase}}</span>
+                          </div>
+                        </div>
+                      </mat-expansion-panel>
+                      <!-- End Address Information -->
+                    </mat-accordion>
+                    <!-- End Mat Accordion :: Individual -->
+
+                    <div *ngIf="submission.client?.client_type == 'Individual'">
+                      <mat-form-field floatLabel="always" appearance="none" class="w-100 ml-4">
+                        <mat-slide-toggle class="not-allowed" [checked]="submission.client?.personal?.smoker" [color]="'primary'" [disabled]="true"><span class="fs-10">Client is {{(submission.client?.personal?.smoker) ? '' : 'not'}}  a smoker.</span></mat-slide-toggle>
+                        <textarea matInput hidden></textarea>
+                      </mat-form-field>
+
+                      <mat-form-field floatLabel="always" appearance="none" class="w-100 ml-4">
+                        <mat-slide-toggle class="not-allowed" [checked]="submission.client?.personal?.selected" [color]="'primary'" [disabled]="true"><span class="fs-10">Client is {{(submission.client?.personal?.selected) ? '' : 'not'}} a selected Individual.</span></mat-slide-toggle>
+                        <textarea matInput hidden></textarea>
+                      </mat-form-field>
+
+                      <mat-form-field floatLabel="always" appearance="none" class="w-100 ml-4">
+                        <mat-slide-toggle class="not-allowed" [checked]="submission.client?.personal?.pdpa" [color]="'primary'" [disabled]="true"><span class="fs-10">Client has {{(submission.client?.personal?.pdpa) ? '' : 'not'}} given consent for PDPA.</span></mat-slide-toggle>
+                        <textarea matInput hidden></textarea>
+                      </mat-form-field>
+                    </div>
+
+                    <!-- Start Mat Accordion :: Business -->
+                    <mat-accordion class="mt-3" multi="true" [displayMode]="'flat'" *ngIf="submission.client?.client_type == 'Business'" style="border-top: 1px solid #eee;">
+                      <!-- Start Business Information -->
+                      <mat-expansion-panel class="mat-elevation-z list-info">
+                        <mat-expansion-panel-header>
+                          <mat-panel-title class="fs-12 ls-25 fw-600 font-proxima text-uppercase">Business Information</mat-panel-title>
+                        </mat-expansion-panel-header>
+
+                        <div class="list-item d-flex text-left mb-3 pb-3 flex-column">
+                          <span class="d-flex fs-10 lh-20 ls-25 text-uppercase text-master-lt desc">Business Name</span>
+                          <span class="d-flex fs-13 ls-15 text-truncate">{{(submission.client?.business?.name || submission.client?.display_name) | uppercase}}</span>
+                        </div>
+                        <div class="list-item d-flex text-left mb-3 pb-3 flex-column">
+                          <span class="d-flex fs-10 lh-20 ls-25 text-uppercase text-master-lt desc">Business UEN</span>
+                          <span class="d-flex fs-13 ls-15 text-truncate">{{submission.client?.business?.uen | uppercase}}</span>
+                        </div>
+                      </mat-expansion-panel>
+                      <!-- End Business Information -->
+                    </mat-accordion>
+                    <!-- End Mat Accordion :: Business -->
+
+                  </div>
+                  <!-- End Profile Details -->
+
+                </div>
+                <!-- End Padded Container -->
+
+            </div>
+            <!-- End Client Summary Component -->
+
+          </mat-card-content>
+          <!-- End Mat Card Content -->
+
+          <!-- Start Mat Card footer -->
+          <mat-card-footer>
+
+            <!-- Route to Client Particulars -->
+            <a mat-stroked-button class="mx-auto my-3 fs-12 fw-600 lh-35 back-button" [routerLink]="['/authenticated/associates/relationships/clients/' + submission.client?.uuid + '/particulars']" (click)="routeStore()">View Full Client Particulars</a>
+
+          </mat-card-footer>
+          <!-- End Mat Card footer -->
+
+        </mat-card>
+        <!-- End Mat Card -->
+
+      </div>
+      <!-- End Client Summary Component -->
+
+
+      <!-- Start Submission Content -->
+      <div class="d-flex flex-xl-grow-1 mb-4 ml-xl-4 align-self-xl-start flex-column">
+
+        <mat-card class="mat-elevation-z d-flex bg-white">
+
+          <!-- Start Mat Card Header -->
+          <mat-card-header class="px-4">
+
+            <!-- Start Navigation Tabs -->
+            <nav mat-tab-nav-bar class="w-100 my-2 rounded-btn" [disableRipple]="true">
+
+              <!-- Start Mat Tab -->
+              <button class="border-0" mat-tab-link [routerLink]="['cases']" routerLinkActive #rla="routerLinkActive" [active]="rla.isActive" [routerLinkActiveOptions]="{exact:true}">
+                <div class="mat-tab-label-content h-100">
+                  <div class="d-inline-flex flex-column mat-titles h-100">
+                    <span class="fs-12 fw-600 text-uppercase">Cases ({{submission.case_count || 0}})</span>
+                  </div>
+                </div>
+              </button>
+              <!-- End Mat Tab -->
+
+              <!-- Start Mat Tab -->
+              <button class="border-0" mat-tab-link [routerLink]="['uploaded-files']" routerLinkActive #rla1="routerLinkActive" [active]="rla1.isActive" [routerLinkActiveOptions]="{exact:true}">
+                <div class="mat-tab-label-content h-100">
+                  <div class="d-inline-flex flex-column mat-titles h-100">
+                    <span class="fs-12 fw-600 text-uppercase">Uploaded Files ({{submission.media_count || 0}})</span>
+                  </div>
+                </div>
+              </button>
+              <!-- End Mat Tab -->
+
+              <!-- Start Mat Tab -->
+              <button class="border-0" mat-tab-link [routerLink]="['audit-log']" routerLinkActive #rla2="routerLinkActive" [active]="rla2.isActive" [routerLinkActiveOptions]="{exact:true}">
+                <div class="mat-tab-label-content h-100">
+                  <div class="d-inline-flex flex-column mat-titles h-100">
+                    <span class="fs-12 fw-600 text-uppercase">Audit Log</span>
+                  </div>
+                </div>
+              </button>
+              <!-- End Mat Tab -->
+
+            </nav>
+            <!-- End Navigation Tabs -->
+
+          </mat-card-header>
+          <!-- End Mat Card Header -->
+
+
+          <!-- Start Mat Card Content -->
+          <mat-card-content class="no-inner-padding">
+
+            <!-- Child Routing Tabs -->
+            <router-outlet></router-outlet>
+
+          </mat-card-content>
+          <!-- End Mat Card Content -->
+
+        </mat-card>
+
+      </div>
+      <!-- End Submission Content -->
+
+    </div>
+    <!-- End Client Summary && Submission Details Container -->
+
+</div>
+<!-- End Submission Details -->
+
+
+<ng-template #editing_mode>
+<!--
+  Steps for creating a submission record
+  + Find/Create Policy Holder (Client)
+  - Update Client Record
+  + Create a Submission Record (Draft)
+  - Upload Submission Documents (PFR, NRIC) ***
+  - Add New Case  ***
+  --- Select Life Assured == Client ? Find/Create Life Assured record
+  --- Select Submission Category (Insurance/CIS/GI/Loans/Wills)
+  ------ Select Product Series (Filter By Provider)
+  ------ Select Product Options (Filter By Product Category)
+  ------ Add Product Riders
+  -------- Define Policy Information
+  --- Upload Case Documents (Application, BI, Supporting Documents, Consent)
+-->
+  <div class="d-flex flex-column flex-lg-row">
+
+    <mat-accordion class="d-flex flex-column mt-3 w-100">
+      <mat-expansion-panel class="mat-elevation-z" [expanded]="step === 0" (opened)="setStep(0)">
+        <mat-expansion-panel-header>
+          <mat-panel-title class="fs-12 ls-25 fw-600 font-proxima text-uppercase">Update Policy Holder Details</mat-panel-title>
+        </mat-expansion-panel-header>
+
+        <mat-form-field>
+          <mat-label>First name</mat-label>
+          <input matInput>
+        </mat-form-field>
+
+        <mat-form-field>
+          <mat-label>Age</mat-label>
+          <input matInput type="number" min="1">
+        </mat-form-field>
+
+        <mat-action-row>
+          <button mat-button color="primary" (click)="nextStep()">Next</button>
+        </mat-action-row>
+      </mat-expansion-panel>
+
+      <mat-expansion-panel class="mat-elevation-z" [expanded]="step === 1" (opened)="setStep(1)">
+        <mat-expansion-panel-header>
+          <mat-panel-title class="fs-12 ls-25 fw-600 font-proxima text-uppercase">Upload Policy Holder Documents</mat-panel-title>
+        </mat-expansion-panel-header>
+
+        <mat-form-field>
+          <mat-label>Country</mat-label>
+          <input matInput>
+        </mat-form-field>
+
+        <mat-action-row>
+          <button mat-button color="warn" (click)="prevStep()">Previous</button>
+          <button mat-button color="primary" (click)="nextStep()">Next</button>
+        </mat-action-row>
+      </mat-expansion-panel>
+
+    </mat-accordion>
+
+    <div class="d-flex mt-3 w-100">
+
+        <mat-card class="mat-elevation-z d-flex bg-white p-5 w-100">
+
+        </mat-card>
+
+    </div>
+
+
+  </div>
+
+</ng-template>

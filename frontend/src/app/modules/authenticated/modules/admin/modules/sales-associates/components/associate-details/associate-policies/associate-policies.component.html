@@ -1,0 +1,120 @@
+<!--
+ * @license
+ * Copyright TWISS.IO
+ * All Rights Reserved.
+ * Licensed under the MIT License.
+ -->
+
+<!-- Start Padded Container -->
+<div class="container-fluid animated bounceInUp mt-4">
+
+  <!-- Associate does not have any Policies  -->
+  <access-denied [title]="'This Associate does not have any Policies yet.'" [link]="'../'" [linkText]="'Back to Associate Salesforce Data'" *ngIf="associate.count.policies == 0"></access-denied>
+
+  <!-- Associate has Policies :: Start Material Card -->
+  <mat-card class="mat-elevation-z" *ngIf="associate.count.policies > 0">
+
+    <!-- Start Material Card Content -->
+    <mat-card-content class="no-inner-padding flex-column">
+
+      <!-- Start Table Filters -->
+      <div class="d-flex py-2 px-4 row datatable-form-fields">
+        <div class="col-lg-6">
+          <mat-form-field appearance="outline" class="mat-light-blue w-100" *ngIf="dataLoaded">
+            <mat-icon matPrefix>filter_list</mat-icon>
+            <mat-label>Filter by Provider Name</mat-label>
+            <mat-select [(ngModel)]="providerSelected" panelClass="mat-selection-panel mat-light-blue" (selectionChange)="filterChange()">
+              <mat-option [value]="''" class="show-all">Show All Providers <span class="filter_count">({{providersFilterCount['all'] || 0}})</span></mat-option>
+              <ng-container *ngFor="let provider of providers">
+                <mat-option *ngIf="providersFilterCount[provider.slug] > 0" [value]="provider.alias">{{provider.full_name}} <span class="filter_count">({{providersFilterCount[provider.slug] || 0}})</span></mat-option>
+              </ng-container>
+            </mat-select>
+            <button type="button" mat-button *ngIf="providerSelected" matSuffix mat-icon-button aria-label="Clear" (click)="$event.stopPropagation(); providerSelected = ''; filterChange();" class="d-inline-block" style="transform: translateY(9px);">
+              <mat-icon class="mat-light-blue">close</mat-icon>
+            </button>
+          </mat-form-field>
+        </div>
+        <div class="col-lg-6 text-right">
+          <mat-form-field appearance="outline" [ngClass]="{'d-none': !dataLoaded, 'activated': searchActive || pageService.isMobile || pageService.isDesktopSmall}" class="mat-light-blue multiple auto-hide pointer align-middle" (click)="searchActive = true">
+            <mat-icon matPrefix>search</mat-icon>
+            <mat-label>Search Policies</mat-label>
+            <input matInput #searchInput type="text" placeholder="Type anything here..." tabindex="1" [(ngModel)]="searchTerm" (input)="searchChange()" (blur)="searchChange(true)" (keyup.esc)="searchChange(true);$event.target.blur();" spellcheck="false" autocomplete="off">
+            <button type="button" mat-button *ngIf="searchTerm" matSuffix mat-icon-button aria-label="Clear" (click)="searchTerm = null; searchChange();" class="d-inline-block">
+              <mat-icon>close</mat-icon>
+            </button>
+          </mat-form-field>
+
+          <button mat-stroked-button class="btn" (click)="getPolicies()" tooltip="Refresh Database" container="body">
+            <i class="far fa-sync-alt" *ngIf="dataLoaded"></i>
+            <mat-spinner [diameter]="20" [strokeWidth]="3" *ngIf="!dataLoaded"></mat-spinner>
+          </button>
+        </div>
+      </div>
+      <!-- End Table Filters -->
+
+
+      <!-- Progress Loader -->
+      <card-loader *ngIf="!dataLoaded"></card-loader>
+
+
+      <!-- Database Table Start -->
+      <ngx-datatable
+        [rows]="policies"
+        class="material w-100"
+        [ngStyle]="{'height': (getDatatableHeight(policies, 60) + 105) + 'px'}"
+        [ngClass]="{'mobile': pageService.isMobile || pageService.isDesktopSmall}"
+        [columnMode]="'force'"
+        [headerHeight]="50"
+        [footerHeight]="50"
+        [scrollbarV]="true"
+        [scrollbarH]="true"
+        [rowHeight]="60"
+        [messages]="tableMessages"
+        [rowClass]="rowClass"
+        *ngIf="dataLoaded"
+        [sorts]="[{ prop: 'date_submission', dir: 'desc'}]">
+        <ngx-datatable-column name="Policy Information" prop="policy_no" headerClass="p-81" [minWidth]="300" [draggable]="false">
+          <ng-template ngx-datatable-cell-template let-row="row" let-value="value">
+            <div class="d-flex" [routerLink]="[dataView, row.uuid]">
+              <div class="profile-thumbnail-wrapper mr-3" style="width: 40px;">
+                <img src="{{ row.provider?.thumbnail_2x }}" width="40" height="40" alt="">
+              </div>
+              <div class="d-flex flex-column">
+                <div class="hover-padding text-truncate lh-18 mt-auto">{{row.policy_no}}</div>
+                <div class="hover-padding fs-9 ls-13 text-uppercase text-muted desc text-truncate lh-18 mb-auto">{{row.provider?.name}}</div>
+              </div>
+            </div>
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="Policy Holder" prop="client.name" [minWidth]="300" [draggable]="false">
+          <ng-template ngx-datatable-cell-template let-row="row" let-value="value">
+            <div [routerLink]="[dataView, row.uuid]" class="hover-padding text-truncate">{{value || '-'}}</div>
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="Life Assured" prop="life_assured.name" [minWidth]="300" [draggable]="false">
+          <ng-template ngx-datatable-cell-template let-row="row" let-value="value">
+            <div [routerLink]="[dataView, row.uuid]" class="hover-padding text-truncate">{{value || '-'}}</div>
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="Commissions" prop="commissions" headerClass="text-center" [width]="150" [canAutoResize]="false" [draggable]="false">
+          <ng-template ngx-datatable-cell-template let-row="row" let-value="value">
+            <div [routerLink]="[dataView, row.uuid]" class="text-center">{{value | currency}}</div>
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="Date Inception" prop="date_inception" headerClass="text-center" [width]="150" [canAutoResize]="false" [draggable]="false">
+          <ng-template ngx-datatable-cell-template let-row="row" let-value="value">
+            <div [routerLink]="[dataView, row.uuid]" class="text-center">{{value || '-'}}</div>
+          </ng-template>
+        </ngx-datatable-column>
+      </ngx-datatable>
+      <!-- Datatable End -->
+
+
+    </mat-card-content>
+    <!-- End Material Card Content -->
+
+  </mat-card>
+  <!-- Client has Policies :: End Material Card -->
+
+</div>
+<!-- End Padded Container -->

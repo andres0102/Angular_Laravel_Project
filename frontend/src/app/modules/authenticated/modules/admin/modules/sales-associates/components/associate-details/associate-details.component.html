@@ -1,0 +1,148 @@
+<!--
+ * @license
+ * Copyright TWISS.IO
+ * All Rights Reserved.
+ * Licensed under the MIT License.
+ -->
+
+<!-- Start Padded Container -->
+<div class="container-fluid animated bounceInUp" *ngIf="!authService.user?.permissions?.includes(page_permission) || !associate">
+  <div class="row align-items-start pt-4">
+    <div class="col-12">
+      <!-- Restricted Area -->
+      <access-denied [title]="'Associate record does not exist. Please contact IT Support if this error persists.'" [link]="'..'" [linkText]="'Back to Sales Associates Database'"></access-denied>
+    </div>
+  </div>
+</div>
+<!-- End Padded Container -->
+
+
+
+<!-- Start Details -->
+<div *ngIf="authService.user?.permissions?.includes(page_permission) && associate">
+
+    <!-- Start Summary Component -->
+    <div class="summary container-fluid mat-elevation-z d-flex bg-white pt-4 flex-column position-sticky">
+
+      <!-- Start Summary Action Buttons -->
+      <div class="d-flex">
+        <a class="back-button py-2 rounded-pill fs-8 ls-15 text-uppercase position-relative mr-auto d-table" mat-stroked-button [routerLink]="[sessionStorageService.getItem('previous_url') || '/authenticated/admin/sales-associates']" (click)="routeBack()">
+              <span class="faa-parent animated-hover stretched-link">
+                <i class="far fa-long-arrow-left mr-2 faa-passing-reverse" style="line-height: 5.5px;"></i> Back to {{sessionStorageService.getItem('previous_title') || 'Sales Associates Database'}}
+              </span>
+            </a>
+
+        <a class="back-button ml-auto position-relative" [routerLink]="['/authenticated/admin/sales-associates']" (click)="routeBack()">
+          <span class="faa-parent animated-hover stretched-link">
+            <i class="fal fa-times faa-tada fs-30"></i>
+          </span>
+        </a>
+      </div>
+      <!-- End Summary Action Buttons -->
+
+      <!-- Start Summary -->
+      <div class="w-100 my-auto d-flex flex-column">
+
+          <!-- Start Padded Container -->
+          <div class="d-flex flex-grow-1 py-2 flex-column flex-lg-row">
+
+            <!-- Start Profile Image / Gender -->
+            <div class="profile-thumbnail-wrapper align-self-center overflow-hidden {{(!associate.display_photo.original && !associate.display_photo.thumbnail) ? 'rounded ' + (associate.personal?.gender_slug || 'camera') : 'rounded-circle faa-tada animated-hover'}}">
+              <img src="{{ associate.display_photo.original || '/assets/images/spacer.png' }}" width="120" height="120" alt="">
+            </div>
+            <!-- End Profile Image / Gender -->
+
+            <!-- Start Profile Name -->
+            <div class="d-flex flex-column pl-lg-3 flex-grow-1">
+              <div class="font-proxima fs-25 ls-15 text-truncate text-center text-lg-left">{{ associate.personal?.full_name }}</div>
+              <div class="font-proxima fs-12 text-uppercase text-master-lt desc text-truncate info-container text-center text-lg-left">
+                <span class="ls-13">{{associate.designation}}</span>
+                <span class="ls-15" *ngIf="associate.personal?.gender_slug">{{associate.personal?.gender_slug | uppercase}}</span>
+                <span class="ls-15" *ngIf="associate.personal?.date_birth">{{-(associate.personal?.date_birth | amDifference:today:'years') + ' year old' | uppercase }}</span>
+              </div>
+
+              <button mat-flat-button color="primary" class="ml-2 fs-12 fw-600 btn-submit mx-auto ml-lg-0 mt-2" type="button" (click)="sendWelcomeEmail()">Send Welcome Email</button>
+            </div>
+            <!-- End Profile Name -->
+
+
+          </div>
+          <!-- End Padded Container -->
+
+          <!-- Start Navigation Tabs -->
+          <nav mat-tab-nav-bar class="w-100 mt-2">
+
+            <!-- Start Mat Tab -->
+            <a mat-tab-link class="px-3" [routerLink]="['salesforce-data']" routerLinkActive #rla1="routerLinkActive" [active]="rla1.isActive" [routerLinkActiveOptions]="{exact:true}">
+              <div class="mat-tab-label-content h-100">
+                <div class="d-inline-flex flex-column mat-titles h-100">
+                  <span class="fs-12 fw-600 text-uppercase">Salesforce Data</span>
+                </div>
+              </div>
+            </a>
+            <!-- End Mat Tab -->
+
+            <!-- Start Mat Tab -->
+            <a mat-tab-link class="px-3" [routerLink]="['personal-particulars']" routerLinkActive #rla2="routerLinkActive" [active]="rla2.isActive" [routerLinkActiveOptions]="{exact:true}">
+              <div class="mat-tab-label-content h-100">
+                <div class="d-inline-flex flex-column mat-titles h-100">
+                  <span class="fs-12 fw-600 text-uppercase">Personal Particulars</span>
+                </div>
+              </div>
+            </a>
+            <!-- End Mat Tab -->
+
+            <!-- Start Mat Tab -->
+            <a mat-tab-link class="px-3" [routerLink]="['clients']" routerLinkActive #rla3="routerLinkActive" [active]="rla3.isActive" [routerLinkActiveOptions]="{exact:true}">
+              <div class="mat-tab-label-content h-100">
+                <div class="d-inline-flex flex-column mat-titles h-100">
+                  <span class="fs-12 fw-600 text-uppercase">Clients ({{associate.count.clients || 0}})</span>
+                </div>
+              </div>
+            </a>
+            <!-- End Mat Tab -->
+
+            <!-- Start Mat Tab -->
+            <a mat-tab-link class="px-3" [routerLink]="['submissions']" routerLinkActive #rla4="routerLinkActive" [active]="rla4.isActive" [routerLinkActiveOptions]="{exact:true}">
+              <div class="mat-tab-label-content h-100">
+                <div class="d-inline-flex flex-column mat-titles h-100">
+                  <span class="fs-12 fw-600 text-uppercase">Submissions ({{associate.count.submissions || 0}})</span>
+                </div>
+              </div>
+            </a>
+            <!-- End Mat Tab -->
+
+            <!-- Start Mat Tab -->
+            <a mat-tab-link class="px-3" [routerLink]="['incepted-policies']" routerLinkActive #rla5="routerLinkActive" [active]="rla5.isActive" [routerLinkActiveOptions]="{exact:true}">
+              <div class="mat-tab-label-content h-100">
+                <div class="d-inline-flex flex-column mat-titles h-100">
+                  <span class="fs-12 fw-600 text-uppercase">Incepted Policies ({{associate.count.policies || 0}})</span>
+                </div>
+              </div>
+            </a>
+            <!-- End Mat Tab -->
+
+            <!-- Start Mat Tab -->
+            <a mat-tab-link class="px-3" [routerLink]="['audit-log']" routerLinkActive #rla6="routerLinkActive" [active]="rla6.isActive" [routerLinkActiveOptions]="{exact:true}">
+              <div class="mat-tab-label-content h-100">
+                <div class="d-inline-flex flex-column mat-titles h-100">
+                  <span class="fs-12 fw-600 text-uppercase">Audit Log</span>
+                </div>
+              </div>
+            </a>
+            <!-- End Mat Tab -->
+
+          </nav>
+          <!-- End Navigation Tabs -->
+
+      </div>
+      <!-- End Summary -->
+
+    </div>
+    <!-- End Summary Component -->
+
+  <!-- Child Routing Tabs -->
+  <router-outlet></router-outlet>
+
+</div>
+<!-- End Details -->

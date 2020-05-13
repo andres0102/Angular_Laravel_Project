@@ -1,0 +1,33 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "allowJs": true,
+    "baseUrl": "./",
+    "outDir": "./dist/out-tsc",
+    "sourceMap": true,
+    "declaration": false,
+    "downlevelIteration": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "module": "esnext",
+    "moduleResolution": "node",
+    "importHelpers": true,
+    "target": "es2015",
+    "allowSyntheticDefaultImports": true,
+    "typeRoots": [
+      "node_modules/@types"
+    ],
+    "paths": {
+      "@app/*": ["src/app/*"],
+      "@guest/*": ["src/app/modules/guest/*"],
+      "@auth/*": ["src/app/modules/authenticated/*"],
+      "@associates/*": ["src/app/modules/authenticated/modules/associates/*"],
+      "@admin/*": ["src/app/modules/authenticated/modules/admin/*"],
+      "@env/*": ["src/environments/*"]
+    },
+    "lib": [
+      "es2018",
+      "dom"
+    ]
+  }
+}

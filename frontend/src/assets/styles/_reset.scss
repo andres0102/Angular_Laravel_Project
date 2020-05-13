@@ -1,0 +1,14 @@
+/**
+ * @license
+ * Copyright TWISS.IO
+ * All Rights Reserved.
+ * Licensed under the MIT License.
+ */
+@import '~src/assets/styles/variables';
+
+* {
+  &:active,
+  :focus {
+    outline: none !important;
+  }
+}

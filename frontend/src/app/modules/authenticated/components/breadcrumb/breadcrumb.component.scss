@@ -1,0 +1,69 @@
+/**
+ * @license
+ * Copyright TWISS.IO
+ * All Rights Reserved.
+ * Licensed under the MIT License.
+ */
+@import '~src/assets/styles/variables';
+
+:host {
+  background: linear-gradient(#f0f5ff,#d0dbef);
+  border-top: 1px solid #e7effd;
+  border-bottom: 1px solid #d0d4da;
+  box-shadow: 0 0 10px rgba(142, 159, 185, 0.5);
+  top: 80px !important;
+  transition: $pg-transition;
+  z-index: 2;
+
+  ol.breadcrumb {
+    font-family: 'Montserrat';
+    text-transform: uppercase;
+    background-color: transparent;
+    box-shadow: none;
+    padding: 8px 0 5px;
+    margin: 0;
+    border-radius: unset;
+    border: none;
+
+    & > li.breadcrumb-item {
+      float: left;
+      padding-left: 0px;
+      &:nth-child(2):before { content: "|" !important; }
+
+      & + .breadcrumb-item:before {
+        padding: 0 13px 0 10px;
+        color: #515050;
+        font-family: 'Font Awesome 5 Pro';
+        content: "\f105";
+        font-size: 12px;
+        vertical-align: middle;
+        opacity: .3;
+      }
+
+      &.active{
+        font-weight: 500;
+        color: #0090d9;
+        margin-left: 5px;
+        margin-right: 5px;
+      }
+
+      & > .fal.fa-home {
+        color: $lfa-blue;
+        opacity: .3;
+        width: 30px;
+        text-align: center;
+        &:hover { font-weight: bold; }
+      }
+    }
+
+    & > li.back-button { color: #bbb !important; }
+  }
+}
+
+
+@media (max-width: 992px) {
+  :host {
+    padding-left: 15px !important;
+    padding-right: 15px !important;
+  }
+}

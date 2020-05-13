@@ -1,0 +1,59 @@
+/**
+ * @license
+ * Copyright TWISS.IO
+ * All Rights Reserved.
+ * Licensed under the MIT License.
+ */
+@import '~src/assets/styles/variables';
+
+::ng-deep {
+  .mat-form-field.mat-form-field-appearance-legacy:not(.mat-focused) .mat-form-field-underline { background-color: #ccc !important; }
+}
+
+#main {
+  top: 0;
+  &.notices-loaded { height: 180px; }
+  &:not(.notices-loaded) { height: 165px !important; }
+}
+
+mat-card-content {
+  transition: .3s ease;
+  &.single { padding: 15px 62px 50px; }
+  &:not(.single) {
+    padding: 15px 1.5rem 15px;
+    .notice-title {
+      i { width: 35px; text-align: center; }
+    }
+  }
+}
+
+mat-card-footer {
+  padding-top: 15px !important;
+  background: #f9f9f9;
+
+
+  button {
+    &[disabled] { opacity: 0.25; cursor: not-allowed; }
+  }
+}
+
+::ng-deep {
+  ckeditor {
+    &.notice-title .ck-content p {
+      font-size: 30px;
+      font-weight: 600;
+      letter-spacing: 0.13em;
+      font-family: $font-proxima;
+      margin-top: 0 !important;
+    }
+    .ck.ck-editor__editable_inline {
+      border: 2px solid transparent;
+    }
+    .ck.ck-editor__editable:not(.ck-editor__nested-editable).ck-focused {
+      border-radius: 10px;
+      border: 2px solid $mat-light-blue;
+      box-shadow: inset 2px 2px #e7e7ff55;
+      background: #e7e7ff11;
+    }
+  }
+}

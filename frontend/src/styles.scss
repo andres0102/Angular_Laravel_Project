@@ -1,0 +1,48 @@
+/**
+ * @license
+ * Copyright TWISS.IO
+ * All Rights Reserved.
+ * Licensed under the MIT License.
+ */
+@import 'themes';
+// @import '~@nebular/theme/styles/globals';
+
+// @include nb-install() {
+//   @include nb-theme-global();
+// };
+
+// Import Google Fonts Libraries
+// @import url('https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i,800,800i');
+@import url('https://fonts.googleapis.com/css?family=Montserrat:100,100i,200,200i,300,300i,400,400i,500,500i,600,600i,700,700i,800,800i,900,900i');
+@import url('https://fonts.googleapis.com/css?family=Source+Sans+Pro:200,200i,300,300i,400,400i,600,600i,700,700i,900,900i');
+@import url('https://fonts.googleapis.com/css?family=Source+Code+Pro:200,300,400,500,600,700,900');
+@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
+
+// You can add global styles to this file, and also import other style files
+
+@import '~@swimlane/ngx-datatable/release/index.css';
+@import '~@swimlane/ngx-datatable/release/themes/bootstrap.css';
+@import '~@swimlane/ngx-datatable/release/themes/material.css';
+@import '~@swimlane/ngx-datatable/release/assets/icons.css';
+
+@import 'assets/styles/vendors/pace';
+@import 'assets/styles/vendors/swal';
+@import 'assets/styles/vendors/perfect-scroller';
+@import 'assets/styles/vendors/font-awesome-animations.css';
+@import 'assets/styles/vendors/chartjs';
+@import 'assets/styles/vendors/material';
+@import 'assets/styles/vendors/bootstrap';
+@import 'assets/styles/vendors/ngx-datatable';
+
+@import 'assets/styles/reset';
+@import 'assets/styles/helpers';
+@import 'assets/styles/custom';
+
+@import 'assets/styles/fonts';
+@import 'assets/styles/typography';
+@import 'assets/styles/buttons';
+@import 'assets/styles/notifications';
+@import 'assets/styles/modals';
+@import 'assets/styles/timeline';
+
+/* You can add global styles to this file, and also import other style files */

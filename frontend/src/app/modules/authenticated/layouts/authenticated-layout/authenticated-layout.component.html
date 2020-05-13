@@ -1,0 +1,85 @@
+<!-- BEGIN SIDEBAR COMPONENT -->
+<authenticated-sidebar (mouseenter)="spinSymbol = true" (mouseleave)="spinSymbol = false">
+  <ng-template #sidebarHeader>
+    <div class="sidebar-header-controls">
+      <button type="button" class="btn btn-link d-lg-inline-block d-none" data-toggle-pin="sidebar" (click)="sidebarService.toggle_pin()"><i></i></button>
+    </div>
+  </ng-template>
+  <ng-template #menuItems>
+    <menu-items [items]="menuLinks"></menu-items>
+  </ng-template>
+</authenticated-sidebar>
+<!-- END SIDEBAR COMPONENT -->
+
+
+<!-- PAGE CONTAINER -->
+<page-container>
+  <pg-header
+    [online]="_online_data"
+    [breadcrumb]="_breadcrumb"
+    [mobileSidebar]="_mobileSidebar"
+    [spinSymbol]="spinSymbol"
+    (mouseenter)="spinSymbol = true"
+    (mouseleave)="spinSymbol = false"
+    [_moduleAlerts]="_moduleAlerts"
+    [_moduleChats]="_moduleChats"
+    [_moduleTeams]="_moduleTeams"
+    [_moduleSearch]="_moduleSearch"></pg-header>
+  <div class="connectivity-warning ls-15 lh-22 fs-13" [ngClass]="{'active': !_online_data.connection_status}">
+    <i class="fas fa-circle fs-12 text-danger m-r-5 faa-flash animated"></i> {{connectivity_message}} <i class="fas fa-spinner-third float-right lh-20 faa-spin animated"></i>
+  </div>
+  <div class="page-content-wrapper {{_pageContainerClass}}">
+    <!-- START PAGE CONTENT -->
+    <div class="content {{_contentClass}}">
+      <breadcrumb class="d-block container-fluid position-sticky" *ngIf="_breadcrumb" [data]="_breadcrumb_data" (mouseenter)="spinSymbol = true" (mouseleave)="spinSymbol = false" [ngClass]="{'m-b-25': !_condensed}"></breadcrumb>
+      <router-outlet></router-outlet>
+    </div>
+    <!-- END PAGE CONTENT -->
+    <!-- START COPYRIGHT -->
+    <div class="container-fluid container-fixed-lg footer" *ngIf="_footer">
+      <div class="copyright sm-text-center font-proxima">
+        <p class="d-inline-block m-0 fs-12 ls-13">Copyright &copy; 2020 Legacy FA Pte Ltd. All Rights Reserved.</p>
+
+        <p class="d-block d-lg-inline-block m-0 float-lg-right">
+          <a class="underline fs-12 ls-13" href="javascript:void(0)">Terms of Use</a>
+          <span class="muted mx-1">|</span>
+          <a class="underline fs-12 ls-13" href="javascript:void(0)">Privacy Policy</a>
+        </p>
+
+        <div class="clearfix">
+        </div>
+      </div>
+    </div>
+    <!-- END COPYRIGHT -->
+  </div>
+</page-container>
+
+<!-- QUICKSEARCH -->
+<!-- <app-search-overlay></app-search-overlay> -->
+
+
+<!-- Sweet-Alerts -->
+<swal #onlineSwal
+  title="You are {{(_online_data.connection_status)?'Online':'Offline'}}!"
+  text="Some functionalities may not work while working offline."
+  type="{{(_online_data.connection_status)?'success':'error'}}"
+  [showConfirmButton]="false">
+
+  <div *ngIf="_online_data.connection_status">
+    <div *swalPartial id="swal2-content">
+      <div class="d-block">
+          <table class="table table-sm text-left table-borderless fs-10 m-0">
+            <tr><td rowspan="5" class="padding-20 text-center device-icon" style="border-right: 1px solid #eee;">
+              <i class="d-block mb-2 fs-30 fal fa-{{ identity.metadata['device'] }}"></i>{{ identity.metadata['device'] }}
+            </td>
+            <tr><td class="px-3">Unique ID</td>   <td>: {{identity.metadata['fingerprint']}}</td></tr>
+            <tr><td class="px-3">IP Address</td>  <td>: {{_online_data.user_ip}}</td></tr>
+            <tr><td class="px-3">OS</td>          <td>: {{identity.metadata['device_info']['os']}} {{ (identity.metadata['device_info']['os_version']) ? '(' + identity.metadata['device_info']['os_version'] + ')' : '' }}</td></tr>
+            <tr><td class="px-3">Browser</td>     <td>: {{identity.metadata['device_info']['browser']}} ({{identity.metadata['device_info']['browser_version']}})</td></tr>
+          </table>
+      </div>
+    </div>
+  </div>
+
+</swal>
+

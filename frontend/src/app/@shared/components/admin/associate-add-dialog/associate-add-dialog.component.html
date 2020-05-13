@@ -1,0 +1,241 @@
+<h2 mat-dialog-title>Create a new Associate Record</h2>
+
+<mat-dialog-content>
+  <form [formGroup]="authForm" (ngSubmit)="authForm.valid && submitForm()">
+    <!-- Heading Text Component -->
+    <heading-text class="my-3" [title]="'User Details'"></heading-text>
+
+    <div class="row">
+      <!-- Mat-Select -- Gender -->
+      <mat-form-field class="w-100 mb-3 col-sm-3">
+        <mat-label>Gender</mat-label>
+        <mat-select panelClass="mat-selection-panel mat-light-blue" formControlName="gender_slug" tabindex="1" required>
+          <mat-option *ngFor="let gender of select_gender" [value]="gender.slug">{{gender.title}}</mat-option>
+        </mat-select>
+        <button type="button" mat-button *ngIf="gender_slug.value" matSuffix mat-icon-button aria-label="Clear" (click)="$event.stopPropagation(); resetForm('gender_slug');" class="d-inline-block" style="transform: translateY(2px)">
+          <mat-icon class="mat-light-blue">close</mat-icon>
+        </button>
+        <mat-error *ngIf="(gender_slug.touched || gender_slug.dirty) && gender_slug.invalid">Gender is required.</mat-error>
+      </mat-form-field>
+
+      <!-- Mat-Input -- Full Name -->
+      <mat-form-field class="w-100 mb-3 col-sm-9">
+        <mat-label>Full Name (as per NRIC)</mat-label>
+        <input matInput type="text" placeholder="Type full name here..." formControlName="full_name" maxlength="128" tabindex="1" autocomplete="full_name">
+        <button type="button" mat-button *ngIf="full_name.value && !full_name.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm('full_name')">
+          <mat-icon class="mat-light-blue">close</mat-icon>
+        </button>
+        <mat-hint align="end">{{full_name.value?.length || 0}} / 128</mat-hint>
+        <mat-error *ngIf="(full_name.touched || full_name.dirty) && full_name.errors?.required">Full Name is required.</mat-error>
+      </mat-form-field>
+    </div>
+
+    <!-- Mat-Input -- Email Address -->
+    <mat-form-field class="w-100 mb-3">
+      <mat-label>LFA Email Address</mat-label>
+      <input matInput type="email" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,4}$" placeholder="Type email address here..." formControlName="email" maxlength="128" tabindex="2" autocomplete="email">
+      <button type="button" mat-button *ngIf="email.value && !email.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm('email')">
+        <mat-icon class="mat-light-blue">close</mat-icon>
+      </button>
+      <mat-hint align="end">{{email.value?.length || 0}} / 128</mat-hint>
+      <mat-error *ngIf="(email.touched || email.dirty) && email.errors?.required">Email is required.</mat-error>
+      <mat-error *ngIf="(email.touched || email.dirty) && email.errors?.email">Please enter a valid email address.</mat-error>
+      <mat-error *ngIf="(email.touched || email.dirty) && email.errors?.pattern">Valid: <u>username</u>@legacyfa-asia.com</mat-error>
+      <mat-error *ngIf="(email.touched || email.dirty) && email.errors?.exists">Email exists, please input a different email address.</mat-error>
+    </mat-form-field>
+
+    <div class="row">
+      <!-- Date RNF Submission -->
+      <mat-form-field class="w-100 mb-3 col-sm-6 col-xl-3">
+        <mat-label>Date Application</mat-label>
+        <input class="text-muted" matInput [matDatepicker]="date_lfa_application" formControlName="date_lfa_application" [readonly]="true" tabindex="3">
+        <mat-datepicker-toggle matSuffix [for]="date_lfa_application"></mat-datepicker-toggle>
+        <mat-datepicker #date_lfa_application disabled="false"></mat-datepicker>
+        <button type="button" mat-button *ngIf="date_lfa_application.value" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm('date_lfa_application')">
+          <mat-icon class="mat-light-blue">close</mat-icon>
+        </button>
+      </mat-form-field>
+      <!-- Date RNF Submission -->
+      <mat-form-field class="w-100 mb-3 col-sm-6 col-xl-3">
+        <mat-label>Date CEO Interview</mat-label>
+        <input class="text-muted" matInput [matDatepicker]="date_ceo_interview" formControlName="date_ceo_interview" [readonly]="true" tabindex="4">
+        <mat-datepicker-toggle matSuffix [for]="date_ceo_interview"></mat-datepicker-toggle>
+        <mat-datepicker #date_ceo_interview disabled="false"></mat-datepicker>
+      </mat-form-field>
+      <!-- Date RNF Submission -->
+      <mat-form-field class="w-100 mb-3 col-sm-6 col-xl-3">
+        <mat-label>Date Contract Start</mat-label>
+        <input class="text-muted" matInput [matDatepicker]="date_contract_start" formControlName="date_contract_start" [readonly]="true" tabindex="5">
+        <mat-datepicker-toggle matSuffix [for]="date_contract_start"></mat-datepicker-toggle>
+        <mat-datepicker #date_contract_start disabled="false"></mat-datepicker>
+      </mat-form-field>
+      <!-- Date RNF Submission -->
+      <mat-form-field class="w-100 mb-3 col-sm-6 col-xl-3">
+        <mat-label>Date Onboarded</mat-label>
+        <input class="text-muted" matInput [matDatepicker]="date_onboarded" formControlName="date_onboarded" [readonly]="true" tabindex="6">
+        <mat-datepicker-toggle matSuffix [for]="date_onboarded"></mat-datepicker-toggle>
+        <mat-datepicker #date_onboarded disabled="false"></mat-datepicker>
+      </mat-form-field>
+    </div>
+
+
+    <!-- Heading Text Component -->
+    <heading-text class="mt-5 mb-3" [title]="'Salesforce Details'"></heading-text>
+
+    <div class="row">
+      <!-- Mat-Select -- Salesforce Designation -->
+      <mat-form-field class="w-100 mb-3 col-sm-6">
+        <mat-label>Salesforce Designation</mat-label>
+        <mat-select panelClass="mat-selection-panel mat-light-blue" formControlName="designation_slug" tabindex="7" required>
+          <mat-option *ngFor="let designation of select_salesforce_designations" [value]="designation.slug">{{designation.title}}</mat-option>
+        </mat-select>
+        <button type="button" mat-button *ngIf="designation_slug.value" matSuffix mat-icon-button aria-label="Clear" (click)="$event.stopPropagation(); resetForm('designation_slug');" class="d-inline-block" style="transform: translateY(2px)">
+          <mat-icon class="mat-light-blue">close</mat-icon>
+        </button>
+        <mat-error *ngIf="(designation_slug.touched || designation_slug.dirty) && designation_slug.invalid">Salesforce Designation is required.</mat-error>
+      </mat-form-field>
+      <!-- Mat-Select -- Banding -->
+      <mat-form-field class="w-100 mb-3 col-sm-6">
+        <mat-label>LFA Banding</mat-label>
+        <mat-select panelClass="mat-selection-panel mat-light-blue" formControlName="banding_lfa" tabindex="8" required>
+          <mat-option [value]="0.5">Band 1 (50%)</mat-option>
+          <mat-option [value]="0.55">Band 2 (55%)</mat-option>
+          <mat-option [value]="0.6">Band 3 (60%)</mat-option>
+          <mat-option [value]="0.65">Band 4 (65%)</mat-option>
+          <mat-option [value]="0.7">Band 5 (70%)</mat-option>
+          <mat-option [value]="0.75">Band 6 (75%)</mat-option>
+          <mat-option [value]="0.8">Band 7 (80%)</mat-option>
+        </mat-select>
+        <button type="button" mat-button *ngIf="banding_lfa.value" matSuffix mat-icon-button aria-label="Clear" (click)="$event.stopPropagation(); resetForm('banding_lfa');" class="d-inline-block" style="transform: translateY(2px)">
+          <mat-icon class="mat-light-blue">close</mat-icon>
+        </button>
+        <mat-error *ngIf="(banding_lfa.touched || banding_lfa.dirty) && banding_lfa.invalid">Salesforce Designation is required.</mat-error>
+      </mat-form-field>
+    </div>
+
+    <!-- LFA-Code -->
+    <div class="row">
+      <!-- Unit Code -->
+      <mat-form-field class="w-100 mb-3 col-6 col-md-3">
+        <mat-label>Unit</mat-label>
+        <mat-select panelClass="mat-selection-panel mat-light-blue" formControlName="unit" tabindex="9" required>
+          <mat-option *ngFor="let item of select_units" [value]="item">{{item.code}}</mat-option>
+        </mat-select>
+        <mat-error *ngIf="(unit.touched || unit.dirty) && unit.invalid">Required.</mat-error>
+        <mat-hint align="start" class="d-none d-sm-inline-block" *ngIf="unit.valid">{{unit.value.name}}</mat-hint>
+      </mat-form-field>
+
+      <!-- Group Code -->
+      <mat-form-field class="w-100 mb-3 col-6 col-md-3">
+        <mat-label>Group</mat-label>
+        <mat-select panelClass="mat-selection-panel mat-light-blue" formControlName="group" tabindex="10" required>
+          <mat-option *ngFor="let item of select_groups" [value]="item">{{item.code}}</mat-option>
+        </mat-select>
+        <mat-error *ngIf="(group.touched || group.dirty) && group.invalid">Required.</mat-error>
+        <mat-hint align="start" class="d-none d-sm-inline-block" *ngIf="group.valid">{{group.value.name}}</mat-hint>
+      </mat-form-field>
+
+      <!-- SL/No -->
+      <mat-form-field class="w-100 mb-3 col-md-6">
+        <mat-label>LFA Code</mat-label>
+        <input matInput type="text" pattern="\d*" placeholder="Type LFA Code here..." formControlName="lfa_sl_no" minlength="4" maxlength="4" tabindex="11" autocomplete="lfa_sl_no">
+        <button type="button" mat-button *ngIf="lfa_sl_no.value && !lfa_sl_no.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm('lfa_sl_no')">
+          <mat-icon class="mat-light-blue">close</mat-icon>
+        </button>
+        <mat-hint align="start" class="d-none d-sm-inline-block" *ngIf="lfa_sl_no.invalid || (!unit.value && !group.value)">Recommended: {{select_code}}</mat-hint>
+        <mat-hint align="start" class="d-none d-sm-inline-block" *ngIf="lfa_sl_no.valid && unit.value && group.value">LFA Code: {{unit.value.code}}{{group.value.code}}-{{lfa_sl_no.value || select_code}}</mat-hint>
+        <mat-hint align="end" class="d-none d-sm-inline-block">{{lfa_sl_no.value?.length || 0}} / 4</mat-hint>
+        <mat-error *ngIf="(lfa_sl_no.touched || lfa_sl_no.dirty) && lfa_sl_no.invalid && lfa_sl_no.errors?.minlength">LFA Code requires minimum of 4 numbers.</mat-error>
+        <mat-error *ngIf="(lfa_sl_no.touched || lfa_sl_no.dirty) && lfa_sl_no.invalid && lfa_sl_no.errors?.required">LFA Code is required.</mat-error>
+        <mat-error *ngIf="(lfa_sl_no.touched || lfa_sl_no.dirty) && lfa_sl_no.invalid && lfa_sl_no.errors?.pattern">LFA Code must be numeric.</mat-error>
+        <mat-error *ngIf="(lfa_sl_no.touched || lfa_sl_no.dirty) && lfa_sl_no.errors?.exists">LFA Code exists, please input a different code.</mat-error>
+      </mat-form-field>
+    </div>
+
+
+    <!-- Heading Text Component -->
+    <heading-text class="mt-5 mb-3" [title]="'RNF Details'"></heading-text>
+
+    <div class="row">
+      <!-- Mat-Select -- RNF Status -->
+      <mat-form-field class="w-100 mb-3 col-sm-6">
+        <mat-label>RNF Status</mat-label>
+        <mat-select panelClass="mat-selection-panel mat-light-blue" formControlName="rnf_status_slug" tabindex="12" required>
+          <mat-option *ngFor="let item of select_rnf_status" [value]="item.slug">{{item.title}}</mat-option>
+        </mat-select>
+        <button type="button" mat-button *ngIf="rnf_status_slug.value" matSuffix mat-icon-button aria-label="Clear" (click)="$event.stopPropagation(); resetForm('rnf_status_slug');" class="d-inline-block" style="transform: translateY(2px)">
+          <mat-icon class="mat-light-blue">close</mat-icon>
+        </button>
+        <mat-error *ngIf="(rnf_status_slug.touched || rnf_status_slug.dirty) && rnf_status_slug.invalid && rnf_status_slug.errors?.required">RNF Status is required.</mat-error>
+      </mat-form-field>
+      <!-- Mat-Input -- RNF No -->
+      <mat-form-field class="w-100 mb-3 col-sm-6">
+        <mat-label>RNF Number</mat-label>
+        <input matInput type="text" placeholder="Type RNF number here..." formControlName="rnf_no" maxlength="128" autocomplete="rnf_no" tabindex="13" required>
+        <button type="button" mat-button *ngIf="rnf_no.value && !rnf_no.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm('rnf_no')">
+          <mat-icon class="mat-light-blue">close</mat-icon>
+        </button>
+        <mat-hint align="end">{{rnf_no.value?.length || 0}} / 128</mat-hint>
+        <mat-error *ngIf="(rnf_no.touched || rnf_no.dirty) && rnf_no.invalid && rnf_no.errors?.required">RNF Number is required.</mat-error>
+      </mat-form-field>
+    </div>
+
+    <div class="row">
+      <!-- Date RNF Submission -->
+      <mat-form-field class="w-100 mb-3 col-sm-6">
+        <mat-label>RNF Submission Date</mat-label>
+        <input class="text-muted" matInput [matDatepicker]="date_rnf_submission" formControlName="date_rnf_submission" [readonly]="true" required tabindex="14">
+        <mat-datepicker-toggle matSuffix [for]="date_rnf_submission"></mat-datepicker-toggle>
+        <mat-datepicker #date_rnf_submission disabled="false"></mat-datepicker>
+      </mat-form-field>
+      <!-- Date RNF Submission -->
+      <mat-form-field class="w-100 mb-3 col-sm-6">
+        <mat-label>RNF Approval Date</mat-label>
+        <input class="text-muted" matInput [matDatepicker]="date_rnf_approval" formControlName="date_rnf_approval" [readonly]="true" required tabindex="15">
+        <mat-datepicker-toggle matSuffix [for]="date_rnf_approval"></mat-datepicker-toggle>
+        <mat-datepicker #date_rnf_approval disabled="false"></mat-datepicker>
+      </mat-form-field>
+    </div>
+
+    <!-- Heading Text Component -->
+    <heading-text class="mt-5 mb-3" [title]="'CMFAS Details'"></heading-text>
+
+    <div class="row">
+      <!-- Date RNF Submission -->
+      <mat-form-field class="w-100 mb-3 col-sm-6 col-xl-3">
+        <mat-label>M9 Date</mat-label>
+        <input class="text-muted" matInput [matDatepicker]="date_m9" formControlName="date_m9" [readonly]="true" tabindex="16">
+        <mat-datepicker-toggle matSuffix [for]="date_m9"></mat-datepicker-toggle>
+        <mat-datepicker #date_m9 disabled="false"></mat-datepicker>
+      </mat-form-field>
+      <!-- Date RNF Submission -->
+      <mat-form-field class="w-100 mb-3 col-sm-6 col-xl-3">
+        <mat-label>M9A Date</mat-label>
+        <input class="text-muted" matInput [matDatepicker]="date_m9a" formControlName="date_m9a" [readonly]="true" tabindex="17">
+        <mat-datepicker-toggle matSuffix [for]="date_m9a"></mat-datepicker-toggle>
+        <mat-datepicker #date_m9a disabled="false"></mat-datepicker>
+      </mat-form-field>
+      <!-- Date RNF Submission -->
+      <mat-form-field class="w-100 mb-3 col-sm-6 col-xl-3">
+        <mat-label>M5 Date</mat-label>
+        <input class="text-muted" matInput [matDatepicker]="date_m5" formControlName="date_m5" [readonly]="true" tabindex="18">
+        <mat-datepicker-toggle matSuffix [for]="date_m5"></mat-datepicker-toggle>
+        <mat-datepicker #date_m5 disabled="false"></mat-datepicker>
+      </mat-form-field>
+      <!-- Date RNF Submission -->
+      <mat-form-field class="w-100 mb-3 col-sm-6 col-xl-3">
+        <mat-label>HI Date</mat-label>
+        <input class="text-muted" matInput [matDatepicker]="date_hi" formControlName="date_hi" [readonly]="true" tabindex="19">
+        <mat-datepicker-toggle matSuffix [for]="date_hi"></mat-datepicker-toggle>
+        <mat-datepicker #date_hi disabled="false"></mat-datepicker>
+      </mat-form-field>
+    </div>
+
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button [mat-dialog-close]="authForm.value" class="fs-12 fw-600 text-master-lt mr-auto" *ngIf="!processing">Cancel</button>
+  <button mat-stroked-button class="fs-12 fw-600 text-master-lt" type="reset" *ngIf="!processing" (click)="resetForm()">Reset Fields</button>
+  <button mat-flat-button color="primary" class="ml-2 fs-12 fw-600 btn-submit" [disabled]="processing || authForm.invalid" type="submit" (click)="submitForm()">{{(processing) ? 'Processing' : 'Add Sales Associate'}}</button>
+</mat-dialog-actions>

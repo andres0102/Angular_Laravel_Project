@@ -1,0 +1,11 @@
+<ol class="breadcrumb">
+  <li class="breadcrumb-item pointer" *ngIf="data._parent1 && data._parent1 == 'Home'" [routerLink]="data._parent1_link"><i class="fal fa-home fs-16 lh-16"></i></li>
+  <li class="breadcrumb-item pointer animated fadeInLeft d-none d-md-inline-block fs-10 ls-15" *ngIf="data._parent1 && data._parent1 != 'Home'" [routerLink]="data._parent1_link">{{ data._parent1 }}</li>
+  <li class="breadcrumb-item pointer animated fadeInLeft d-none d-md-inline-block fs-10 ls-15" *ngIf="data._parent2" [routerLink]="data._parent2_link">{{ data._parent2 }}</li>
+  <li class="breadcrumb-item pointer animated fadeInLeft d-none d-md-inline-block fs-10 ls-15" *ngIf="data._parent3" [routerLink]="data._parent3_link">{{ data._parent3 }}</li>
+  <li class="breadcrumb-item active animated fadeInLeft fs-10 ls-15">{{ data._pageTitle || 'Untitled Page' }}</li>
+
+  <li class="back-button p-t-2 p-r-13 text-right" *ngIf="data._exitButton">
+    <i class="fas fa-times-circle fs-16 pointer" [routerLink]="data._exitLink"></i>
+  </li>
+</ol>

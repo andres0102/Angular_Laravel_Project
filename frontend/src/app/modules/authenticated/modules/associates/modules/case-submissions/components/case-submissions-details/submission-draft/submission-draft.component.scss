@@ -1,0 +1,94 @@
+/**
+ * @license
+ * Copyright TWISS.IO
+ * All Rights Reserved.
+ * Licensed under the MIT License.
+ */
+
+@import '~src/assets/styles/variables';
+
+:host { width: 100%; }
+
+::ng-deep {
+  .mat-horizontal-stepper-header-container {
+    margin: 30px 0;
+  }
+  .mat-horizontal-content-container {
+    flex-grow: 1;
+  }
+
+  card-loader {
+    height: calc(100vh - 110px);
+    div.bg-light {
+      height: 100%;
+    }
+  }
+
+  table {
+    .mat-form-field-wrapper { padding: 0; }
+  }
+}
+
+@media (min-width: 991px) {
+  .border-left-lg { border-left: 1px solid rgba(0,0,0,.1); }
+}
+
+.id-image {
+  border: 4px dashed #E0E0FF;
+  border-radius: 10px;
+}
+
+.btn_remove_file {
+  position: absolute;
+  background: rgba(255,255,255,0.2);
+  color: rgba(0,0,0,0.3);
+  top: 5px;
+  right: 5px;
+  width: 30px;
+  height: 30px;
+  line-height: 30px;
+}
+
+
+table.table{
+  thead {
+    border-top: 1px solid #e7e7ff;
+    border-bottom: 1px solid #e7e7ff;
+    background: linear-gradient(#fafaff, #e7e7ff 5%, #fafaff 95%, #e7e7ff);
+    td {
+      color: #7777cc;
+      text-transform: uppercase;
+      font-weight: 600;
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      vertical-align: middle;
+    }
+  }
+  tbody {
+    tr {
+      border-bottom: 1px solid #e7e7ff;
+      &.main { background-color: #f0fbff; }
+      td {
+        vertical-align: middle;
+      }
+      &:hover {
+        background-color: #e7e7ff;
+      }
+    }
+  }
+  tfoot {
+    border-top: 1px solid #e7e7ff;
+    border-bottom: 1px solid #e6e6ff;
+    background: linear-gradient(#ffffff, #f1f1ff 5%, #f2f2ff 95%, #e7e7ff);
+    tr {
+      td {
+        color: #7777cc;
+        text-transform: uppercase;
+        font-weight: 600;
+        font-size: 10px;
+        letter-spacing: 0.15em;
+        vertical-align: middle;
+      }
+    }
+  }
+}

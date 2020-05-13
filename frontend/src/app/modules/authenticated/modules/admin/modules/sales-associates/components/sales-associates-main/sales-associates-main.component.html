@@ -1,0 +1,230 @@
+<!--
+ * @license
+ * Copyright TWISS.IO
+ * All Rights Reserved.
+ * Licensed under the MIT License.
+ -->
+
+<!-- Start Padded Container -->
+<div class="container-fluid animated bounceInUp">
+
+  <!-- Start Hover-Top Containers -->
+  <div class="row align-items-start" [ngClass]="{'hover-top':!authService.user?.permissions?.includes(page_permission), 'hover-top-high':authService.user?.permissions?.includes(page_permission)}">
+
+    <!-- Start Bootstrap Grid -->
+    <div class="col-12">
+
+      <!-- Restricted Area -->
+      <access-denied *ngIf="!authService.user?.permissions?.includes(page_permission)"></access-denied>
+
+      <!-- Start Main Database Area -->
+      <mat-card class="mat-elevation-z bg-transparent" *ngIf="authService.user?.permissions?.includes(page_permission)">
+
+        <!-- Start Navigation Tabs -->
+        <nav mat-tab-nav-bar class="full-database">
+
+          <!-- Start Mat Tab :: All -->
+          <a mat-tab-link [routerLink]="['/authenticated/admin/sales-associates']" [queryParams]="{type: null, f: null}" queryParamsHandling="merge" routerLinkActive #rla1="routerLinkActive" [active]="rla1.isActive" style="width: 255px;" [routerLinkActiveOptions]="{exact:true}" (click)="clearFilters()">
+            <div class="mat-tab-label-content">
+              <div class="d-inline-flex flex-row">
+                <span class="mat-tab-icon"><i class="fad fa-list"></i></span>
+                <div class="d-inline-flex flex-column ml-3 mat-titles">
+                  <span class="mat-tab-title align-self-start">All Associates</span>
+                  <span class="mat-tab-subtitle align-self-start">{{(dataLoaded && filtersLoaded && associates) ? associates.length + ' Records' : 'Loading...'}}</span>
+                </div>
+              </div>
+            </div>
+          </a>
+          <!-- End Mat Tab :: All -->
+
+          <!-- Start Mat Tab :: Tier 1 -->
+          <a class="sub-category align-self-end" mat-tab-link [routerLink]="['/authenticated/admin/sales-associates']" [queryParams]="{type: 'advisors'}" queryParamsHandling="merge" routerLinkActive #rla2="routerLinkActive" [active]="rla2.isActive" [routerLinkActiveOptions]="{exact:true}" (click)="typeChange('advisors')">
+            <div class="mat-tab-label-content h-100">
+              <div class="d-inline-flex flex-row">
+                <span class="mat-tab-icon fs-20 lh-36"><i class="fad fa-user"></i></span>
+                <div class="d-inline-flex flex-column ml-2 mat-titles">
+                  <span class="mat-tab-title align-self-start">T1 - Advisors</span>
+                  <span class="mat-tab-subtitle align-self-start">{{(dataLoaded && filtersLoaded && associates) ? typeFilterCount['advisors'] + ' Records' : 'Loading...'}}</span>
+                </div>
+              </div>
+            </div>
+          </a>
+          <!-- End Mat Tab :: Tier 1 -->
+
+          <!-- Start Mat Tab :: Tier 2 -->
+          <a class="sub-category align-self-end" mat-tab-link [routerLink]="['/authenticated/admin/sales-associates']" [queryParams]="{type: 'managers'}" queryParamsHandling="merge" routerLinkActive #rla3="routerLinkActive" [active]="rla3.isActive" [routerLinkActiveOptions]="{exact:true}" (click)="typeChange('managers')">
+            <div class="mat-tab-label-content h-100">
+              <div class="d-inline-flex flex-row">
+                <span class="mat-tab-icon fs-20 lh-36"><i class="fad fa-user"></i></span>
+                <div class="d-inline-flex flex-column ml-2 mat-titles">
+                  <span class="mat-tab-title align-self-start">T2 - Managers</span>
+                  <span class="mat-tab-subtitle align-self-start">{{(dataLoaded && filtersLoaded && associates) ? typeFilterCount['managers'] + ' Records' : 'Loading...'}}</span>
+                </div>
+              </div>
+            </div>
+          </a>
+          <!-- End Mat Tab :: Tier 2 -->
+
+          <!-- Start Mat Tab :: Tier 3 -->
+          <a class="sub-category align-self-end" mat-tab-link [routerLink]="['/authenticated/admin/sales-associates']" [queryParams]="{type: 'directors'}" queryParamsHandling="merge" routerLinkActive #rla4="routerLinkActive" [active]="rla4.isActive" [routerLinkActiveOptions]="{exact:true}" (click)="typeChange('directors')">
+            <div class="mat-tab-label-content h-100">
+              <div class="d-inline-flex flex-row">
+                <span class="mat-tab-icon fs-20 lh-36"><i class="fad fa-user"></i></span>
+                <div class="d-inline-flex flex-column ml-2 mat-titles">
+                  <span class="mat-tab-title align-self-start">T3 - Directors</span>
+                  <span class="mat-tab-subtitle align-self-start">{{(dataLoaded && filtersLoaded && associates) ? typeFilterCount['directors'] + ' Records' : 'Loading...'}}</span>
+                </div>
+              </div>
+            </div>
+          </a>
+          <!-- End Mat Tab :: Tier 3 -->
+
+        </nav>
+        <!-- End Navigation Tabs -->
+
+        <!-- Start Material Card Content -->
+        <mat-card-content class="no-inner-padding flex-column">
+
+            <!-- Start Table Filters -->
+            <div class="d-flex py-2 px-4 row datatable-form-fields">
+              <div class="col-lg-6">
+                <mat-form-field appearance="outline" class="mat-light-blue" [ngClass]="{'d-none': !dataLoaded}">
+                  <mat-icon matPrefix>filter_list</mat-icon>
+                  <mat-label>Filter by Status</mat-label>
+                  <mat-select [(ngModel)]="statusSelected" panelClass="mat-selection-panel mat-light-blue" (selectionChange)="filterChange()">
+                    <mat-option [value]="''" class="show-all" *ngIf="dataLoaded && associates">Show All Sales Associates <span class="filter_count">({{statusFilterCount['all'] || 0}})</span></mat-option>
+                    <mat-option [value]="'active'" *ngIf="dataLoaded && associates && statusFilterCount['active'] > 0">Active Associates <span class="filter_count">({{statusFilterCount['active'] || 0}})</span></mat-option>
+                    <mat-option [value]="'inactive'" *ngIf="dataLoaded && associates && statusFilterCount['inactive'] > 0">Inactive Associates <span class="filter_count">({{statusFilterCount['inactive'] || 0}})</span></mat-option>
+                  </mat-select>
+                  <button type="button" mat-button *ngIf="statusSelected" matSuffix mat-icon-button aria-label="Clear" (click)="$event.stopPropagation(); statusSelected = ''; filterChange();" class="d-inline-block" style="transform: translateY(9px);">
+                    <mat-icon class="mat-light-blue">close</mat-icon>
+                  </button>
+                </mat-form-field>
+              </div>
+              <div class="col-lg-6 text-right">
+                <mat-form-field appearance="outline" [ngClass]="{'d-none': !dataLoaded, 'activated': searchActive || pageService.isMobile || pageService.isDesktopSmall}" class="mat-light-blue multiple auto-hide pointer align-middle" (click)="searchActive = true;">
+                  <mat-icon matPrefix>search</mat-icon>
+                  <mat-label>Search Associates Records</mat-label>
+                  <input matInput #searchInput type="text" placeholder="Type anything here..." tabindex="1" [(ngModel)]="searchTerm" (input)="searchChange()" (blur)="searchChange(true)" (keyup.esc)="searchChange(true);$event.target.blur();" spellcheck="false" autocomplete="off">
+                  <button type="button" mat-button *ngIf="searchTerm" matSuffix mat-icon-button aria-label="Clear" (click)="searchTerm = null; searchChange();" class="d-inline-block">
+                    <mat-icon class="mat-light-blue">close</mat-icon>
+                  </button>
+                </mat-form-field>
+
+                <button mat-stroked-button class="btn" (click)="adminSalesAssocService.addAssociateDialog()" *ngIf="dataLoaded && adminSalesAssocService.selections_loaded" tooltip="New Associate" container="body">
+                  <i class="far fa-plus"></i>
+                </button>
+
+                <button mat-stroked-button class="btn" (click)="getAssociates(true)" tooltip="Refresh Database" container="body">
+                  <i class="far fa-sync-alt" *ngIf="dataLoaded && !dataUpdating"></i>
+                  <mat-spinner [diameter]="20" [strokeWidth]="3" *ngIf="!dataLoaded || dataUpdating"></mat-spinner>
+                </button>
+              </div>
+            </div>
+            <!-- End Table Filters -->
+
+
+            <!-- Progress Loader -->
+            <card-loader *ngIf="!dataLoaded"></card-loader>
+
+
+            <!-- Datatable Start -->
+            <ngx-datatable
+              [rows]="associates"
+              class="material w-100"
+              [ngStyle]="{'height': (getDatatableHeight(associates, 60) + 105) + 'px'}"
+              [ngClass]="{'mobile': pageService.isMobile || pageService.isDesktopSmall}"
+              [columnMode]="'force'"
+              [headerHeight]="50"
+              [footerHeight]="50"
+              [scrollbarV]="true"
+              [scrollbarH]="true"
+              [reorderable]="false"
+              [rowHeight]="60"
+              [rowClass]="rowClass"
+              [messages]="messages"
+              *ngIf="dataLoaded"
+              [sorts]="[{ prop: 'lfa_sl_no', dir: 'asc'}]"
+              (keyup.esc)="quitEditing($event); editing = {};">
+
+              <!-- Submission Status -->
+              <ngx-datatable-column [resizeable]="false" name="LFA Code" prop="lfa_sl_no" headerClass="text-center" cellClass="px-3" [width]="155" [canAutoResize]="false" [draggable]="false">
+                <ng-template ngx-datatable-cell-template let-row="row" let-value="value">
+                  <div class="text-center ls-13">{{(row.lfa_code || "-") | uppercase}}</div>
+                </ng-template>
+              </ngx-datatable-column>
+
+              <!-- Associate Display Photo -->
+              <ngx-datatable-column [resizeable]="false" name="" [width]="70" [draggable]="false" [canAutoResize]="false" cellClass="position-relative pr-0">
+                <ng-template ngx-datatable-cell-template let-row="row">
+                  <div class="profile-thumbnail-wrapper overflow-hidden stretched-link {{(!row.display_photo.original && !row.display_photo.thumbnail) ? 'rounded ' + (row.personal?.gender_slug || 'camera') : 'rounded-circle faa-tada animated-hover'}}"
+                      [routerLink]="[dataView, row.uuid]">
+                    <img src="{{ row.display_photo.original || '/assets/images/spacer.png' }}" width="40" height="40" alt="">
+                  </div>
+                </ng-template>
+              </ngx-datatable-column>
+
+              <!-- Client Particulars -->
+              <ngx-datatable-column [resizeable]="false" name="Associate Information" prop="personal.full_name" [minWidth]="300" [draggable]="false" headerClass="pl-1" cellClass="position-relative pl-1">
+                <ng-template ngx-datatable-cell-template let-row="row" let-value="value">
+                  <div [routerLink]="[row.uuid]" class="stretched-link hover-padding text-truncate">{{value || '-'}}</div>
+                  <div class="hover-padding fs-10 text-uppercase text-master-lt desc text-truncate info-container">
+                    <span class="ls-13">{{row.designation}}</span>
+                    <span class="ls-13" *ngIf="row.personal?.gender_slug">{{row.personal?.gender_slug | uppercase}}</span>
+                    <span class="ls-13" *ngIf="row.personal?.date_birth">{{-(row.personal?.date_birth | amDifference:today:'years') + ' year old' | uppercase}}</span>
+                  </div>
+                </ng-template>
+              </ngx-datatable-column>
+
+              <!-- Clients Count -->
+              <ngx-datatable-column [resizeable]="false" name="Clients" prop="count.clients" headerClass="text-center" [width]="115" [canAutoResize]="false" [draggable]="false" cellClass="position-relative">
+                <ng-template ngx-datatable-cell-template let-row="row" let-value="value">
+                  <div [routerLink]="[row.uuid + '/clients']" class="stretched-link text-center">{{value}}</div>
+                </ng-template>
+              </ngx-datatable-column>
+
+              <!-- Submissions Count -->
+              <ngx-datatable-column [resizeable]="false" name="Submissions" prop="count.submissions" headerClass="text-center" [width]="115" [canAutoResize]="false" [draggable]="false" cellClass="position-relative">
+                <ng-template ngx-datatable-cell-template let-row="row" let-value="value">
+                  <div [routerLink]="[row.uuid + '/submissions']" class="stretched-link text-center">{{value}}</div>
+                </ng-template>
+              </ngx-datatable-column>
+
+              <!-- Policies Count -->
+              <ngx-datatable-column [resizeable]="false" name="Policies" prop="count.policies" headerClass="text-center" [width]="115" [canAutoResize]="false" [draggable]="false" cellClass="position-relative">
+                <ng-template ngx-datatable-cell-template let-row="row" let-value="value">
+                  <div [routerLink]="[row.uuid + '/incepted-policies']" class="stretched-link text-center">{{value}}</div>
+                </ng-template>
+              </ngx-datatable-column>
+
+              <!-- First Day -->
+              <ngx-datatable-column [resizeable]="false" name="First Day" prop="first_day" headerClass="text-center" [width]="150" [canAutoResize]="false" [draggable]="false">
+                <ng-template ngx-datatable-cell-template let-row="row" let-value="value">
+                  <div class="text-center">{{value || '-'}}</div>
+                </ng-template>
+              </ngx-datatable-column>
+
+              <!-- Last Day -->
+              <ngx-datatable-column [resizeable]="false" name="Last Day" prop="last_day" headerClass="text-center" [width]="150" [canAutoResize]="false" [draggable]="false">
+                <ng-template ngx-datatable-cell-template let-row="row" let-value="value">
+                  <div class="text-center">{{value || '-'}}</div>
+                </ng-template>
+              </ngx-datatable-column>
+
+            </ngx-datatable>
+            <!-- Datatable End -->
+
+        </mat-card-content>
+        <!-- End Material Card Content -->
+
+      </mat-card>
+      <!-- End Main Database Area -->
+
+    </div>
+    <!-- End Bootstrap Grid -->
+
+  </div>
+  <!-- End Hover-Top Containers -->
+
+</div>
+<!-- End Padded Container -->

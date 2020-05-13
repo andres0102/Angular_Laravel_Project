@@ -1,0 +1,13 @@
+/**
+ * @license
+ * Copyright TWISS.IO
+ * All Rights Reserved.
+ * Licensed under the MIT License.
+ */
+@import '~src/assets/styles/variables';
+
+#main {
+  top: 0;
+  &.notices-loaded { height: 180px; }
+  &:not(.notices-loaded) { height: 165px !important; }
+}

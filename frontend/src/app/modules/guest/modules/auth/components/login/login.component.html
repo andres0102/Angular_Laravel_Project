@@ -1,0 +1,215 @@
+<!--
+ * @license
+ * Copyright TWISS.IO
+ * All Rights Reserved.
+ * Licensed under the MIT License.
+ -->
+
+<!-- Start Padded Container -->
+<div class="container-fluid h-100">
+  <div class="row h-100">
+    <div class="col-xl-6 col-lg-9 my-auto mx-auto mx-xl-0">
+      <div class="jumbotron auth-box lfa-footer pt-5 pb-4 animated fadeInLeft">
+        <h1 class="font-montserrat display-4 mb-1 text-center text-lg-left">
+          Sign in
+        </h1>
+        <div
+          class="font-montserrat text-muted d-block text-center text-lg-left"
+        >
+          <span *ngIf="!status">Good {{ greetings }}! </span>
+          <span class="d-none d-sm-inline-block" *ngIf="!status"
+            >Sign into your account and let's get started!
+          </span>
+
+          <span
+            class="d-none d-sm-inline-block"
+            *ngIf="status == 'token-invalid'"
+            >Your session has expired, lets sign in again.</span
+          >
+          <span class="d-none d-sm-inline-block" *ngIf="status == 'logout'"
+            >You have successfully logged out.</span
+          >
+        </div>
+
+        <form
+          class="text-center text-lg-left"
+          [formGroup]="authForm"
+          (ngSubmit)="authForm.valid && submit()"
+        >
+          <mat-form-field appearance="outline" class="w-100">
+            <mat-icon matPrefix *ngIf="!user">face</mat-icon>
+            <div
+              matPrefix
+              *ngIf="user"
+              class="profile"
+              [ngClass]="user?.gender"
+            ></div>
+
+            <mat-label *ngIf="!user">LFA Username</mat-label>
+            <mat-label *ngIf="user">{{ user?.name | titlecase }}</mat-label>
+
+            <input
+              matInput
+              #usernameInput
+              type="text"
+              placeholder="type your username here..."
+              formControlName="username"
+              maxlength="128"
+              (input)="search(username.value)"
+              tabindex="1"
+              class="text-lowercase"
+              autocomplete="username"
+            />
+            <button
+              type="button"
+              mat-button
+              *ngIf="username.value && !username.disabled"
+              matSuffix
+              mat-icon-button
+              aria-label="Clear"
+              (click)="reset()"
+            >
+              <mat-icon>close</mat-icon>
+            </button>
+            <mat-hint align="start">@legacyfa-asia.com</mat-hint>
+            <mat-hint align="end" class="d-none d-sm-inline-block"
+              >{{ username.value.length }} / 128</mat-hint
+            >
+            <mat-error
+              *ngIf="(username.touched || username.dirty) && username.invalid"
+              >Valid: <u>username</u>@legacyfa-asia.com</mat-error
+            >
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="w-100">
+            <mat-icon matPrefix>lock</mat-icon>
+            <mat-label>Password</mat-label>
+            <input
+              matInput
+              #passwordInput
+              type="{{ secure ? 'password' : 'text' }}"
+              placeholder="type your password here..."
+              formControlName="password"
+              maxlength="48"
+              tabindex="2"
+              autocomplete="current-password"
+            />
+            <button
+              type="button"
+              mat-button
+              matSuffix
+              mat-icon-button
+              aria-label="Show Password"
+              (click)="secure = !secure"
+              class="d-inline-block"
+            >
+              <mat-icon>{{
+                secure ? "visibility_off" : "visibility"
+              }}</mat-icon>
+            </button>
+            <button
+              type="button"
+              mat-button
+              *ngIf="password.value && !password.disabled"
+              matSuffix
+              mat-icon-button
+              aria-label="Clear"
+              (click)="
+                password.setValue('');
+                password.markAsPristine();
+                password.markAsUntouched()
+              "
+              class="d-inline-block"
+            >
+              <mat-icon>close</mat-icon>
+            </button>
+            <mat-hint align="start">{{
+              secure
+                ? "Do keep your password safe!"
+                : "Your password is currently visible to the public!"
+            }}</mat-hint>
+            <mat-hint align="end" class="d-none d-sm-inline-block"
+              >{{ password.value.length }} / 48</mat-hint
+            >
+            <mat-error
+              *ngIf="
+                (password.touched || password.dirty) &&
+                password.hasError('required')
+              "
+              >Password is required.</mat-error
+            >
+            <mat-error
+              *ngIf="
+                (password.touched || password.dirty) &&
+                password.hasError('password')
+              "
+              >Credentials are invalid.</mat-error
+            >
+            <mat-error *ngIf="password.hasError('unexpected')"
+              >Something unexpected has occured, please try again
+              later.</mat-error
+            >
+          </mat-form-field>
+
+          <mat-checkbox
+            color="primary"
+            formControlName="public"
+            tabindex="3"
+            class="font-montserrat pl-0 d-none d-sm-block"
+            >This is a public computer, do not cache my personal
+            information.</mat-checkbox
+          >
+
+          <button
+            type="submit"
+            mat-flat-button
+            color="primary"
+            tabindex="4"
+            class="btn-submit mb-2 mb-lg-4"
+            [disabled]="processing || authForm.invalid"
+          >
+            <mat-spinner
+              class="d-inline-block"
+              *ngIf="processing"
+            ></mat-spinner>
+            {{ processing ? "Authenticating..." : "Authenticate" }}
+          </button>
+
+          <a
+            class="forget-password-button font-montserrat d-block d-lg-inline-block"
+            [routerLink]="['/auth/forget-password']"
+            [queryParams]="{ username: username.value || null }"
+            tabindex="5"
+            >Forget Password</a
+          >
+        </form>
+
+        <hr class="mt-4" />
+
+        <p class="mb-0 font-montserrat text-center text-lg-left">
+          Copyright &copy; 2020 Legacy FA Pte Ltd.
+          <span class="d-none d-sm-inline-block">All Rights Reserved.</span>
+        </p>
+        <p class="mb-0 font-montserrat text-center text-lg-left">
+          <a>Terms of Use</a> | <a>Privacy Policy</a>
+        </p>
+
+        <!-- Start Shape Background -->
+        <svg
+          class="carousel-parent-shape"
+          width="1216px"
+          height="625px"
+          viewBox="0 0 1216 625"
+          preserveAspectRatio="none"
+        >
+          <path
+            fill-rule="evenodd"
+            d="M-0.000,311.382 C-0.000,311.382 62.999,372.037 102.727,273.078 C118.498,233.793 168.280,306.657 186.342,249.138 C203.245,195.310 231.848,195.447 246.067,143.801 C266.856,68.285 291.661,3.867 310.569,0.159 C341.089,-5.826 374.891,182.287 422.852,134.224 C468.160,88.821 511.245,170.842 535.135,177.317 C545.468,180.117 579.312,194.321 613.972,189.287 C635.941,186.097 655.397,155.251 678.475,172.529 C726.537,208.512 730.880,342.989 781.202,397.567 C807.168,425.730 831.757,373.189 862.428,356.869 C890.078,342.156 923.937,365.255 946.043,356.869 C975.409,345.727 998.875,341.716 1015.324,294.624 C1027.442,259.931 1032.880,184.101 1048.770,155.771 C1068.789,120.077 1110.838,156.070 1129.996,129.436 C1169.461,74.571 1216.000,43.251 1216.000,43.251 L1216.000,624.999 L-0.000,624.999 L-0.000,311.382 Z"
+          ></path>
+        </svg>
+        <!-- End Shape Background -->
+      </div>
+    </div>
+  </div>
+</div>
+<!-- End Padded Container -->

@@ -1,0 +1,47 @@
+<!--
+ * @license
+ * Copyright TWISS.IO
+ * All Rights Reserved.
+ * Licensed under the MIT License.
+ -->
+
+<!-- Dialog Title -->
+<h2 mat-dialog-title>Add Provider Code Record</h2>
+
+<!-- Start Mat Dialog Content -->
+<mat-dialog-content>
+  <form [formGroup]="authForm" (ngSubmit)="authForm.valid && submitForm()">
+
+      <!-- Mat-Input -- Providers -->
+      <mat-form-field class="w-100 mb-3">
+        <mat-label>Select Provider</mat-label>
+        <mat-select class="mat-light-blue" formControlName="provider_slug" tabindex="1" [required]="true">
+          <mat-option *ngFor="let obj of providers | sortBy:'asc':'full_name'" [value]="obj.slug">{{obj.full_name}}</mat-option>
+        </mat-select>
+        <mat-error *ngIf="provider_slug.invalid">Provider is required.</mat-error>
+      </mat-form-field>
+
+      <!-- Mat-Input -- Code -->
+      <mat-form-field class="w-100 mb-3">
+        <mat-label>Provider Code</mat-label>
+        <input matInput type="text" placeholder="Type provider code here..." formControlName="code" maxlength="128" autocomplete="code" tabindex="2" required>
+        <button type="button" mat-button *ngIf="code.value && !code.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm('code')">
+          <mat-icon class="mat-light-blue">close</mat-icon>
+        </button>
+        <mat-hint align="end">{{code.value?.length || 0}} / 128</mat-hint>
+        <mat-error *ngIf="(code.touched || code.dirty) && code.invalid && code.errors?.required">Provider Code is required.</mat-error>
+      </mat-form-field>
+
+  </form>
+</mat-dialog-content>
+<!-- End Mat Dialog Content -->
+
+
+
+<!-- Start Mat Dialog Actions -->
+<mat-dialog-actions align="end">
+  <button mat-button [mat-dialog-close]="authForm.value" class="fs-12 fw-600 text-master-lt mr-auto" *ngIf="!processing">Cancel</button>
+  <button mat-stroked-button class="fs-12 fw-600 text-master-lt" type="reset" *ngIf="!processing" (click)="resetForm()">Reset Fields</button>
+  <button mat-flat-button color="primary" class="ml-2 fs-12 fw-600 btn-submit" [disabled]="processing || authForm.invalid" type="submit" (click)="submitForm()">{{(processing) ? 'Processing' : 'Add Record'}}</button>
+</mat-dialog-actions>
+<!-- End Mat Dialog Actions -->

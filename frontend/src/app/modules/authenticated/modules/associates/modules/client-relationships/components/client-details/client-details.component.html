@@ -1,0 +1,138 @@
+<!--
+ * @license
+ * Copyright TWISS.IO
+ * All Rights Reserved.
+ * Licensed under the MIT License.
+ -->
+
+<!-- Start Padded Container -->
+<div class="container-fluid animated bounceInUp" *ngIf="!authService.user?.permissions?.includes(page_permission) || !client">
+  <div class="row align-items-start pt-4">
+    <div class="col-12">
+      <!-- Restricted Area -->
+      <access-denied [title]="'Client record does not exist. Please contact IT Support if this error persists.'" [link]="'..'" [linkText]="'Back to Clients Database'"></access-denied>
+    </div>
+  </div>
+</div>
+<!-- End Padded Container -->
+
+
+
+<!-- Start Client Details -->
+<div *ngIf="authService.user?.permissions?.includes(page_permission) && client">
+
+  <!-- Start Form -->
+  <form class="text-center text-lg-left" [formGroup]="authForm">
+
+    <!-- Start Client Summary Component -->
+    <div class="client-summary container-fluid mat-elevation-z d-flex bg-white pt-4 flex-column position-sticky">
+
+      <!-- Start Summary Action Buttons -->
+      <div class="d-flex">
+        <a class="back-button py-2 rounded-pill fs-8 ls-15 text-uppercase position-relative mr-auto d-table" mat-stroked-button [routerLink]="[sessionStorageService.getItem('previous_url') || '/authenticated/associates/relationships/clients']" (click)="routeBack()">
+              <span class="faa-parent animated-hover stretched-link">
+                <i class="far fa-long-arrow-left mr-2 faa-passing-reverse" style="line-height: 5.5px;"></i> Back to {{sessionStorageService.getItem('previous_title') || 'Clients Database'}}
+              </span>
+            </a>
+
+        <a class="back-button ml-auto position-relative" [routerLink]="['/authenticated/associates/relationships/clients']" (click)="routeBack()">
+          <span class="faa-parent animated-hover stretched-link">
+            <i class="fal fa-times faa-tada fs-30"></i>
+          </span>
+        </a>
+      </div>
+      <!-- End Summary Action Buttons -->
+
+      <!-- Start Client Summary -->
+      <div class="w-100 my-auto d-flex flex-column">
+
+          <!-- Start Padded Container -->
+          <div class="d-flex flex-grow-1 py-2 flex-column flex-lg-row">
+
+            <!-- Start Profile Image / Gender -->
+            <div class="profile-thumbnail-wrapper align-self-center overflow-hidden {{(!client.display_photo.original && !client.display_photo.thumbnail) ? 'rounded ' + ((client.client_type_slug == 'individual') ? client.personal?.gender_slug || 'camera' : 'business') : 'rounded-circle faa-tada animated-hover'}}">
+              <img src="{{ client.display_photo.original || '/assets/images/spacer.png' }}" width="120" height="120" alt="">
+            </div>
+            <!-- End Profile Image / Gender -->
+
+            <!-- Start Profile Name -->
+            <div class="d-flex flex-column pl-lg-3 flex-grow-1">
+              <div class="font-proxima fs-25 ls-15 text-truncate text-center text-lg-left">{{ client.display_name }}</div>
+              <div class="font-proxima fs-12 text-uppercase text-master-lt desc text-truncate info-container text-center text-lg-left" *ngIf="client.client_type_slug == 'individual'">
+                <span class="ls-15" *ngIf="(client.personal?.job_title || client.personal?.company_name)">{{(client.personal.job_title && client.personal.company_name) ? client.personal.job_title + ' @ ' + client.personal.company_name : client.personal.job_title || client.personal.company_name}}</span>
+                <span class="ls-15" *ngIf="client.personal?.gender_slug">{{client.personal?.gender_slug | uppercase}}</span>
+                <span class="ls-15" *ngIf="client.personal?.date_birth">{{-(client.personal?.date_birth | amDifference:today:'years') + ' year old' | uppercase }}</span>
+              </div>
+              <div class="font-proxima fs-12 text-uppercase text-master-lt desc text-truncate info-container" *ngIf="client.client_type_slug == 'business'">
+                <span class="ls-15" *ngIf="client.business?.uen">Business UEN: {{client.business.uen}}</span>
+              </div>
+
+              <div class="w-100 mt-2 pt-3 border-top" style="border-color: #eee;">
+                <span class="d-inline-block m-auto ml-lg-0 tw-chip {{(client.client_type_slug == 'individual')?'blue':'yellow'}}" style="width: 150px;">{{(client.client_type_slug == 'individual')?'Individual':'Business'}}</span>
+              </div>
+            </div>
+            <!-- End Profile Name -->
+
+          </div>
+          <!-- End Padded Container -->
+
+          <!-- Start Navigation Tabs -->
+          <nav mat-tab-nav-bar class="w-100 mt-2">
+
+            <!-- Start Mat Tab -->
+            <a mat-tab-link class="px-3" [routerLink]="['activity-log']" routerLinkActive #rla="routerLinkActive" [active]="rla.isActive" [routerLinkActiveOptions]="{exact:true}">
+              <div class="mat-tab-label-content h-100">
+                <div class="d-inline-flex flex-column mat-titles h-100">
+                  <span class="fs-12 fw-600 text-uppercase">Activity Log</span>
+                </div>
+              </div>
+            </a>
+            <!-- End Mat Tab -->
+
+            <!-- Start Mat Tab -->
+            <a mat-tab-link class="px-3" [routerLink]="['particulars']" routerLinkActive #rla1="routerLinkActive" [active]="rla1.isActive" [routerLinkActiveOptions]="{exact:true}">
+              <div class="mat-tab-label-content h-100">
+                <div class="d-inline-flex flex-column mat-titles h-100">
+                  <span class="fs-12 fw-600 text-uppercase">Particulars</span>
+                </div>
+              </div>
+            </a>
+            <!-- End Mat Tab -->
+
+            <!-- Start Mat Tab -->
+            <a mat-tab-link class="px-3" [routerLink]="['submissions']" routerLinkActive #rla2="routerLinkActive" [active]="rla2.isActive" [routerLinkActiveOptions]="{exact:true}">
+              <div class="mat-tab-label-content h-100">
+                <div class="d-inline-flex flex-column mat-titles h-100">
+                  <span class="fs-12 fw-600 text-uppercase">Submissions ({{client.submissions_count || 0}})</span>
+                </div>
+              </div>
+            </a>
+            <!-- End Mat Tab -->
+
+            <!-- Start Mat Tab -->
+            <a mat-tab-link class="px-3" [routerLink]="['incepted-policies']" routerLinkActive #rla3="routerLinkActive" [active]="rla3.isActive" [routerLinkActiveOptions]="{exact:true}">
+              <div class="mat-tab-label-content h-100">
+                <div class="d-inline-flex flex-column mat-titles h-100">
+                  <span class="fs-12 fw-600 text-uppercase">Incepted Policies ({{client.policies_count || 0}})</span>
+                </div>
+              </div>
+            </a>
+            <!-- End Mat Tab -->
+
+          </nav>
+          <!-- End Navigation Tabs -->
+
+      </div>
+      <!-- End Client Summary -->
+
+    </div>
+    <!-- End Client Summary Component -->
+
+  <!-- Child Routing Tabs -->
+  <router-outlet></router-outlet>
+
+  </form>
+  <!-- End Form -->
+
+</div>
+<!-- End Client Details -->

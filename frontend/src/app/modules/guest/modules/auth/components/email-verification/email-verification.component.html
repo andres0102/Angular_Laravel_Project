@@ -1,0 +1,92 @@
+<div class="container-fluid h-100">
+  <div class="row h-100">
+    <div class="offset-lg-3 col-lg-6 my-auto">
+      <div class="jumbotron auth-box lfa-footer pt-5 pb-4 animated fadeInUp text-center">
+
+        <h1 class="font-montserrat display-4 mb-1 text-center text-overflow" *ngIf="!success && !expired">Welcome</h1>
+        <h1 class="font-montserrat display-4 mb-1 text-center" *ngIf="expired && !resending">Token Expired</h1>
+        <h1 class="font-montserrat display-4 mb-1 text-center" *ngIf="expired && resending && !resending_complete">Sending new Email</h1>
+        <h1 class="font-montserrat display-4 mb-1 text-center" *ngIf="expired && resending && resending_complete">Email Sent!</h1>
+        <h1 class="font-montserrat display-4 mb-1 text-center" *ngIf="success">Password Updated</h1>
+
+        <span class="font-montserrat text-muted d-block text-center" *ngIf="!success && !expired && dataLoaded">Please provide a password for your new account.</span>
+        <span class="font-montserrat text-muted d-block text-center" *ngIf="expired && !resending">Your request has expired, generate a new email below.</span>
+        <span class="font-montserrat text-muted d-block text-center" *ngIf="expired && resending && !resending_complete">Processing your request, please be patient....</span>
+        <span class="font-montserrat text-muted d-block text-center" *ngIf="expired && resending && resending_complete">Please check your inbox for the new link.</span>
+        <span class="font-montserrat text-muted d-block text-center" *ngIf="success">Your password has been successfully updated.</span>
+
+        <button type="submit" mat-flat-button color="primary" *ngIf="expired && !resending" class="btn-submit my-5" (click)="resend()">Request New Email</button>
+        <div class="d-flex my-5" *ngIf="expired && resending">
+          <div class="tw-circle-loader m-auto" [ngClass]="{'tw-circle-load-complete': resending_complete}">
+            <div class="tw-circle-checkmark draw"></div>
+          </div>
+        </div>
+
+        <mat-spinner class="mx-auto my-5" *ngIf="!dataLoaded"></mat-spinner>
+
+        <form class="text-center" [formGroup]="authForm" (ngSubmit)="authForm.valid && submit()" *ngIf="!expired && dataLoaded && !success">
+          <input type="hidden" autocomplete="username">
+
+          <mat-form-field appearance="outline" class="w-100">
+            <mat-icon matPrefix *ngIf="!gender">face</mat-icon>
+            <div matPrefix *ngIf="gender" class="profile" [ngClass]="gender.value"></div>
+            <mat-label>Display Name</mat-label>
+            <input matInput #displayNameInput placeholder="type your display name here..." formControlName="display_name" maxlength="48" tabindex="1" autocomplete="username">
+            <button type="button" mat-button *ngIf="display_name.value && !display_name.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="display_name.setValue('');display_name.markAsPristine();display_name.markAsUntouched();" class="d-inline-block">
+              <mat-icon>close</mat-icon>
+            </button>
+            <mat-hint align="start">Let us know how do you want to be addressed.</mat-hint>
+            <mat-hint align="end" class="d-none d-sm-inline-block">{{display_name.value.length}} / 48</mat-hint>
+            <mat-error *ngIf="(display_name.touched || display_name.dirty) && display_name.hasError('required')">Display Name is required.</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="w-100">
+            <mat-icon matPrefix>lock</mat-icon>
+            <mat-label>New Password</mat-label>
+            <input matInput #passwordInput type="{{(secure_pw)?'password':'text'}}" placeholder="type your password here..." formControlName="password" maxlength="48" tabindex="2" autocomplete="new-password">
+            <button type="button" mat-button matSuffix mat-icon-button aria-label="Show Password" (click)="secure_pw = !secure_pw" class="d-inline-block">
+              <mat-icon>{{(secure_pw)?'visibility_off':'visibility'}}</mat-icon>
+            </button>
+            <button type="button" mat-button *ngIf="password.value && !password.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="password.setValue('');password.markAsPristine();password.markAsUntouched();" class="d-inline-block">
+              <mat-icon>close</mat-icon>
+            </button>
+            <mat-hint align="start">{{(secure_pw)?'Do keep your password safe!':'Your password is currently visible to the public!'}}</mat-hint>
+            <mat-hint align="end" class="d-none d-sm-inline-block">{{password.value.length}} / 48</mat-hint>
+            <mat-error *ngIf="(password.touched || password.dirty) && password.hasError('required')">Password is required.</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="w-100">
+            <mat-icon matPrefix>lock</mat-icon>
+            <mat-label>Confirm Password</mat-label>
+            <input matInput #passwordConfirmInput type="{{(secure_cpw)?'password':'text'}}" placeholder="confirm password here..." formControlName="password_confirmation" maxlength="48" tabindex="3" [errorStateMatcher]="matcher" autocomplete="new-password">
+            <button type="button" mat-button matSuffix mat-icon-button aria-label="Show Password" (click)="secure_cpw = !secure_cpw" class="d-inline-block">
+              <mat-icon>{{(secure_cpw)?'visibility_off':'visibility'}}</mat-icon>
+            </button>
+            <button type="button" mat-button *ngIf="password_confirmation.value && !password_confirmation.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="password_confirmation.setValue('');password_confirmation.markAsPristine();password_confirmation.markAsUntouched();" class="d-inline-block">
+              <mat-icon>close</mat-icon>
+            </button>
+            <mat-hint align="end" class="d-none d-sm-inline-block">{{password_confirmation.value.length}} / 48</mat-hint>
+            <mat-error *ngIf="password_confirmation.hasError('required')">Please confirm your password.</mat-error>
+            <mat-error *ngIf="password_confirmation.value && authForm.hasError('password')">Password does not match.</mat-error>
+          </mat-form-field>
+
+          <button type="submit" mat-flat-button color="primary" tabindex="3" class="btn-submit mb-2 mb-lg-4" [disabled]="processing || authForm.invalid" *ngIf="!success">
+            <mat-spinner class="d-inline-block" *ngIf="processing"></mat-spinner> {{ (processing) ? 'Processing ...' : 'Update Profile' }}
+          </button>
+        </form>
+
+        <button type="submit" mat-flat-button color="primary" tabindex="3" class="btn-submit mt-5 mb-2 mb-lg-4" *ngIf="success" [routerLink]="['/auth/login']" [queryParams]="{username: (username || null)}">Back to Login Page</button>
+
+        <hr class="mt-4">
+
+        <p class="mb-0 font-montserrat text-center">Copyright &copy; 2020 Legacy FA Pte Ltd. <span class="d-none d-sm-inline-block">All Rights Reserved.</span></p>
+        <p class="mb-0 font-montserrat text-center"><a>Terms of Use</a> | <a>Privacy Policy</a></p>
+
+
+        <svg class="carousel-parent-shape" width="1216px" height="625px" viewBox="0 0 1216 625" preserveAspectRatio="none">
+          <path fill-rule="evenodd" d="M-0.000,311.382 C-0.000,311.382 62.999,372.037 102.727,273.078 C118.498,233.793 168.280,306.657 186.342,249.138 C203.245,195.310 231.848,195.447 246.067,143.801 C266.856,68.285 291.661,3.867 310.569,0.159 C341.089,-5.826 374.891,182.287 422.852,134.224 C468.160,88.821 511.245,170.842 535.135,177.317 C545.468,180.117 579.312,194.321 613.972,189.287 C635.941,186.097 655.397,155.251 678.475,172.529 C726.537,208.512 730.880,342.989 781.202,397.567 C807.168,425.730 831.757,373.189 862.428,356.869 C890.078,342.156 923.937,365.255 946.043,356.869 C975.409,345.727 998.875,341.716 1015.324,294.624 C1027.442,259.931 1032.880,184.101 1048.770,155.771 C1068.789,120.077 1110.838,156.070 1129.996,129.436 C1169.461,74.571 1216.000,43.251 1216.000,43.251 L1216.000,624.999 L-0.000,624.999 L-0.000,311.382 Z"></path>
+        </svg>
+      </div>
+    </div>
+  </div>
+</div>

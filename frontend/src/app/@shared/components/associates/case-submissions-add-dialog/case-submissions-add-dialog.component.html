@@ -1,0 +1,940 @@
+<h2 mat-dialog-title>New Submission</h2>
+
+<mat-dialog-content class="pb-4 position-relative">
+
+  <mat-vertical-stepper [linear]="true" #stepper class="font-proxima">
+
+    <mat-step [stepControl]="selectClientForm" label="{{(clientNew) ? 'Create new Client Record' : 'Select Client Record'}}" state="face">
+      <form [formGroup]="selectClientForm">
+
+        <!-- Mat-Autocomplete -- Select Client -->
+        <mat-form-field class="w-100 mb-3">
+          <input #clientInput matInput class="text-master" placeholder="Select existing Client" aria-label="Select existing Client" [matAutocomplete]="clientlist" formControlName="client" (input)="fuseResults()" [readonly]="clientSelected || clientNew" required>
+          <button type="button" mat-button *ngIf="clientSelected && client.value && !client.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm('client');">
+            <mat-icon>close</mat-icon>
+          </button>
+          <mat-hint *ngIf="!clientNew" align="start">Alternatively, you may <a class="link dark" (click)="createClient()">create a new Client Record</a>.</mat-hint>
+          <mat-hint *ngIf="clientNew" align="start">Creating a new Client Record in an external dialog...</mat-hint>
+          <mat-error *ngIf="(client.touched || client.dirty) && client.invalid && !clientNew">Please select an existing Client, or <a class="link dark" (click)="createClient()">create a new Client Record</a>.</mat-error>
+          <mat-autocomplete #clientlist="matAutocomplete" [displayWith]="displayFn" (optionSelected)="processClient();">
+            <mat-option *ngFor="let select_client of clients" [value]="select_client">
+              <div class="d-flex flex-row">
+                <div class="d-flex mr-3" style="width: 100px">
+                  <span class="d-flex m-auto tw-chip {{(select_client.client_type_slug == 'individual')?'blue':'yellow'}}">{{(select_client.client_type_slug == 'individual')?'Individual':'Business'}}</span>
+                </div>
+                <div class="d-flex my-auto mr-2 profile-thumbnail-wrapper overflow-hidden {{(!select_client.display_photo.original && !select_client.display_photo.thumbnail) ? 'rounded ' + ((select_client.client_type_slug == 'individual') ? select_client.personal?.gender_slug || 'camera' : 'business') : 'rounded-circle faa-tada animated-hover'}}">
+                  <img src="{{ select_client.display_photo.original || '/assets/images/spacer.png' }}" width="40" height="40" alt="">
+                </div>
+                <div class="d-flex flex-column my-auto">
+                  <div class="fs-14 lh-21">{{select_client.display_name}}</div>
+                  <div class="fs-10 text-uppercase text-master-lt desc text-truncate info-container" *ngIf="select_client.client_type_slug == 'individual'">
+                    <span class="ls-13" *ngIf="select_client.personal?.job_title || select_client.personal?.company_name">{{(select_client.personal.job_title && select_client.personal.company_name) ? select_client.personal.job_title + ' @ ' + select_client.personal.company_name : select_client.personal.job_title || select_client.personal.company_name}}</span>
+                    <span class="ls-13" *ngIf="select_client.personal?.gender_slug">{{select_client.personal?.gender_slug | uppercase}}</span>
+                    <span class="ls-13" *ngIf="select_client.personal?.date_birth">{{-(select_client.personal?.date_birth | amDifference:today:'years') + ' year old' | uppercase}}</span>
+                  </div>
+                  <div class="hover-padding fs-10 ls-13 text-uppercase text-master-lt desc text-truncate" *ngIf="select_client.client_type_slug == 'business' && select_client.business?.uen">Business UEN: {{select_client.business.uen}}</div>
+                </div>
+              </div>
+            </mat-option>
+          </mat-autocomplete>
+        </mat-form-field>
+
+      </form>
+    </mat-step>
+    <mat-step [stepControl]="updateClientForm" state="account">
+      <ng-template matStepLabel>
+        <div>Update Client Particulars</div>
+        <span class="d-flex fs-10 lh-12 text-uppercase ls-20 fw-400" *ngIf="client.value">{{displayFn(client.value)}}</span>
+      </ng-template>
+
+
+          <!-- Start Auth Form -->
+          <form [formGroup]="updateClientForm" *ngIf="clientSelected">
+            <div class="row font-proxima my-4">
+
+              <!-- Start Left Section -->
+              <section class="col-xl-6">
+
+                <!-- Heading Text Component -->
+                <heading-text [title]="'Client Record'"></heading-text>
+
+                <!-- Mat-Input -- Client UUID -->
+                <mat-form-field class="w-100 mb-3 no-underline">
+                  <mat-label>Client UUID</mat-label>
+                  <input matInput type="text" formControlName="client_uuid" [readonly]="true">
+                </mat-form-field>
+
+                <div class="row">
+                  <div class="col-xl-6">
+                    <!-- Mat-Input -- Client Type -->
+                    <mat-form-field class="w-100 mb-3">
+                      <mat-label>Client Type</mat-label>
+                      <mat-select class="mat-light-blue" formControlName="client_type_slug" tabindex="2">
+                        <mat-option [value]="'individual'">Individual</mat-option>
+                        <mat-option [value]="'business'">Business</mat-option>
+                      </mat-select>
+                      <button type="button" mat-button *ngIf="client_type_slug.value && !client_type_slug.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_updateClient('client_type_slug')" style="transform: translateY(2px);">
+                        <mat-icon class="mat-light-blue">close</mat-icon>
+                      </button>
+                      <mat-error *ngIf="client_type_slug.invalid">Client Type is required.</mat-error>
+                    </mat-form-field>
+                  </div>
+                  <div class="col-xl-6">
+                    <!-- Mat-Input -- Client Source -->
+                    <mat-form-field class="w-100 mb-3">
+                      <mat-label>Client Source</mat-label>
+                      <mat-select class="mat-light-blue" formControlName="source_slug" tabindex="3">
+                        <mat-option *ngFor="let obj of client_sources | sortBy:'asc':'title'" [value]="obj.slug">{{obj.title}}</mat-option>
+                      </mat-select>
+                      <button type="button" mat-button *ngIf="source_slug.value && !source_slug.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_updateClient('source_slug')" style="transform: translateY(2px);">
+                        <mat-icon class="mat-light-blue">close</mat-icon>
+                      </button>
+                      <mat-error *ngIf="source_slug.invalid">Client Source is required.</mat-error>
+                    </mat-form-field>
+                  </div>
+                </div>
+
+                <!-- Mat-Input -- Client Display Name -->
+                <mat-form-field class="w-100 mb-3">
+                  <mat-label>Display Name</mat-label>
+                  <input matInput type="text" placeholder="Type Display Name here..." formControlName="display_name" maxlength="128" tabindex="4">
+                  <button type="button" mat-button *ngIf="display_name.value && !display_name.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_updateClient('display_name')">
+                    <mat-icon class="mat-light-blue">close</mat-icon>
+                  </button>
+                  <mat-hint align="end" class="d-none d-sm-inline-block">{{display_name.value?.length || 0}} / 128</mat-hint>
+                  <mat-error *ngIf="display_name.invalid">Display Name is required.</mat-error>
+                </mat-form-field>
+
+                <!-- Mat-Input -- Client Description -->
+                <mat-form-field class="w-100 mb-3">
+                  <mat-label>Client Description</mat-label>
+                  <textarea matInput formControlName="description" placeholder="Type something about the Client here..." cdkTextareaAutosize [cdkAutosizeMinRows]="2" maxlength="1200" tabindex="5"></textarea>
+                  <mat-hint align="end" class="d-none d-sm-inline-block">{{description.value?.length || 0}} / 1200</mat-hint>
+                </mat-form-field>
+
+                <!-- Mat-Input -- Client Interests -->
+                <mat-form-field class="w-100 mb-3" *ngIf="client_type_slug.value == 'individual'">
+                  <mat-label>Interests/Hobbies</mat-label>
+                  <textarea matInput formControlName="interest" placeholder="List some interests/hobbies about the Client here..." cdkTextareaAutosize [cdkAutosizeMinRows]="2" maxlength="1200" tabindex="6"></textarea>
+                  <mat-hint align="end" class="d-none d-sm-inline-block">{{interest.value?.length || 0}} / 1200</mat-hint>
+                </mat-form-field>
+
+                <!-- Mat-Input -- Client Important Stuffs -->
+                <mat-form-field class="w-100 mb-3">
+                  <mat-label>What's Most Important to this Client?</mat-label>
+                  <textarea matInput formControlName="important" placeholder="Type important stuffs about the Client here..." cdkTextareaAutosize [cdkAutosizeMinRows]="2" maxlength="1200" tabindex="7"></textarea>
+                  <mat-hint align="end" class="d-none d-sm-inline-block">{{important.value?.length || 0}} / 1200</mat-hint>
+                </mat-form-field>
+
+
+                <div *ngIf="client_type_slug.value == 'individual'">
+
+                  <!-- Heading Text Component -->
+                  <heading-text [title]="'Personal Information'" class="mt-5"></heading-text>
+
+                  <div class="row">
+                    <div class="col-xl-4">
+                      <!-- Mat-Input -- Personal Salutation -->
+                      <mat-form-field class="w-100 mb-3">
+                        <mat-label>Salutation</mat-label>
+                        <mat-select class="mat-light-blue" formControlName="salutation_slug" tabindex="8">
+                          <mat-option *ngFor="let obj of salutations" [value]="obj.slug">{{obj.title}}</mat-option>
+                        </mat-select>
+                        <button type="button" mat-button *ngIf="salutation_slug.value && !salutation_slug.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_updateClient('salutation_slug')" style="transform: translateY(2px);">
+                          <mat-icon class="mat-light-blue">close</mat-icon>
+                        </button>
+                      </mat-form-field>
+                    </div>
+                    <div class="col-xl-8">
+                      <!-- Mat-Input -- Personal Full Name -->
+                      <mat-form-field class="w-100 mb-3">
+                        <mat-label>Full Name (NRIC)</mat-label>
+                        <input matInput type="text" placeholder="Type Full Name here..." formControlName="full_name" maxlength="128" tabindex="9" class="text-uppercase">
+                        <button type="button" mat-button *ngIf="full_name.value && !full_name.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_updateClient('full_name')">
+                          <mat-icon class="mat-light-blue">close</mat-icon>
+                        </button>
+                        <mat-hint align="end" class="d-none d-sm-inline-block">{{full_name.value?.length || 0}} / 128</mat-hint>
+                        <mat-error *ngIf="full_name.invalid">Full Name is required.</mat-error>
+                      </mat-form-field>
+                    </div>
+                  </div>
+
+                  <div class="row">
+                    <div class="col-xl-6">
+                      <!-- Mat-Input -- Personal Alias -->
+                      <mat-form-field class="w-100 mb-3">
+                        <mat-label>Alias</mat-label>
+                        <input matInput type="text" placeholder="Type Alias here..." formControlName="alias" maxlength="64" tabindex="10">
+                        <button type="button" mat-button *ngIf="alias.value && !alias.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_updateClient('alias')">
+                          <mat-icon class="mat-light-blue">close</mat-icon>
+                        </button>
+                        <mat-hint align="end" class="d-none d-sm-inline-block">{{alias.value?.length || 0}} / 64</mat-hint>
+                      </mat-form-field>
+                    </div>
+                    <div class="col-xl-6">
+                      <!-- Mat-Input -- Personal Chinese Name -->
+                      <mat-form-field class="w-100 mb-3">
+                        <mat-label>Chinese Name</mat-label>
+                        <input matInput type="text" placeholder="Type Chinese Name here..." formControlName="chinese_name" maxlength="64" tabindex="11">
+                        <button type="button" mat-button *ngIf="chinese_name.value && !chinese_name.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_updateClient('chinese_name')">
+                          <mat-icon class="mat-light-blue">close</mat-icon>
+                        </button>
+                        <mat-hint align="end" class="d-none d-sm-inline-block">{{chinese_name.value?.length || 0}} / 64</mat-hint>
+                      </mat-form-field>
+                    </div>
+                  </div>
+
+                  <div class="row">
+                    <div class="col-xl-4">
+                      <!-- Mat-Input -- Personal NRIC No -->
+                      <mat-form-field class="w-100 mb-3">
+                        <mat-label>NRIC No</mat-label>
+                        <input matInput type="text" placeholder="Type NRIC Number here..." formControlName="nric_no" maxlength="32" tabindex="12">
+                        <button type="button" mat-button *ngIf="nric_no.value && !nric_no.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_updateClient('nric_no')">
+                          <mat-icon class="mat-light-blue">close</mat-icon>
+                        </button>
+                        <mat-hint align="end" class="d-none d-sm-inline-block">{{nric_no.value?.length || 0}} / 32</mat-hint>
+                      </mat-form-field>
+                    </div>
+                    <div class="col-xl-4">
+                      <!-- Mat-Input -- Personal FIN No -->
+                      <mat-form-field class="w-100 mb-3">
+                        <mat-label>FIN No</mat-label>
+                        <input matInput type="text" placeholder="Type FIN Number here..." formControlName="fin_no" maxlength="32" tabindex="13">
+                        <button type="button" mat-button *ngIf="fin_no.value && !fin_no.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_updateClient('fin_no')">
+                          <mat-icon class="mat-light-blue">close</mat-icon>
+                        </button>
+                        <mat-hint align="end" class="d-none d-sm-inline-block">{{fin_no.value?.length || 0}} / 32</mat-hint>
+                      </mat-form-field>
+                    </div>
+                    <div class="col-xl-4">
+                      <!-- Mat-Input -- Personal Passport No -->
+                      <mat-form-field class="w-100 mb-3">
+                        <mat-label>Passport No</mat-label>
+                        <input matInput type="text" placeholder="Type Passport Number here..." formControlName="passport_no" maxlength="32" tabindex="14">
+                        <button type="button" mat-button *ngIf="passport_no.value && !passport_no.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_updateClient('passport_no')">
+                          <mat-icon class="mat-light-blue">close</mat-icon>
+                        </button>
+                        <mat-hint align="end" class="d-none d-sm-inline-block">{{passport_no.value?.length || 0}} / 32</mat-hint>
+                      </mat-form-field>
+                    </div>
+                  </div>
+
+                  <div class="row">
+                    <div class="col-xl-4">
+                      <!-- Mat-Input -- Personal Gender -->
+                      <mat-form-field class="w-100 mb-3">
+                        <mat-label>Gender</mat-label>
+                        <mat-select class="mat-light-blue" formControlName="gender_slug" tabindex="15">
+                          <mat-option *ngFor="let obj of genders" [value]="obj.slug">{{obj.title}}</mat-option>
+                        </mat-select>
+                        <button type="button" mat-button *ngIf="gender_slug.value && !gender_slug.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_updateClient('gender_slug')" style="transform: translateY(2px);">
+                          <mat-icon class="mat-light-blue">close</mat-icon>
+                        </button>
+                      </mat-form-field>
+                    </div>
+                    <div class="col-xl-4">
+                      <!-- Mat-Input -- Date of Birth -->
+                      <mat-form-field class="w-100 mb-3">
+                        <mat-label>Date of Birth</mat-label>
+                        <input class="text-muted" matInput [matDatepicker]="datebirth" formControlName="date_birth" [readonly]="true" tabindex="16">
+                        <mat-datepicker-toggle matSuffix [for]="datebirth"></mat-datepicker-toggle>
+                        <mat-datepicker #datebirth disabled="false"></mat-datepicker>
+                      </mat-form-field>
+                    </div>
+                    <div class="col-xl-4">
+                      <!-- Mat-Input -- Personal Address Country -->
+                      <mat-form-field class="w-100 mb-3">
+                        <mat-label>Country of Birth</mat-label>
+                        <mat-select class="mat-light-blue" formControlName="country_birth_slug" tabindex="17">
+                          <mat-option *ngFor="let obj of countries | sortBy:'asc':'title'" [value]="obj.slug">{{obj.title}}</mat-option>
+                        </mat-select>
+                        <button type="button" mat-button *ngIf="country_birth_slug.value && !country_birth_slug.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_updateClient('country_birth_slug')" style="transform: translateY(2px);">
+                          <mat-icon class="mat-light-blue">close</mat-icon>
+                        </button>
+                      </mat-form-field>
+                    </div>
+                  </div>
+
+                  <div class="row">
+                    <div class="col-xl-6">
+                      <!-- Mat-Input -- Personal Marital Status -->
+                      <mat-form-field class="w-100 mb-3">
+                        <mat-label>Marital Status</mat-label>
+                        <mat-select class="mat-light-blue" formControlName="marital_status_slug" tabindex="18">
+                          <mat-option *ngFor="let obj of marital_status" [value]="obj.slug">{{obj.title}}</mat-option>
+                        </mat-select>
+                        <button type="button" mat-button *ngIf="marital_status_slug.value && !marital_status_slug.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_updateClient('marital_status_slug')" style="transform: translateY(2px);">
+                          <mat-icon class="mat-light-blue">close</mat-icon>
+                        </button>
+                      </mat-form-field>
+                    </div>
+                    <div class="col-xl-6">
+                      <!-- Mat-Input -- Personal Race -->
+                      <mat-form-field class="w-100 mb-3">
+                        <mat-label>Race</mat-label>
+                        <input type="text" matInput formControlName="race_slug" [matAutocomplete]="race_select" tabindex="19" class="text-uppercase">
+                        <mat-autocomplete #race_select="matAutocomplete">
+                          <mat-option *ngFor="let obj of filteredRaces | async | sortBy:'asc':'title'" [value]="obj.slug">{{obj.title | uppercase}}</mat-option>
+                        </mat-autocomplete>
+                      </mat-form-field>
+                    </div>
+                  </div>
+
+                  <div class="row">
+                    <div class="col-xl-6">
+                      <!-- Mat-Input -- Personal Nationality -->
+                      <mat-form-field class="w-100 mb-3">
+                        <mat-label>Nationality</mat-label>
+                        <mat-select class="mat-light-blue" formControlName="nationality_slug" tabindex="20">
+                          <mat-option *ngFor="let obj of countries | sortBy:'asc':'title'" [value]="obj.slug">{{obj.nationality || obj.title}}</mat-option>
+                        </mat-select>
+                        <button type="button" mat-button *ngIf="nationality_slug.value && !nationality_slug.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_updateClient('nationality_slug')" style="transform: translateY(2px);">
+                          <mat-icon class="mat-light-blue">close</mat-icon>
+                        </button>
+                      </mat-form-field>
+                    </div>
+                    <div class="col-xl-6">
+                      <!-- Mat-Input -- Personal Residency Status -->
+                      <mat-form-field class="w-100 mb-3">
+                        <mat-label>Residency Status</mat-label>
+                        <mat-select class="mat-light-blue" formControlName="residency_status_slug" tabindex="21">
+                          <mat-option *ngFor="let obj of residency_status" [value]="obj.slug">{{obj.title}}</mat-option>
+                        </mat-select>
+                        <button type="button" mat-button *ngIf="residency_status_slug.value && !residency_status_slug.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_updateClient('residency_status_slug')" style="transform: translateY(2px);">
+                          <mat-icon class="mat-light-blue">close</mat-icon>
+                        </button>
+                      </mat-form-field>
+                    </div>
+                  </div>
+
+                  <mat-form-field floatLabel="always" appearance="none" class="w-100 mb-3 ml-4">
+                    <mat-slide-toggle formControlName="smoker" [color]="'primary'">Client is {{(smoker.value == true) ? '' : 'not'}}  a smoker.</mat-slide-toggle>
+                    <textarea matInput hidden></textarea>
+                  </mat-form-field>
+
+                  <mat-form-field floatLabel="always" appearance="none" class="w-100 mb-3 ml-4">
+                    <mat-slide-toggle formControlName="selected" [color]="'primary'">Client is {{(selected.value == true) ? '' : 'not'}} a selected Individual.</mat-slide-toggle>
+                    <textarea matInput hidden></textarea>
+                  </mat-form-field>
+
+                  <mat-form-field floatLabel="always" appearance="none" class="w-100 mb-3 ml-4">
+                    <mat-slide-toggle formControlName="pdpa" [color]="'primary'">Client has {{(pdpa.value == true) ? '' : 'not'}} given consent for PDPA.</mat-slide-toggle>
+                    <textarea matInput hidden></textarea>
+                  </mat-form-field>
+                </div>
+              </section>
+              <!-- End Left Section -->
+
+              <!-- Start Right Section -->
+              <section class="col-xl-6" *ngIf="client_type_slug.value == 'business'">
+
+                <!-- Heading Text Component -->
+                <heading-text [title]="'Business Information'" class="mt-5 mt-xl-0"></heading-text>
+
+                <!-- Mat-Input -- Business Name -->
+                <mat-form-field class="w-100 mb-3">
+                  <mat-label>Business Name</mat-label>
+                  <input matInput type="text" placeholder="Type Business Name here..." formControlName="business_name" maxlength="128" tabindex="22">
+                  <button type="button" mat-button *ngIf="business_name.value && !business_name.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_updateClient('business_name')">
+                    <mat-icon class="mat-light-blue">close</mat-icon>
+                  </button>
+                  <mat-hint align="end" class="d-none d-sm-inline-block">{{business_name.value?.length || 0}} / 128</mat-hint>
+                  <mat-error *ngIf="business_name.invalid">Business Name is required.</mat-error>
+                </mat-form-field>
+
+                <!-- Mat-Input -- Business UEN -->
+                <mat-form-field class="w-100 mb-3">
+                  <mat-label>Business UEN</mat-label>
+                  <input matInput type="text" placeholder="Type Business UEN here..." formControlName="business_uen" maxlength="128" tabindex="23">
+                  <button type="button" mat-button *ngIf="business_uen.value && !business_uen.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_updateClient('business_uen')">
+                    <mat-icon class="mat-light-blue">close</mat-icon>
+                  </button>
+                  <mat-hint align="end" class="d-none d-sm-inline-block">{{business_uen.value?.length || 0}} / 128</mat-hint>
+                </mat-form-field>
+              </section>
+
+
+
+              <section class="col-xl-6" *ngIf="client_type_slug.value == 'individual'">
+
+                <!-- Heading Text Component -->
+                <heading-text [title]="'Educational Information'" class="mt-5 mt-xl-0"></heading-text>
+
+                <!-- Mat-Input -- Personal Educational Level -->
+                <mat-form-field class="w-100 mb-3">
+                  <mat-label>Educational Level</mat-label>
+                  <mat-select class="mat-light-blue" formControlName="education_level_slug" tabindex="24">
+                    <mat-option *ngFor="let obj of educational_levels" [value]="obj.slug">{{obj.title}}</mat-option>
+                  </mat-select>
+                  <button type="button" mat-button *ngIf="education_level_slug.value && !education_level_slug.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_updateClient('education_level_slug')" style="transform: translateY(2px);">
+                    <mat-icon class="mat-light-blue">close</mat-icon>
+                  </button>
+                </mat-form-field>
+
+                <!-- Mat-Input -- Personal Educational Institution -->
+                <mat-form-field class="w-100 mb-3">
+                  <mat-label>Institution</mat-label>
+                  <input matInput type="text" placeholder="Type Institution here..." formControlName="education_institution" maxlength="128" tabindex="25">
+                  <button type="button" mat-button *ngIf="education_institution.value && !education_institution.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_updateClient('education_institution')">
+                    <mat-icon class="mat-light-blue">close</mat-icon>
+                  </button>
+                  <mat-hint align="end" class="d-none d-sm-inline-block">{{education_institution.value?.length || 0}} / 128</mat-hint>
+                </mat-form-field>
+
+                <!-- Mat-Input -- Personal Field of Study -->
+                <mat-form-field class="w-100 mb-3">
+                  <mat-label>Field of Study</mat-label>
+                  <input matInput type="text" placeholder="Type Field of Study here..." formControlName="field_of_study" maxlength="128" tabindex="26">
+                  <button type="button" mat-button *ngIf="field_of_study.value && !field_of_study.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_updateClient('field_of_study')">
+                    <mat-icon class="mat-light-blue">close</mat-icon>
+                  </button>
+                  <mat-hint align="end" class="d-none d-sm-inline-block">{{field_of_study.value?.length || 0}} / 128</mat-hint>
+                </mat-form-field>
+
+
+
+                <!-- Heading Text Component -->
+                <heading-text [title]="'Employment Information'" class="mt-5"></heading-text>
+
+                <!-- Mat-Input -- Personal Employment Status -->
+                <mat-form-field class="w-100 mb-3">
+                  <mat-label>Employment Status</mat-label>
+                  <mat-select class="mat-light-blue" formControlName="employment_status_slug" tabindex="27">
+                    <mat-option *ngFor="let obj of employment_status" [value]="obj.slug">{{obj.title}}</mat-option>
+                  </mat-select>
+                  <button type="button" mat-button *ngIf="employment_status_slug.value && !employment_status_slug.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_updateClient('employment_status_slug')" style="transform: translateY(2px);">
+                    <mat-icon class="mat-light-blue">close</mat-icon>
+                  </button>
+                </mat-form-field>
+
+                <div *ngIf="client.personal?.employment_status_slug != 'unemployed'">
+                  <!-- Mat-Input -- Personal Work Job Title-->
+                  <mat-form-field class="w-100 mb-3">
+                    <mat-label>Job Title</mat-label>
+                    <input matInput type="text" placeholder="Type Job Title here..." formControlName="job_title" maxlength="128" tabindex="28">
+                    <button type="button" mat-button *ngIf="job_title.value && !job_title.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_updateClient('job_title')">
+                      <mat-icon class="mat-light-blue">close</mat-icon>
+                    </button>
+                    <mat-hint align="end" class="d-none d-sm-inline-block">{{job_title.value?.length || 0}} / 128</mat-hint>
+                  </mat-form-field>
+
+                  <!-- Mat-Input -- Personal Work Company Name-->
+                  <mat-form-field class="w-100 mb-3">
+                    <mat-label>Company Name</mat-label>
+                    <input matInput type="text" placeholder="Type Company Name here..." formControlName="company_name" maxlength="128" tabindex="29">
+                    <button type="button" mat-button *ngIf="company_name.value && !company_name.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_updateClient('company_name')">
+                      <mat-icon class="mat-light-blue">close</mat-icon>
+                    </button>
+                    <mat-hint align="end" class="d-none d-sm-inline-block">{{company_name.value?.length || 0}} / 128</mat-hint>
+                  </mat-form-field>
+
+                  <!-- Mat-Input -- Personal Work Business Nature-->
+                  <mat-form-field class="w-100 mb-3">
+                    <mat-label>Business Nature</mat-label>
+                    <input matInput type="text" placeholder="Type Business Nature here..." formControlName="business_nature" maxlength="128" tabindex="30">
+                    <button type="button" mat-button *ngIf="business_nature.value && !business_nature.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_updateClient('business_nature')">
+                      <mat-icon class="mat-light-blue">close</mat-icon>
+                    </button>
+                    <mat-hint align="end" class="d-none d-sm-inline-block">{{business_nature.value?.length || 0}} / 128</mat-hint>
+                  </mat-form-field>
+
+                  <!-- Mat-Input -- Personal Income Range -->
+                  <mat-form-field class="w-100 mb-3">
+                    <mat-label>Income Range</mat-label>
+                    <mat-select class="mat-light-blue" formControlName="income_range" tabindex="27">
+                      <mat-option [value]="0">$0 - $29,999</mat-option>
+                      <mat-option [value]="30000">$30,000 - $49,999</mat-option>
+                      <mat-option [value]="50000">$50,000 - $99,999</mat-option>
+                      <mat-option [value]="100000">$100,000 - $149,999</mat-option>
+                      <mat-option [value]="150000">$150,000 - $299,999</mat-option>
+                      <mat-option [value]="300000">$300,000 and above</mat-option>
+                    </mat-select>
+                    <button type="button" mat-button *ngIf="income_range.value && !income_range.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_updateClient('income_range')" style="transform: translateY(2px);">
+                      <mat-icon class="mat-light-blue">close</mat-icon>
+                    </button>
+                  </mat-form-field>
+                </div>
+
+
+
+                <!-- Heading Text Component -->
+                <heading-text [title]="'Contact Information'" class="mt-5"></heading-text>
+
+                <!-- Mat-Input -- Personal Contact Email -->
+                <mat-form-field class="w-100 mb-3">
+                  <mat-icon matPrefix class="mr-2 text-center"><i class="fs-18 fad fa-at text-master-lt"></i></mat-icon>
+                  <mat-label>Personal Email</mat-label>
+                  <input matInput type="text" placeholder="Type Email here..." formControlName="email" maxlength="128" tabindex="31">
+                  <button type="button" mat-button *ngIf="email.value && !email.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_updateClient('email')">
+                    <mat-icon class="mat-light-blue">close</mat-icon>
+                  </button>
+                  <mat-hint align="end" class="d-none d-sm-inline-block">{{email.value?.length || 0}} / 128</mat-hint>
+                </mat-form-field>
+
+                <div class="row">
+                  <div class="col-xl-4">
+                    <!-- Mat-Input -- Personal Contact Home -->
+                    <mat-form-field class="w-100 mb-3">
+                      <mat-icon matPrefix class="mr-2 text-center"><i class="fs-18 fad fa-phone-rotary text-master-lt"></i></mat-icon>
+                      <mat-label>Home No</mat-label>
+                      <input matInput type="text" placeholder="Type Home Number here..." formControlName="home_no" maxlength="32" tabindex="32">
+                      <button type="button" mat-button *ngIf="home_no.value && !home_no.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_updateClient('home_no')">
+                        <mat-icon class="mat-light-blue">close</mat-icon>
+                      </button>
+                      <mat-hint align="end" class="d-none d-sm-inline-block">{{home_no.value?.length || 0}} / 32</mat-hint>
+                    </mat-form-field>
+                  </div>
+                  <div class="col-xl-4">
+                    <!-- Mat-Input -- Personal Contact Mobile -->
+                    <mat-form-field class="w-100 mb-3">
+                      <mat-icon matPrefix class="mr-2 text-center"><i class="fs-18 fad fa-mobile text-master-lt"></i></mat-icon>
+                      <mat-label>Mobile No</mat-label>
+                      <input matInput type="text" placeholder="Type Mobile Number here..." formControlName="mobile_no" maxlength="32" tabindex="33">
+                      <button type="button" mat-button *ngIf="mobile_no.value && !mobile_no.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_updateClient('mobile_no')">
+                        <mat-icon class="mat-light-blue">close</mat-icon>
+                      </button>
+                      <mat-hint align="end" class="d-none d-sm-inline-block">{{mobile_no.value?.length || 0}} / 32</mat-hint>
+                    </mat-form-field>
+                  </div>
+                  <div class="col-xl-4">
+                    <!-- Mat-Input -- Personal Contact Fax -->
+                    <mat-form-field class="w-100 mb-3">
+                      <mat-icon matPrefix class="mr-2 text-center"><i class="fs-18 fad fa-fax text-master-lt"></i></mat-icon>
+                      <mat-label>Fax No</mat-label>
+                      <input matInput type="text" placeholder="Type Fax Number here..." formControlName="fax_no" maxlength="32" tabindex="34">
+                      <button type="button" mat-button *ngIf="fax_no.value && !fax_no.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_updateClient('fax_no')">
+                        <mat-icon class="mat-light-blue">close</mat-icon>
+                      </button>
+                      <mat-hint align="end" class="d-none d-sm-inline-block">{{fax_no.value?.length || 0}} / 32</mat-hint>
+                    </mat-form-field>
+                  </div>
+                </div>
+
+
+
+                <!-- Heading Text Component -->
+                <heading-text [title]="'Address Information'" class="mt-5"></heading-text>
+
+                <div class="row">
+                  <div class="col-4">
+                    <!-- Mat-Input -- Personal Address Block -->
+                    <mat-form-field class="w-100 mb-3">
+                      <mat-icon matPrefix class="mr-2 text-center"><i class="fs-18 fad fa-home text-master-lt"></i></mat-icon>
+                      <mat-label>Block</mat-label>
+                      <input matInput type="text" placeholder="Block" formControlName="block" maxlength="32" tabindex="35">
+                      <button type="button" mat-button *ngIf="block.value && !block.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_updateClient('block')">
+                        <mat-icon class="mat-light-blue">close</mat-icon>
+                      </button>
+                      <mat-hint align="end" class="d-none d-sm-inline-block">{{block.value?.length || 0}} / 32</mat-hint>
+                    </mat-form-field>
+                  </div>
+                  <div class="col-8">
+                    <!-- Mat-Input -- Personal Address Street -->
+                    <mat-form-field class="w-100 mb-3">
+                      <mat-icon matPrefix class="mr-2 text-center"><i class="fs-18 fad fa-road text-master-lt"></i></mat-icon>
+                      <mat-label>Street</mat-label>
+                      <input matInput type="text" placeholder="Street" formControlName="street" maxlength="128" tabindex="36">
+                      <button type="button" mat-button *ngIf="street.value && !street.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_updateClient('street')">
+                        <mat-icon class="mat-light-blue">close</mat-icon>
+                      </button>
+                      <mat-hint align="end" class="d-none d-sm-inline-block">{{street.value?.length || 0}} / 128</mat-hint>
+                    </mat-form-field>
+                  </div>
+                </div>
+
+                <div class="row">
+                  <div class="col-4">
+                    <!-- Mat-Input -- Personal Address Unit -->
+                    <mat-form-field class="w-100 mb-3">
+                      <mat-icon matPrefix class="mr-2 text-center"><i class="fs-18 fab fa-slack-hash text-master-lt"></i></mat-icon>
+                      <mat-label>Unit</mat-label>
+                      <input matInput type="text" placeholder="Unit" formControlName="unit" maxlength="32" tabindex="37">
+                      <button type="button" mat-button *ngIf="unit.value && !unit.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_updateClient('unit')">
+                        <mat-icon class="mat-light-blue">close</mat-icon>
+                      </button>
+                      <mat-hint align="end" class="d-none d-sm-inline-block">{{unit.value?.length || 0}} / 32</mat-hint>
+                    </mat-form-field>
+                  </div>
+                  <div class="col-8">
+                    <!-- Mat-Input -- Personal Address Building -->
+                    <mat-form-field class="w-100 mb-3">
+                      <mat-icon matPrefix class="mr-2 text-center"><i class="fs-18 fad fa-building text-master-lt"></i></mat-icon>
+                      <mat-label>Building</mat-label>
+                      <input matInput type="text" placeholder="Building" formControlName="building" maxlength="128" tabindex="38">
+                      <button type="button" mat-button *ngIf="building.value && !building.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_updateClient('building')">
+                        <mat-icon class="mat-light-blue">close</mat-icon>
+                      </button>
+                      <mat-hint align="end" class="d-none d-sm-inline-block">{{building.value?.length || 0}} / 128</mat-hint>
+                    </mat-form-field>
+                  </div>
+                </div>
+
+                <div class="row">
+                  <div class="col-4">
+                    <!-- Mat-Input -- Personal Address City -->
+                    <mat-form-field class="w-100 mb-3">
+                      <mat-icon matPrefix class="mr-2 text-center"><i class="fs-18 fad fa-city text-master-lt"></i></mat-icon>
+                      <mat-label>City</mat-label>
+                      <input matInput type="text" placeholder="City" formControlName="city" maxlength="32" tabindex="39">
+                      <button type="button" mat-button *ngIf="city.value && !city.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_updateClient('city')">
+                        <mat-icon class="mat-light-blue">close</mat-icon>
+                      </button>
+                      <mat-hint align="end" class="d-none d-sm-inline-block">{{city.value?.length || 0}} / 32</mat-hint>
+                    </mat-form-field>
+                  </div>
+                  <div class="col-4">
+                    <!-- Mat-Input -- Personal Address Postal -->
+                    <mat-form-field class="w-100 mb-3">
+                      <mat-icon matPrefix class="mr-2 text-center"><i class="fs-18 fad fa-mailbox text-master-lt"></i></mat-icon>
+                      <mat-label>Postal</mat-label>
+                      <input matInput type="text" placeholder="Postal" formControlName="postal" maxlength="32" tabindex="40">
+                      <button type="button" mat-button *ngIf="postal.value && !postal.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_updateClient('postal')">
+                        <mat-icon class="mat-light-blue">close</mat-icon>
+                      </button>
+                      <mat-hint align="end" class="d-none d-sm-inline-block">{{postal.value?.length || 0}} / 32</mat-hint>
+                    </mat-form-field>
+                  </div>
+                  <div class="col-4">
+                    <!-- Mat-Input -- Personal Address Country -->
+                    <mat-form-field class="w-100 mb-3">
+                      <mat-icon matPrefix class="mr-2 text-center"><i class="fs-18 fad fa-globe-asia text-master-lt"></i></mat-icon>
+                      <mat-label>Country</mat-label>
+                      <mat-select class="mat-light-blue" formControlName="country_slug" tabindex="41">
+                        <mat-option *ngFor="let obj of countries | sortBy:'asc':'title'" [value]="obj.slug">{{obj.title}}</mat-option>
+                      </mat-select>
+                      <button type="button" mat-button *ngIf="country_slug.value && !country_slug.disabled" matSuffix mat-icon-button aria-label="Clear" (click)="resetForm_updateClient('country_slug')" style="transform: translateY(2px);">
+                        <mat-icon class="mat-light-blue">close</mat-icon>
+                      </button>
+                    </mat-form-field>
+                  </div>
+                </div>
+              </section>
+              <!-- End Right Section -->
+            </div>
+
+          </form>
+          <!-- End Auth Form -->
+
+    </mat-step>
+
+
+
+
+    <mat-step label="Client ID Verification" state="camera"
+      [completed]="(idWebcamInit && idWebcamImage_front && idWebcamImage_back) || (idDropzoneInit && (idDropzoneImage_frontFile || idDropzoneImage_backFile || idDropzone_files.length > 0))">
+      <form [formGroup]="uploadClientIdentity">
+
+        <heading-text [subtitle]="'We are almost done! The next step is to complete verification process by uploading the Client\'s ID card. Please upload the front and back of the Client\'s ID card.'" class="mb-4"></heading-text>
+
+        <div class="d-flex flex-column" [ngClass]="{'flex-xl-row': (!idWebcamInit && !idDropzoneInit)}">
+
+          <!-- Start ::Buttons Wrapper to select either Camera / Dropper -->
+          <div class="d-flex flex-column buttons-zone pr-xl-3" *ngIf="(!idWebcamInit && !idDropzoneInit)">
+            <!-- Button to initialize webcam -->
+            <button mat-flat-button class="btn-upload upload-webcam text-left px-3 mb-3" (click)="idWebcamInit = true; scrollToWebcam();">
+              <div class="d-flex">
+                <i class="far fa-camera fs-50 my-auto mr-3 text-master-light"></i>
+                <div class="d-flex flex-column text-truncate">
+                  <span class="fs-15 ls-18 lh-15 fw-600 text-master mb-2 text-truncate">Take a Photo</span>
+                  <span class="fs-10 ls-13 lh-15 text-master-lt text-wrap">You can take a photo of your Client's ID with the camera on your phone, computer, or tablet.</span>
+                </div>
+              </div>
+            </button>
+
+            <!-- Button to initialize dropzone -->
+            <button mat-flat-button class="btn-upload upload-webcam text-left px-3 mb-3" (click)="idDropzoneInit = true;">
+              <div class="d-flex">
+                <i class="far fa-cloud-upload fs-39 my-auto mr-3 text-master-light"></i>
+                <div class="d-flex flex-column text-truncate">
+                  <span class="fs-15 ls-18 lh-15 fw-600 text-master mb-2 text-truncate">Upload Photos</span>
+                  <span class="fs-10 ls-13 lh-15 text-master-lt text-wrap">You can also choose to upload files. The files will be tagged directly to the selected Client profile.</span>
+                </div>
+              </div>
+            </button>
+          </div>
+          <!-- End :: Buttons Wrapper to select either Camera / Dropper -->
+
+
+
+          <!-- Start :: Wrapper once either Camera / Dropper initialize -->
+          <div *ngIf="(idWebcamInit || idDropzoneInit) else default_image" class="d-flex flex-column" [ngClass]="{'flex-grow-1': (!idWebcamInit && !idDropzoneInit)}">
+
+            <!-- Button to restart Upload Interface -->
+            <button class="btn-close-interface fs-18 mat-elevation-z mx-auto my-3 faa-animate animated-hover faa-tada" mat-fab matTooltip="Restart ID Verfication" [matTooltipPosition]="'above'" (click)="resetUploadInterface()">
+              <i class="fal fa-times fs-35" style="transform: translate(1px,-6px);"></i>
+            </button>
+
+              <!-- Start :: Choice of Upload == Dropzone -->
+              <div *ngIf="idDropzoneInit" class="d-flex row upload-zone position-relative mt-3">
+
+                <div class="col-lg-4 mb-4">
+                  <div *ngIf="!idDropzoneImage_front" ngx-dropzone (change)="onDropzoneSelectSingle($event, 'front')" [accept]="'image/*'" [id]="'dz_front'" [multiple]="false" class="id-image">
+                    <ngx-dropzone-label>
+                      <div class="d-flex flex-column text-truncate p-3 faa-parent animated-hover">
+                        <svg class="mx-auto mb-3 faa-float" xmlns="http://www.w3.org/2000/svg" width="75px" height="46px" viewBox="0 0 360 212"><path d="m24.46582 212.40039a24.89438 24.89438 0 0 1 -24.86572-24.86621v-163.06836a24.894 24.894 0 0 1 24.86572-24.86572h311.06836a24.89438 24.89438 0 0 1 24.86621 24.86572v163.06836a24.8948 24.8948 0 0 1 -24.86621 24.86621zm272.01953-28.00977a3.62793 3.62793 0 0 0 0 7.25586h10.07129a3.62793 3.62793 0 0 0 0-7.25586zm-38.59961 0a3.62793 3.62793 0 1 0 0 7.25586h19.29981a3.62793 3.62793 0 1 0 0-7.25586zm-38.60058 0a3.62793 3.62793 0 0 0 0 7.25586h19.29984a3.62793 3.62793 0 1 0 0-7.25586zm-29.3711 0a3.62793 3.62793 0 0 0 0 7.25586h10.07129a3.62793 3.62793 0 1 0 0-7.25586zm-25.14258 3.22754v-156.50439h-140.79248v156.50439zm25.14258-125.19873a3.62842 3.62842 0 0 0 0 7.25684h116.64258a3.62842 3.62842 0 0 0 0-7.25684zm0-28.27685a3.62842 3.62842 0 0 0 0 7.25683h116.64258a3.62842 3.62842 0 0 0 0-7.25683z" fill="#bfe8e0"/><path d="m160.77148 188.419-10.98632-25.6709a26.72952 26.72952 0 0 0 -21.49463-16.00684l-11.73-1.34082c-.49951-.05664-1.0083-.13965-1.51123-.24609-.04932-.01075-.09912-.02442-.14942-.03809-.49707-.11621-.9126-.21875-1.31689-.3457a16.17516 16.17516 0 0 1 -7.04981-4.50781l-.00293.00195-.23681-.26074a16.04456 16.04456 0 0 1 -3.96729-10.55664v-6.668l.272-.0918a28.23383 28.23383 0 0 0 16.83545-15.46387l.1045-.24072h.2622a10.06664 10.06664 0 0 0 10.10742-10.04053 4.92378 4.92378 0 0 0 -7.53125-4.20019l-.60986.376v-.7163l1.188-8.19336a29.00144 29.00144 0 0 0 -43.69191-29.00445l-3.01075 1.81836h-.11133a10.23675 10.23675 0 0 0 -8.21923 4.15918 32.19616 32.19616 0 0 0 -4.23389 30.37451l.24609.6626-.69482-.13037a4.91572 4.91572 0 0 0 -5.86914 4.854 10.05594 10.05594 0 0 0 10.02051 10.03955l.26123.00049.10449.24024a28.2349 28.2349 0 0 0 16.83594 15.46484l.272.0918v6.668a16.04661 16.04661 0 0 1 -3.9668 10.55664l-.23095.26464-.00879-.00585a16.05471 16.05471 0 0 1 -6.97559 4.48046c-.479.1543-.89453.25684-1.3125.35157-.12939.03515-.1792.04882-.23047.05957-.501.10644-1.00976.18945-1.50976.24609l-11.7295 1.34082a26.7309 26.7309 0 0 0 -21.49462 16.00684l-10.98636 25.67092h-3.23926v-158.105h142.39209v158.105z" fill="#fff"/><g fill="#008489"><path d="m189.91406 42.19922a4.42823 4.42823 0 1 1 0-8.85645h116.64258a4.42823 4.42823 0 1 1 0 8.85645z"/><path d="m189.91406 70.47607a4.42822 4.42822 0 1 1 0-8.85644h116.64258a4.42822 4.42822 0 1 1 0 8.85644z"/><path d="m189.91406 192.44727a4.42872 4.42872 0 0 1 0-8.85743h10.07129a4.42872 4.42872 0 0 1 0 8.85743z"/><path d="m219.28516 192.44727a4.42872 4.42872 0 0 1 0-8.85743h19.29984a4.42872 4.42872 0 0 1 0 8.85743z"/><path d="m257.88574 192.44727a4.42872 4.42872 0 1 1 0-8.85743h19.29981a4.42872 4.42872 0 0 1 0 8.85743z"/><path d="m296.48535 192.44727a4.42871 4.42871 0 0 1 0-8.85743h10.07129a4.42872 4.42872 0 0 1 0 8.85743z"/></g><path d="m113.523 144.749.227-.769-.167.791z" fill="#995c4a"/><path d="m73.48694 144.38867c.02484-.00781.04828-.01849.07306-.02637-.02478.00788-.04816.01862-.07306.02637z" fill="#995c4a"/><path d="m71.97656 144.37109.21289-.05566.18164.7793c-.13134.03515-.18115.04882-.23242.05957z" fill="#995c4a"/><path d="m79.999 139.81641.29541-.33789a15.24989 15.24989 0 0 0 3.76959-10.03125v-6.09473a29.03832 29.03832 0 0 1 -16.9375-15.57422 10.85767 10.85767 0 0 1 -10.55668-10.83594 5.75023 5.75023 0 0 1 10.18018-3.65576 42.82717 42.82717 0 0 0 8.9126-25.43115l.07812-5.25293.76856-.14893a47.46926 47.46926 0 0 0 39.29736 28.93018l6.27686.60156a5.7226 5.7226 0 0 1 8.624 4.957 10.853 10.853 0 0 1 -10.6455 10.8389 29.035 29.035 0 0 1 -16.936 15.57129v6.09473a15.24784 15.24784 0 0 0 3.77 10.03125l.29541.33789-13.5962 9.36132z" fill="#995c4a"/><path d="m114.8999 145.11621.10059-.80078.21289.05566-.16211.78321c-.05127-.01075-.10107-.02442-.15137-.03809z" fill="#995c4a"/><path d="m66.4126 94.168a4.9773 4.9773 0 0 0 -3.17432-2.07959l-.22217-.042-.07861-.21192a32.99264 32.99264 0 0 1 4.33936-31.12649 11.04113 11.04113 0 0 1 8.75146-4.48487l2.82031-1.70361a29.80181 29.80181 0 0 1 44.89795 29.8042l-1.23926 8.50586-6.77685-.6499a48.26428 48.26428 0 0 1 -39.21729-27.7378l-.05078 3.4253a43.6244 43.6244 0 0 1 -9.40527 26.3247l-.33838.42676z" fill="#2e2725"/><path d="m25.54834 188.419 11.12109-25.98536a27.53225 27.53225 0 0 1 22.13916-16.4873l11.73-1.34082c.4751-.05371.958-.13281 1.436-.23438l.21435-.05566c.39942-.09082.794-.1875 1.17774-.30859a15.35569 15.35569 0 0 0 6.92187-4.53223l.23047-.26367.29151.19336 12.78468 8.80265 13.06641-8.997.24024.26465a15.26487 15.26487 0 0 0 6.8496 4.50684c.45557.14648.84961.24316 1.24708.334l.21484.05566c.48.10157.96289.18067 1.4375.23438l11.73047 1.34082a27.53084 27.53084 0 0 1 22.13916 16.4873l11.12109 25.98535z" fill="#ff8e8e"/></svg>
+
+                        <span class="fs-15 ls-18 lh-15 fw-600 text-master mb-1 text-truncate">Upload Front of ID</span>
+                        <span class="fs-12 ls-13 lh-15 text-master-lt text-wrap">Click here, or simply just drag & drop your image here to begin.</span>
+                      </div>
+                    </ngx-dropzone-label>
+                  </div>
+
+                  <div *ngIf="idDropzoneImage_front" class="position-relative id-image overflow-hidden">
+                    <img [src]="idDropzoneImage_front" class="w-100" />
+                    <!-- Button to remove file -->
+                    <button class="mat-elevation-z btn_remove_file" mat-fab matTooltip="Remove File" [matTooltipPosition]="'above'" (click)="onDropzoneRemove('front')">
+                      <i class="fal fa-times fs-20" style="transform: translate(1px,-13px);"></i>
+                    </button>
+                  </div>
+                  <span *ngIf="idDropzoneImage_front" class="fs-15 ls-18 lh-15 fw-600 text-master mb-1 text-truncate d-block text-center mt-3">{{ idDropzoneImage_frontFile.name }}</span>
+                </div>
+
+                <div class="col-lg-4 mb-4">
+                  <div *ngIf="!idDropzoneImage_back" ngx-dropzone (change)="onDropzoneSelectSingle($event, 'back')" [accept]="'image/*'" [id]="'dz_back'" [multiple]="false" class="id-image">
+                    <ngx-dropzone-label>
+                      <div class="d-flex flex-column text-truncate p-3 faa-parent animated-hover">
+                        <svg class="mx-auto mb-3 faa-float" xmlns="http://www.w3.org/2000/svg" width="75px" height="46px" viewBox="0 0 360 212"><path d="m335.53418 0h-311.06836a24.46568 24.46568 0 0 0 -24.46582 24.46582v19.21h360v-19.21a24.466 24.466 0 0 0 -24.46582-24.46582z" fill="#bfe8e0"/><path d="m0 187.53418a24.466 24.466 0 0 0 24.46582 24.46582h311.06836a24.46631 24.46631 0 0 0 24.46582-24.46582v-102.63618h-360z" fill="#bfe8e0"/><path d="m0 43.67578h360v41.22217h-360z" fill="#60b6b5"/></svg>
+
+                        <span class="fs-15 ls-18 lh-15 fw-600 text-master mb-1 text-truncate">Upload Back of ID</span>
+                        <span class="fs-12 ls-13 lh-15 text-master-lt text-wrap">Click here, or simply just drag & drop your image here to begin.</span>
+                      </div>
+                    </ngx-dropzone-label>
+                  </div>
+
+                  <div *ngIf="idDropzoneImage_back" class="position-relative id-image overflow-hidden">
+                    <img [src]="idDropzoneImage_back" class="w-100" />
+                    <!-- Button to remove file -->
+                    <button class="mat-elevation-z btn_remove_file" mat-fab matTooltip="Remove File" [matTooltipPosition]="'above'" (click)="onDropzoneRemove('back')">
+                      <i class="fal fa-times fs-20" style="transform: translate(1px,-13px);"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="col-lg-4 mb-4">
+                  <div *ngIf="!idDropzone_files_uploaded" ngx-dropzone (change)="onDropzoneSelectFiles($event, 'client-identity')" [accept]="'image/*,.pdf'" [id]="'dz_multiple'" [multiple]="true" class="id-image">
+                    <ngx-dropzone-label>
+                      <div class="d-flex flex-column text-truncate p-3 faa-parent animated-hover">
+                        <i class="mx-auto mb-3 faa-float fad fa-file-alt fs-44" style="color: #60b6b5;"></i>
+
+                        <span class="fs-15 ls-18 lh-15 fw-600 text-master mb-1 text-truncate">Upload Multiple Files</span>
+                        <span class="fs-12 ls-13 lh-15 text-master-lt text-wrap">Click here, or simply just drag & drop to upload multiple photos and/or PDF documents...</span>
+                      </div>
+                    </ngx-dropzone-label>
+                  </div>
+
+                  <div *ngIf="idDropzone_files_uploaded && idDropzone_files" class="position-relative id-image d-flex flex-column" style="height: 180px">
+                    <!-- <img [src]="idDropzoneImage_back" class="w-100" /> -->
+                    <i class="fs-60 fad fa-file-check faa-float animated mx-auto mt-auto mb-3" style="color: #60b6b5;"></i>
+                    <span class="fs-15 ls-18 lh-15 fw-600 text-master mb-auto mx-auto text-truncate">{{idDropzone_files.length || 0}} file(s) selected</span>
+                    <!-- Button to remove file -->
+                    <button class="mat-elevation-z btn_remove_file" mat-fab matTooltip="Remove All Files" [matTooltipPosition]="'above'" (click)="onDropzoneRemove('multiple')">
+                      <i class="fal fa-times fs-20" style="transform: translate(1px,-13px);"></i>
+                    </button>
+                  </div>
+                </div>
+
+
+              </div>
+              <!-- End :: Choice of Upload == Dropzone -->
+
+              <!-- Start :: Choice of Upload == Camera -->
+              <div *ngIf="idWebcamInit" class="d-flex flex-column">
+                <!-- Start Webcam permission allowed -->
+                <div *ngIf="idWebcamAllow else webcam_notallowed" class="d-flex flex-column">
+                  <!-- Start Camera Steps (3/3) -->
+                  <div class="steps-wrap">
+                    <ul class="steps">
+                        <li [ngClass]="{'active': !idWebcamImage_front && !idWebcamImage_back}"></li>
+                        <li class="divider"></li>
+                        <li [ngClass]="{'active': idWebcamImage_front && !idWebcamImage_back}"></li>
+                        <li class="divider"></li>
+                        <li [ngClass]="{'active': idWebcamImage_front && idWebcamImage_back}"></li>
+                    </ul>
+                    <span class="fs-15 ls-18 text-bold color-mat-blue mb-3 align-self-center font-montserrat" *ngIf="!idWebcamImage_front">Step #1: Capture Front of ID</span>
+                    <span class="fs-15 ls-18 text-bold color-mat-blue mb-3 align-self-center font-montserrat" *ngIf="idWebcamImage_front && !idWebcamImage_back">Step #2: Capture Back of ID</span>
+                    <span class="fs-15 ls-18 text-bold color-mat-blue mb-3 align-self-center font-montserrat" *ngIf="idWebcamImage_front && idWebcamImage_back">Step #3: Verify Captured Images</span>
+                  </div>
+                  <!-- End Camera Steps (3/3) -->
+
+                  <!-- Start Webcam instance -->
+                  <div class="d-flex position-relative upload-zone mx-auto" *ngIf="!(idWebcamImage_front && idWebcamImage_back)">
+                    <webcam [imageQuality]="1" [captureImageData]="false" (initError)="handleWebcamError($event)" [trigger]="idTriggerObservable" (imageCapture)="handleWebcamImage($event)" class="w-100"></webcam>
+                    <button class="btn-submit btn-capture fs-18" mat-fab color="primary" (click)="idTriggerSnapshot()">
+                      <i class="fas fa-camera text-white" style="transform: translate(1px,-6px);"></i>
+                    </button>
+                    <div class="webcam-overlay">
+                      <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" data-prefix="fal" data-icon="expand-wide" class="svg-inline--fa fa-expand-wide fa-w-16" role="img" viewBox="0 0 512 512"><path fill="#fff" d="M0 212V88c0-13.3 10.7-24 24-24h124c6.6 0 12 5.4 12 12v8c0 6.6-5.4 12-12 12H32v116c0 6.6-5.4 12-12 12h-8c-6.6 0-12-5.4-12-12zM364 64h124c13.3 0 24 10.7 24 24v124c0 6.6-5.4 12-12 12h-8c-6.6 0-12-5.4-12-12V96H364c-6.6 0-12-5.4-12-12v-8c0-6.6 5.4-12 12-12zm148 236v124c0 13.3-10.7 24-24 24H364c-6.6 0-12-5.4-12-12v-8c0-6.6 5.4-12 12-12h116V300c0-6.6 5.4-12 12-12h8c6.6 0 12 5.4 12 12zM148 448H24c-13.3 0-24-10.7-24-24V300c0-6.6 5.4-12 12-12h8c6.6 0 12 5.4 12 12v116h116c6.6 0 12 5.4 12 12v8c0 6.6-5.4 12-12 12z"/></svg>
+                    </div>
+                  </div>
+                  <!-- End Webcam instance -->
+
+                  <!-- When there is an image being captured -->
+                  <div class="images-preview mt-4" *ngIf="idWebcamImage_front || idWebcamImage_back">
+                    <!-- Button to initialize webcam -->
+                    <button mat-flat-button class="btn-upload upload-webcam text-left px-3 mb-3 col-12" (click)="resetWebcamImages()">
+                      <div class="d-flex">
+                        <i class="far fa-trash-undo fs-50 my-auto mr-3 text-master-light"></i>
+                        <div class="d-flex flex-column text-truncate">
+                          <span class="fs-15 ls-18 lh-15 fw-600 text-master mb-2 text-truncate">Retake Images</span>
+                          <span class="fs-10 ls-13 lh-15 text-master-lt text-wrap">You can take a photo of your Client's ID with the camera on your phone, computer, or tablet.</span>
+                        </div>
+                      </div>
+                    </button>
+
+                    <div class="row">
+                      <div class="col-md-6" [ngClass]="{'mx-auto': !idWebcamImage_back}">
+                        <img *ngIf="idWebcamImage_front" [src]="idWebcamImage_front.imageAsDataUrl" class="w-100 id-image" />
+                        <!-- Mat-Input -- Image Name -->
+                        <mat-form-field class="w-100 mb-3">
+                          <mat-label>New Filename for ID Card (Front)</mat-label>
+                          <input matInput type="text" placeholder="Specify new filename here..." formControlName="idWebcamImage_front_name" maxlength="128">
+                          <mat-hint align="start">Filename: {{idWebcamImage_front_name.value || 'Captured Image - ID Card (Front)'}}.jpg</mat-hint>
+                          <button type="button" mat-button *ngIf="idWebcamImage_front_name.value" matSuffix mat-icon-button aria-label="Clear" (click)="uploadClientIdentity('idWebcamImage_front_name')">
+                            <mat-icon class="mat-light-blue">close</mat-icon>
+                          </button>
+                          <mat-hint align="end" class="d-none d-sm-inline-block">{{idWebcamImage_front_name.value?.length || 0}} / 128</mat-hint>
+                        </mat-form-field>
+                      </div>
+                      <div class="col-md-6" *ngIf="idWebcamImage_back">
+                        <img [src]="idWebcamImage_back.imageAsDataUrl" class="w-100 id-image" />
+                        <!-- Mat-Input -- Image Name -->
+                        <mat-form-field class="w-100 mb-3">
+                          <mat-label>New Filename for ID Card (Back)</mat-label>
+                          <input matInput type="text" placeholder="Specify new filename here..." formControlName="idWebcamImage_back_name" maxlength="128">
+                          <mat-hint align="start">Filename: {{idWebcamImage_back_name.value || 'Captured Image - ID Card (Back)'}}.jpg</mat-hint>
+                          <button type="button" mat-button *ngIf="idWebcamImage_back_name.value" matSuffix mat-icon-button aria-label="Clear" (click)="uploadClientIdentity('idWebcamImage_back_name')">
+                            <mat-icon class="mat-light-blue">close</mat-icon>
+                          </button>
+                          <mat-hint align="end" class="d-none d-sm-inline-block">{{idWebcamImage_back_name.value?.length || 0}} / 128</mat-hint>
+                        </mat-form-field>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+                <!-- End Webcam permission allowed -->
+              </div>
+              <!-- End :: Choice of Upload == Camera -->
+
+
+
+          </div>
+          <!-- End :: Wrapper once either Camera / Dropper initialize -->
+
+        </div>
+
+      </form>
+    </mat-step>
+
+
+    <mat-step label="{{upload_type.title}}" state="{{upload_type.icon}}" *ngFor="let upload_type of upload_types" [optional]="upload_type.optional" [completed]="filesQueryRef(upload_type.slug).length > 0">
+      <heading-text [subtitle]="'Upload files for ' + upload_type.title" class="mb-4"></heading-text>
+
+      <div ngx-dropzone (change)="onDropzoneSelectFiles($event, upload_type.slug)" [accept]="'image/*,.pdf'" [id]="'dz_' + upload_type.slug" [multiple]="true" class="id-image">
+        <ngx-dropzone-label>
+          <div class="d-flex flex-column text-truncate faa-parent animated-hover">
+            <i class="mx-auto mb-3 faa-float fad fa-file-alt fs-60" style="color: #60b6b5;"></i>
+
+            <span class="fs-15 ls-18 lh-15 fw-600 text-master mb-1 text-truncate">Upload files for {{upload_type.title}}</span>
+            <span class="fs-12 ls-13 lh-15 text-master-lt text-wrap">Click here, or simply just drag & drop your file(s) here...</span>
+          </div>
+        </ngx-dropzone-label>
+      </div>
+
+      <div *ngIf="filesQueryRef(upload_type.slug, 'uploaded')" class="mt-3 row">
+        <div *ngFor="let file of filesQueryRef(upload_type.slug)" class="col-md-4">
+          <div class="position-relative id-image d-flex flex-column px-3" style="height: 180px">
+            <i class="fs-60 fad fa-file-check faa-float animated mx-auto mt-auto mb-3" style="color: #60b6b5;"></i>
+            <span class="fs-15 ls-18 lh-15 fw-600 text-master mb-1 mx-auto text-center w-100 text-truncate">{{file.name}}</span>
+            <span class="fs-12 ls-13 lh-15 text-master-lt text-wrap mb-auto mx-auto">{{file.size | filesize}}</span>
+            <button class="mat-elevation-z btn_remove_file" mat-fab matTooltip="Remove File" [matTooltipPosition]="'above'" (click)="onDropzoneRemoveFiles(file, upload_type.slug)">
+              <i class="fal fa-times fs-20" style="transform: translate(1px,-13px);"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </mat-step>
+
+
+
+
+
+    <!-- <mat-step label="Client PFR" state="cloud">
+      <heading-text [subtitle]="'Last but not least, the final step is to upload the Personal Financial Record of your Client.'" class="mb-4"></heading-text>
+
+      <div ngx-dropzone (change)="onDropzoneSelectClientPFR($event)" [accept]="'image/*,.pdf'" [id]="'dz_pfr'" [multiple]="true" class="id-image">
+        <ngx-dropzone-label>
+          <div class="d-flex flex-column text-truncate faa-parent animated-hover">
+            <i class="mx-auto mb-3 faa-float fad fa-file-alt fs-60" style="color: #60b6b5;"></i>
+
+            <span class="fs-15 ls-18 lh-15 fw-600 text-master mb-1 text-truncate">Upload files for Client PFR</span>
+            <span class="fs-12 ls-13 lh-15 text-master-lt text-wrap">Click here, or simply just drag & drop your file(s) here...</span>
+          </div>
+        </ngx-dropzone-label>
+      </div>
+
+      <div *ngIf="pfrDropzone_files_uploaded" class="mt-3 row">
+        <div *ngFor="let file of pfrDropzone_files" class="col-md-4">
+          <div class="position-relative id-image d-flex flex-column" style="height: 180px">
+            <i class="fs-60 fad fa-file-check faa-float animated mx-auto mt-auto mb-3" style="color: #60b6b5;"></i>
+            <span class="fs-15 ls-18 lh-15 fw-600 text-master mb-1 mx-auto text-truncate">{{file.name}}</span>
+            <span class="fs-12 ls-13 lh-15 text-master-lt text-wrap mb-auto mx-auto">{{file.size | filesize}}</span>
+            <button class="mat-elevation-z btn_remove_file" mat-fab matTooltip="Remove File" [matTooltipPosition]="'above'" (click)="pfrDropzoneRemove(file)">
+              <i class="fal fa-times fs-20" style="transform: translate(1px,-13px);"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </mat-step> -->
+
+    <!-- Icon overrides. -->
+    <ng-template matStepperIcon="face">
+      <mat-icon>face</mat-icon>
+    </ng-template>
+    <ng-template matStepperIcon="account">
+      <mat-icon>ballot</mat-icon>
+    </ng-template>
+    <ng-template matStepperIcon="camera">
+      <mat-icon>photo_camera</mat-icon>
+    </ng-template>
+    <ng-template matStepperIcon="cloud">
+      <mat-icon>cloud_upload</mat-icon>
+    </ng-template>
+  </mat-vertical-stepper>
+
+</mat-dialog-content>
+
+<mat-dialog-actions align="end" *ngIf="stepper">
+  <button mat-button mat-dialog-close class="fs-12 fw-600 text-master-lt" *ngIf="!processing">Cancel</button>
+  <button mat-button class="fs-12 fw-600 text-master-lt" (click)="showStepper()">Console Stepper</button>
+  <button mat-flat-button class="ml-2 fs-12 fw-600" *ngIf="stepper && stepper.selectedIndex !== 0 && !processing" (click)="stepper.previous()">Back</button>
+  <button mat-flat-button class="ml-2 fs-12 fw-600" *ngIf="stepper && stepper.selectedIndex !== stepper.steps?.length-1 && !processing" (click)="stepper.next()" [disabled]="(!stepper.selected?.optional && !(stepper.selected?.completed || stepper.selected?.stepControl?.valid)) || false" >Next</button>
+  <button mat-flat-button color="primary" class="ml-2 fs-12 fw-600 btn-submit"
+      [disabled]="processing || selectClientForm.invalid || (!stepper.selected?.optional && !(stepper.selected?.completed || stepper.selected?.stepControl?.valid)) || false"
+      *ngIf="stepper && (stepper.selectedIndex === stepper.steps?.length-1 || stepper.selectedIndex === stepper.steps?.length-2)" (click)="submitForm()">Create Submission Draft</button>
+</mat-dialog-actions>
+
+
+
+
+
+
+
+
+
+
+<!-- Webcam not allowed -->
+<ng-template #webcam_notallowed>
+  <div class="d-flex flex-column text-center my-5">
+    <i class="fal fa-webcam-slash fs-100 mb-4 text-danger-lt"></i>
+    <span class="fs-18 ls-18 fw-600 text-master mb-2 text-danger">Error: Camera access not granted</span>
+    <span class="fs-12 lh-12 ls-13 text-danger-lt">Error: Camera access not granted</span>
+  </div>
+</ng-template>
+
+
+<!-- Default Image Placeholder -->
+<ng-template #default_image>
+  <svg class="my-auto" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 450 250" height="250" class="_uhlm2" preserveAspectRatio="xMidYMid meet" style="width: 100%;"><defs><clipPath id="animationMask_2Z2IRWb9jV"><rect width="450" height="250" x="0" y="0"></rect></clipPath></defs><g clip-path="url(#animationMask_2Z2IRWb9jV)"><g transform="matrix(1,0,0,1,225,125)" opacity="1" style="user-select: none;"><g opacity="1" transform="matrix(1,0,0,1,0,0)"><g opacity="1" transform="matrix(1,0,0,1,0,0)"><path fill="rgb(96,182,181)" fill-opacity="1" d="M0 0 M59.193,85.195 C59.193,85.195 44.861,85.195 44.861,85.195 C44.861,85.195 44.861,88.503 44.861,88.503 C44.861,88.503 -28.178,88.503 -28.178,88.503 C-28.854,90.429 -30.688,91.809 -32.845,91.809 C-32.845,91.809 -71.464,91.809 -71.464,91.809 C-73.621,91.809 -75.455,90.429 -76.13,88.503 C-76.13,88.503 -149.169,88.503 -149.169,88.503 C-149.169,88.503 -149.169,85.195 -149.169,85.195 C-149.169,85.195 -163.5,85.195 -163.5,85.195 C-163.5,85.195 -163.5,89.814 -163.5,89.814 C-163.5,94.56899999999999 -159.646,98.425 -154.89,98.425 C-154.89,98.425 50.582,98.425 50.582,98.425 C55.337,98.425 59.193,94.56899999999999 59.193,89.814 C59.193,89.814 59.193,85.195 59.193,85.195"></path></g><g opacity="1" transform="matrix(1,0,0,1,0,0)"><path fill="rgb(0,132,137)" fill-opacity="1" d="M0 0 M-32.845,91.809 C-32.845,91.809 -71.464,91.809 -71.464,91.809 C-74.194,91.809 -76.407,89.596 -76.407,86.866 C-76.407,86.866 -76.407,85.195 -76.407,85.195 C-76.407,85.195 -27.9,85.195 -27.9,85.195 C-27.9,85.195 -27.9,86.866 -27.9,86.866 C-27.9,89.596 -30.113999999999997,91.809 -32.845,91.809"></path></g><g opacity="1" transform="matrix(1,0,0,1,0,0)"><path fill="rgb(96,182,181)" fill-opacity="1" d="M0 0 M39.343,-39.38 C39.343,-39.38 -143.651,-39.38 -143.651,-39.38 C-146.698,-39.38 -149.169,-36.910999999999994 -149.169,-33.864 C-149.169,-33.864 -149.169,85.195 -149.169,85.195 C-149.169,85.195 -76.407,85.195 -76.407,85.195 C-76.407,85.195 -27.9,85.195 -27.9,85.195 C-27.9,85.195 44.861,85.195 44.861,85.195 C44.861,85.195 44.861,-33.864 44.861,-33.864 C44.861,-36.910999999999994 42.391000000000005,-39.38 39.343,-39.38"></path></g><g opacity="1" transform="matrix(1,0,0,1,0,0)"><path fill="rgb(36,130,128)" fill-opacity="1" d="M0 0 M-76.407,85.195 C-76.407,85.195 -149.169,85.195 -149.169,85.195 C-149.169,85.195 -149.169,88.503 -149.169,88.503 C-149.169,88.503 -76.13,88.503 -76.13,88.503 C-76.31,87.991 -76.407,87.44 -76.407,86.866 C-76.407,86.866 -76.407,85.195 -76.407,85.195M0 0 M44.861,85.195 C44.861,85.195 -27.9,85.195 -27.9,85.195 C-27.9,85.195 -27.9,86.866 -27.9,86.866 C-27.9,87.44 -27.998,87.991 -28.178,88.503 C-28.178,88.503 44.861,88.503 44.861,88.503 C44.861,88.503 44.861,85.195 44.861,85.195"></path></g><g opacity="1" transform="matrix(1,0,0,1,0,0)"><path fill="rgb(0,94,97)" fill-opacity="1" d="M0 0 M-27.9,85.195 C-27.9,85.195 -76.407,85.195 -76.407,85.195 C-76.407,85.195 -76.407,86.866 -76.407,86.866 C-76.407,87.44 -76.31,87.991 -76.13,88.503 C-76.13,88.503 -28.178,88.503 -28.178,88.503 C-27.998,87.991 -27.9,87.44 -27.9,86.866 C-27.9,86.866 -27.9,85.195 -27.9,85.195"></path></g></g><g opacity="1" transform="matrix(1,0,0,1,0,0)"><path fill="rgb(255,255,255)" fill-opacity="1" d="M0 0 M23.914,-26.151 C23.914,-26.151 -128.222,-26.151 -128.222,-26.151 C-128.222,-26.151 -128.222,71.966 -128.222,71.966 C-128.222,71.966 23.914,71.966 23.914,71.966 C23.914,71.966 23.914,-26.151 23.914,-26.151z"></path></g><g opacity="1" transform="matrix(1,0,0,1,0,0)"><path fill="rgb(255,244,207)" fill-opacity="1" d="M0 0 M-47.744,-32.766 C-47.744,-30.331 -49.719,-28.356 -52.154,-28.356 C-54.589000000000006,-28.356 -56.564,-30.331 -56.564,-32.766 C-56.564,-35.201 -54.589000000000006,-37.175 -52.154,-37.175 C-49.719,-37.175 -47.744,-35.201 -47.744,-32.766z"></path></g><g opacity="1" transform="matrix(1,0,0,1,0,0)"><g opacity="1" transform="matrix(1,0,0,1,0,0)"><g opacity="1" transform="matrix(1,0,0,1,0,0)"><path stroke-linecap="round" stroke-linejoin="round" fill-opacity="0" stroke="rgb(176,176,176)" stroke-opacity="1" stroke-width="1" d="M0 0 M-90.188,11.424 C-90.188,11.424 -90.188,3.194 -90.188,3.194 C-90.188,0.43299999999999983 -87.949,-1.806 -85.188,-1.806 C-85.188,-1.806 -76.959,-1.806 -76.959,-1.806"></path></g><g opacity="1" transform="matrix(1,0,0,1,0,0)"><path stroke-linecap="round" stroke-linejoin="round" fill-opacity="0" stroke="rgb(176,176,176)" stroke-opacity="1" stroke-width="1" d="M0 0 M-76.959,46.702 C-76.959,46.702 -85.188,46.702 -85.188,46.702 C-87.949,46.702 -90.188,44.463 -90.188,41.702 C-90.188,41.702 -90.188,33.472 -90.188,33.472"></path></g></g><g opacity="1" transform="matrix(1,0,0,1,0,0)"><g opacity="1" transform="matrix(1,0,0,1,0,0)"><path stroke-linecap="round" stroke-linejoin="round" fill-opacity="0" stroke="rgb(176,176,176)" stroke-opacity="1" stroke-width="1" d="M0 0 M-27.349,-1.806 C-27.349,-1.806 -19.12,-1.806 -19.12,-1.806 C-16.359,-1.806 -14.12,0.43299999999999983 -14.12,3.194 C-14.12,3.194 -14.12,11.424 -14.12,11.424"></path></g><g opacity="1" transform="matrix(1,0,0,1,0,0)"><path stroke-linecap="round" stroke-linejoin="round" fill-opacity="0" stroke="rgb(176,176,176)" stroke-opacity="1" stroke-width="1" d="M0 0 M-14.12,33.472 C-14.12,33.472 -14.12,41.702 -14.12,41.702 C-14.12,44.463 -16.359,46.702 -19.12,46.702 C-19.12,46.702 -27.349,46.702 -27.349,46.702"></path></g></g></g></g><g transform="matrix(1,0,0,1,225,125)" opacity="1" style="user-select: none;"><g opacity="1" transform="matrix(1,0,0,1,0,0)"><g opacity="1" transform="matrix(1,0,0,1,0,0)"><path fill="rgb(191,232,224)" fill-opacity="1" d="M0 0 M71.033,-9.938 C71.033,-9.938 -13.399,-9.938 -13.399,-9.938 C-15.241999999999999,-9.938 -16.736,-11.432 -16.736,-13.275 C-16.736,-13.275 -16.736,-60.368 -16.736,-60.368 C-16.736,-62.211 -15.241999999999999,-63.706 -13.399,-63.706 C-13.399,-63.706 71.033,-63.706 71.033,-63.706 C72.876,-63.706 74.371,-62.211 74.371,-60.368 C74.371,-60.368 74.371,-13.275 74.371,-13.275 C74.371,-11.432 72.876,-9.938 71.033,-9.938z"></path></g><g opacity="1" transform="matrix(1,0,0,1,0,0)"><path fill="rgb(96,182,181)" fill-opacity="1" d="M0 0 M74.371,-42.174 C74.371,-42.174 -16.736,-42.174 -16.736,-42.174 C-16.736,-42.174 -16.736,-52.629 -16.736,-52.629 C-16.736,-52.629 74.371,-52.629 74.371,-52.629 C74.371,-52.629 74.371,-42.174 74.371,-42.174z"></path></g></g></g><g transform="matrix(1,0,0,1,-305.751,1308.341)" opacity="1" style="user-select: none;"><g opacity="1" transform="matrix(1,0,0,1,0,0)"><path stroke-linecap="butt" stroke-linejoin="miter" fill-opacity="0" stroke-miterlimit="10" stroke="rgb(255,142,142)" stroke-opacity="1" stroke-width="2" d="M0 0 M639.595,-1122.437 C639.595,-1122.437 635.335,-1118.808 635.335,-1118.808 C630.057,-1114.312 628.018,-1107.072 630.174,-1100.482 C630.174,-1100.482 630.174,-1100.482 630.174,-1100.482 C631.9929999999999,-1094.922 630.788,-1088.816 626.993,-1084.365 C626.993,-1084.365 626.61,-1083.917 626.61,-1083.917"></path></g><g opacity="1" transform="matrix(1,0,0,1,0,0)"><path stroke-linecap="butt" stroke-linejoin="miter" fill-opacity="0" stroke-miterlimit="10" stroke="rgb(255,142,142)" stroke-opacity="1" stroke-width="2" d="M0 0 M694.07,-1122.437 C694.07,-1122.437 698.33,-1118.808 698.33,-1118.808 C703.6080000000001,-1114.312 702.366,-1106.026 700.122,-1100.482 C697.8779999999999,-1094.9379999999999 699.801,-1083.917 699.801,-1083.917"></path></g><g opacity="1" transform="matrix(1,0,0,1,0,0)"><g opacity="1" transform="matrix(1,0,0,1,0,0)"><path stroke-linecap="butt" stroke-linejoin="miter" fill-opacity="0" stroke-miterlimit="10" stroke="rgb(255,142,142)" stroke-opacity="1" stroke-width="2" d="M0 0 M685.456,-1149.983 C685.456,-1149.983 648.391,-1149.983 648.391,-1149.983 C643.533,-1149.983 639.595,-1146.046 639.595,-1141.188 C639.595,-1141.188 639.595,-1122.437 639.595,-1122.437 C639.595,-1122.437 694.251,-1122.437 694.251,-1122.437 C694.251,-1122.437 694.251,-1141.188 694.251,-1141.188 C694.251,-1146.046 690.314,-1149.983 685.456,-1149.983z"></path></g><g opacity="1" transform="matrix(1,0,0,1,0,0)"><g opacity="1" transform="matrix(1,0,0,1,0,0)"><path fill="rgb(160,94,69)" fill-opacity="1" d="M0 0 M663.019,-1274.427 C663.019,-1274.427 663.019,-1234.404 663.019,-1234.404 C663.019,-1234.404 686.366,-1134.345 686.366,-1134.345 C686.366,-1134.345 654.681,-1134.345 654.681,-1134.345 C654.681,-1134.345 650.486,-1165.106 650.486,-1165.106 C649.9929999999999,-1168.719 647.442,-1171.7130000000002 643.954,-1172.775 C643.954,-1172.775 617.348,-1180.873 617.348,-1180.873 C613.353,-1182.089 609.1990000000001,-1182.707 605.023,-1182.707 C605.023,-1182.707 586.308,-1182.707 586.308,-1182.707 C586.308,-1182.707 586.308,-1182.707 586.308,-1182.707 C586.308,-1188.294 590.7230000000001,-1192.882 596.306,-1193.097 C596.306,-1193.097 611.138,-1193.668 611.138,-1193.668 C620.532,-1194.029 627.0690000000001,-1203.1450000000002 624.398,-1212.159 C624.398,-1212.159 616.325,-1239.407 616.325,-1239.407 C616.325,-1239.407 598.936,-1247.014 598.936,-1247.014 C593.472,-1249.405 590.329,-1255.203 591.31,-1261.086 C591.31,-1261.086 591.31,-1261.086 591.31,-1261.086 C591.31,-1261.086 619.911,-1249.043 619.911,-1249.043 C621.8939999999999,-1248.2079999999999 623.49,-1246.6570000000002 624.38,-1244.698 C624.38,-1244.698 631.334,-1229.401 631.334,-1229.401 C631.334,-1229.401 631.334,-1229.401 631.334,-1229.401 C632.9419999999999,-1229.401 634.049,-1231.014 633.472,-1232.514 C633.472,-1232.514 626.331,-1251.08 626.331,-1251.08 C626.331,-1251.08 607.439,-1268.792 607.439,-1268.792 C603.329,-1272.645 603.588,-1279.246 607.987,-1282.765 C607.987,-1282.765 607.987,-1282.765 607.987,-1282.765 C607.987,-1282.765 614.657,-1277.762 614.657,-1277.762 C614.657,-1277.762 614.657,-1278.739 614.657,-1278.739 C614.657,-1280.249 615.2570000000001,-1281.6970000000001 616.325,-1282.765 C616.325,-1282.765 616.325,-1282.765 616.325,-1282.765 C616.325,-1282.765 638.684,-1263.601 638.684,-1263.601 C639.3349999999999,-1263.0430000000001 639.8589999999999,-1262.351 640.222,-1261.574 C640.222,-1261.574 651.345,-1237.739 651.345,-1237.739 C651.345,-1237.739 651.345,-1237.739 651.345,-1237.739 C654.3330000000001,-1238.7350000000001 656.348,-1241.5310000000002 656.348,-1244.68 C656.348,-1244.68 656.348,-1265.884 656.348,-1265.884 C656.348,-1269.925 659.099,-1273.447 663.019,-1274.427 C663.019,-1274.427 663.019,-1274.427 663.019,-1274.427z"></path></g><g opacity="1" transform="matrix(1,0,0,1,0,0)"><path stroke-linecap="butt" stroke-linejoin="miter" fill-opacity="0" stroke-miterlimit="10" stroke="rgb(128,40,38)" stroke-opacity="1" stroke-width="2" d="M0 0 M614.642,-1278.754 C614.642,-1278.754 634.753,-1260.111 634.753,-1260.111 C635.839,-1259.105 636.702,-1257.882 637.285,-1256.521 C637.285,-1256.521 646.406,-1235.238 646.406,-1235.238"></path></g></g><g opacity="1" transform="matrix(1,0,0,1,0,0)"><path stroke-linecap="butt" stroke-linejoin="miter" fill-opacity="0" stroke-miterlimit="10" stroke="rgb(160,51,38)" stroke-opacity="1" stroke-width="2" d="M0 0 M682.331,-1150.035 C682.331,-1150.035 653.078,-1150 653.078,-1150 C653.078,-1150 682.331,-1150.035 682.331,-1150.035z"></path></g></g></g><g transform="matrix(1,0,0,1,225,125)" opacity="1" style="user-select: none;"><g opacity="1" transform="matrix(1,0,0,1,0,0)"><g opacity="1" transform="matrix(1,0,0,1,0,0)"><path fill="rgb(191,232,224)" fill-opacity="1" d="M0 0 M-22.876,42.448 C-22.876,42.448 -81.432,42.448 -81.432,42.448 C-83.979,42.448 -86.043,40.384 -86.043,37.837 C-86.043,37.837 -86.043,7.059 -86.043,7.059 C-86.043,4.5120000000000005 -83.979,2.448 -81.432,2.448 C-81.432,2.448 -22.876,2.448 -22.876,2.448 C-20.329,2.448 -18.265,4.5120000000000005 -18.265,7.059 C-18.265,7.059 -18.265,37.837 -18.265,37.837 C-18.265,40.384 -20.329,42.448 -22.876,42.448z"></path></g><g opacity="1" transform="matrix(1,0,0,1,0,0)"><path fill="rgb(255,255,255)" fill-opacity="1" d="M0 0 M-54.946,37.847 C-54.946,37.847 -81.604,37.847 -81.604,37.847 C-81.604,37.847 -81.604,8.231 -81.604,8.231 C-81.604,8.231 -54.946,8.231 -54.946,8.231 C-54.946,8.231 -54.946,37.847 -54.946,37.847z"></path></g><g opacity="1" transform="matrix(1,0,0,1,0,0)"><path stroke-linecap="round" stroke-linejoin="round" fill-opacity="0" stroke="rgb(0,132,137)" stroke-opacity="1" stroke-width="2" d="M0 0 M-50.287,9.559 C-50.287,9.559 -28.327,9.559 -28.327,9.559"></path></g><g opacity="1" transform="matrix(1,0,0,1,0,0)"><path stroke-linecap="round" stroke-linejoin="round" fill-opacity="0" stroke="rgb(0,132,137)" stroke-opacity="1" stroke-width="2" d="M0 0 M-50.287,14.883 C-50.287,14.883 -28.327,14.883 -28.327,14.883"></path></g><g opacity="1" transform="matrix(1,0,0,1,0,0)"><path stroke-linecap="round" stroke-linejoin="round" fill-opacity="0" stroke-dasharray=" 5" stroke-dashoffset="0" stroke="rgb(0,132,137)" stroke-opacity="1" stroke-width="2" d="M0 0 M-50.287,37.847 C-50.287,37.847 -28.327,37.847 -28.327,37.847"></path></g><g opacity="1" transform="matrix(1,0,0,1,0,0)"><g opacity="1" transform="matrix(1,0,0,1,0,0)"><g opacity="1" transform="matrix(1,0,0,1,0,0)"><path fill="rgb(160,94,69)" fill-opacity="1" d="M0 0 M-68.422,25.9 C-68.422,25.9 -68.422,25.9 -68.422,25.9 C-71.393,25.9 -73.801,23.492 -73.801,20.521 C-73.801,20.521 -73.801,18.488 -73.801,18.488 C-73.801,15.517 -71.393,13.108 -68.422,13.108 C-68.422,13.108 -68.422,13.108 -68.422,13.108 C-65.451,13.108 -63.042,15.517 -63.042,18.488 C-63.042,18.488 -63.042,20.521 -63.042,20.521 C-63.042,23.492 -65.451,25.9 -68.422,25.9z"></path></g><g opacity="1" transform="matrix(1,0,0,1,0,0)"><path fill="rgb(160,94,69)" fill-opacity="1" d="M0 0 M-57.92,33.211 C-58.544000000000004,31.451999999999998 -60.115,30.201999999999998 -61.969,29.99 C-61.969,29.99 -64.089,29.748 -64.089,29.748 C-65.578,29.578 -66.702,28.317999999999998 -66.702,26.819 C-66.702,26.819 -66.702,23.039 -66.702,23.039 C-66.702,23.039 -68.865,23.039 -68.865,23.039 C-68.865,23.039 -70.141,23.039 -70.141,23.039 C-70.141,23.039 -70.141,26.819 -70.141,26.819 C-70.141,28.317999999999998 -71.265,29.578 -72.754,29.748 C-72.754,29.748 -74.874,29.99 -74.874,29.99 C-76.728,30.201999999999998 -78.30000000000001,31.451999999999998 -78.924,33.211 C-78.924,33.211 -80.566,37.847 -80.566,37.847 C-80.566,37.847 -68.865,37.847 -68.865,37.847 C-68.865,37.847 -56.277,37.847 -56.277,37.847 C-56.277,37.847 -57.92,33.211 -57.92,33.211z"></path></g><g opacity="1" transform="matrix(1,0,0,1,0,0)"><path fill="rgb(46,39,37)" fill-opacity="1" d="M0 0 M-71.708,14.235 C-71.708,14.235 -71.708,14.235 -71.708,14.235 C-70.422,17.3 -67.556,19.411 -64.247,19.728 C-64.247,19.728 -63.042,19.843 -63.042,19.843 C-63.042,19.843 -62.819,18.313 -62.819,18.313 C-62.408,15.492999999999999 -64.20700000000001,12.821000000000002 -66.974,12.14 C-66.974,12.14 -66.974,12.14 -66.974,12.14 C-68.39800000000001,11.789000000000001 -69.903,12.018999999999998 -71.159,12.777 C-71.159,12.777 -71.708,13.108 -71.708,13.108 C-71.708,13.108 -71.708,13.108 -71.708,13.108 C-72.343,13.108 -72.94,13.41 -73.316,13.922 C-73.316,13.922 -73.316,13.922 -73.316,13.922 C-74.58200000000001,15.645000000000001 -74.864,17.901999999999997 -74.06,19.883 C-74.06,19.883 -73.801,20.521 -73.801,20.521 C-73.801,20.521 -73.801,20.521 -73.801,20.521 C-72.49000000000001,19.065 -71.75099999999999,17.183 -71.722,15.224 C-71.722,15.224 -71.708,14.235 -71.708,14.235z"></path></g><g opacity="1" transform="matrix(1,0,0,1,0,0)"><path fill="rgb(255,142,142)" fill-opacity="1" d="M0 0 M-72.754,29.748 C-72.754,29.748 -74.962,30 -74.962,30 C-76.781,30.208 -78.35,31.375999999999998 -79.07,33.059 C-79.07,33.059 -82.341,40.703 -82.341,40.703 C-82.341,40.703 -54.502,40.703 -54.502,40.703 C-54.502,40.703 -57.773,33.059 -57.773,33.059 C-58.493,31.375999999999998 -60.062,30.208 -61.881,30 C-61.881,30 -64.089,29.748 -64.089,29.748 C-64.845,29.662000000000003 -65.505,29.293000000000003 -65.973,28.757 C-65.973,28.757 -68.422,30.443 -68.422,30.443 C-68.422,30.443 -70.87,28.757 -70.87,28.757 C-71.339,29.293000000000003 -71.998,29.662000000000003 -72.754,29.748z"></path></g><g opacity="1" transform="matrix(1,0,0,1,0,0)"><path fill="rgb(160,94,69)" fill-opacity="1" d="M0 0 M-73.303,22.665 C-73.303,22.665 -73.351,22.665 -73.351,22.665 C-74.437,22.665 -75.317,21.785999999999998 -75.317,20.7 C-75.317,20.7 -75.317,20.7 -75.317,20.7 C-75.317,20.144 -74.866,19.693 -74.31,19.693 C-74.31,19.693 -74.31,19.693 -74.31,19.693 C-73.754,19.693 -73.303,20.144 -73.303,20.7 C-73.303,20.7 -73.303,22.665 -73.303,22.665z"></path></g><g opacity="1" transform="matrix(1,0,0,1,0,0)"><path fill="rgb(160,94,69)" fill-opacity="1" d="M0 0 M-63.523,22.665 C-63.523,22.665 -63.475,22.665 -63.475,22.665 C-62.389,22.665 -61.51,21.785999999999998 -61.51,20.7 C-61.51,20.7 -61.51,20.7 -61.51,20.7 C-61.51,20.144 -61.96,19.693 -62.516,19.693 C-62.516,19.693 -62.516,19.693 -62.516,19.693 C-63.071999999999996,19.693 -63.523,20.144 -63.523,20.7 C-63.523,20.7 -63.523,22.665 -63.523,22.665z"></path></g></g></g><g opacity="1" transform="matrix(1,0,0,1,0,0)"><path fill="rgb(255,195,189)" fill-opacity="1" d="M0 0 M-68.418,30.439 C-68.418,30.439 -65.97,28.753 -65.97,28.753 C-65.97,28.753 -70.867,28.753 -70.867,28.753 C-70.867,28.753 -68.418,30.439 -68.418,30.439z"></path></g></g></g></g></svg>
+</ng-template>

@@ -1,0 +1,57 @@
+/**
+ * @license
+ * Copyright TWISS.IO
+ * All Rights Reserved.
+ * Licensed under the MIT License.
+ */
+@import '~src/assets/styles/variables';
+
+.swal2-popup {
+  overflow: hidden;
+  border: 1px solid white;
+  padding: 2em 1.25em !important;
+  .swal2-x-mark:before, .swal2-success-ring:before {
+    content: '';
+    background-size: 100%;
+    position: absolute;
+    width: 50em;
+    height: 30em;
+    transform: translateX(-70%) translateY(-65%);
+  }
+  .swal2-success-ring:before { background: radial-gradient(rgba(165, 220, 134, 0.3), rgba(165, 220, 134, 0) 50%); }
+  .swal2-x-mark:before { background: radial-gradient(rgba(242, 116, 116, 0.3), rgba(242, 116, 116, 0) 50%); }
+  #swal2-title {
+    letter-spacing: 0.15em;
+    margin: 0 0 10px;
+    font-family: 'Montserrat';
+  }
+  #swal2-content {
+    font-size: 13px;
+    letter-spacing: 0.1em;
+    font-family: 'Montserrat';
+    line-height: 1.5;
+  }
+}
+
+.connectivity-warning {
+  position: fixed;
+  top: 100px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-150px);
+  transition: .5s ease-out;
+  box-shadow: $pg-shadow;
+  background: linear-gradient(#252525, #222);
+  color: #ddd;
+  border-top: 1px solid #333;
+  color: #ddd;
+  padding: 15px 20px;
+  max-width: 500px;
+  width: 95%;
+  z-index: 1000;
+  opacity: 0;
+
+  &.active {
+    opacity: 1;
+    transform: translateX(-50%);
+  }
+}

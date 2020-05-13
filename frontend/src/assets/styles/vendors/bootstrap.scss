@@ -1,0 +1,119 @@
+/**
+ * @license
+ * Copyright TWISS.IO
+ * All Rights Reserved.
+ * Licensed under the MIT License.
+ */
+@import '~src/assets/styles/variables';
+
+// Bootstrap Dropdown
+.dropdown { line-height: 12px; }
+
+.dropdown-menu {
+  margin-top: 5px;
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.01);
+  box-shadow: 0px 2px 1px -1px rgba(0, 0, 0, 0.2), 0px 1px 1px 0px rgba(0, 0, 0, 0.14), 0px 1px 3px 0px rgba(0, 0, 0, 0.12);
+  transform: translateY(-10px) !important;
+  padding: 0;
+  width: 250px;
+  .dropdown-item {
+    padding: 13px 18px;
+    color: #888;
+    i {
+      width: 22px;
+      text-align: center;
+      margin-right: 10px;
+    }
+    i, span { transition: .3s ease; }
+    &:not(:hover){
+      border-left: 3px solid transparent;
+      &:nth-of-type(odd) {
+        background-color: #f5f5ff;
+        border-color: #f5f5ff;
+      }
+    }
+    &:hover {
+      span { transform: translateX(3px); }
+    }
+    &:not(.danger):hover {
+      background-color: #e5e5ff;
+      border-left: 3px solid $mat-blue;
+      span.title { color: $mat-blue; }
+      > i, span.desc { color: #8696ef; }
+    }
+    &.danger {
+      background-color: #fff0f0;
+      &:hover {
+        border-left: 3px solid $mat-red;
+      }
+    }
+  }
+  > :first-child {
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+    overflow: hidden;
+  }
+  > :last-child {
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+    overflow: hidden;
+  }
+  &:after {
+    top: -2px;
+    right: 23px;
+    content: "";
+    height: 0;
+    width: 0;
+    position: absolute;
+    pointer-events: none;
+    width: 7px;
+    height: 7px;
+    box-shadow: 2px -2px 2px -1px rgba(0, 0, 0, 0.15);
+    z-index: -1;
+    border: 0;
+    background: linear-gradient(45deg, transparent 50%, #ffffff 50%);
+    transform: rotate(-45deg);
+  }
+}
+
+
+
+
+// Bootstrap Tooltip
+bs-tooltip-container {
+  &.tooltip-left { transform: translateX(-5px); }
+  &.bs-tooltip-left .tooltip-arrow:before { left: 0 !important; }
+  &.bs-tooltip-left .tooltip-arrow:before { border-left-color: rgba(65, 65, 65, 0.8) !important; }
+  &.bs-tooltip-top .tooltip-arrow:before { border-top-color: rgba(65, 65, 65, 0.8) !important; }
+  &.bs-tooltip-right .tooltip-arrow:before { border-right-color: rgba(65, 65, 65, 0.8) !important; }
+  &.bs-tooltip-bottom .tooltip-arrow:before { border-bottom-color: rgba(65, 65, 65, 0.8) !important; }
+  .tooltip-inner {
+    z-index: 2;
+    border-radius: 5px;
+    color: white;
+    font-family: $font-proxima;
+    font-size: 12px;
+    padding: 5px 15px;
+    border: 1px solid rgba(65, 65, 65, 0.8);
+    background: linear-gradient(160deg, rgba(44, 44, 44, .8), rgba(16, 16, 16, 1));
+  }
+}
+
+
+.list-group {
+  * { border-color: #e7e7ff !important; }
+  .list-group-item {
+    &.list-group-item-action:hover {
+      cursor: pointer;
+      background: #f8f8ff;
+    }
+    &.active {
+      background-color: #e7e7ff;
+    }
+    &.delete {
+      background-color: #ffe7e7;
+      &:hover { background-color: #fbd5d5 !important; }
+    }
+  }
+}
